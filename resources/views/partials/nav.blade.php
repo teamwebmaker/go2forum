@@ -10,8 +10,6 @@
 
         $authLinks = [
             ['label' => 'სახლი', 'route' => 'page.home'],
-            ['label' => 'პროფილი', 'route' => 'profile.user-info'],
-            ['label' => 'ვერიფიკაცია', 'route' => 'profile.verification'],
         ];
     @endphp
     <nav class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
