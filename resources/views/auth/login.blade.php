@@ -13,13 +13,13 @@
 
         <x-form.input name="password" type="password" label="პაროლი" minlength="6" placeholder="••••••••" required />
 
-        <x-button type="submit" class="w-full text-cyan-400">
+        <x-button type="submit" class="w-full">
             შესვლა
         </x-button>
 
         <p class="text-end text-sm text-slate-600">
             ახალი ხარ?
-            <a class="font-medium text-blue-600 hover:underline" href="{{ route('page.register') }}">ანგარიშის შექმნა</a>
+            <a class="font-medium text-blue-600 hover:underline" href="{{ route('register') }}">ანგარიშის შექმნა</a>
         </p>
     </form>
 @endsection

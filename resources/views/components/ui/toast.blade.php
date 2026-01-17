@@ -48,33 +48,31 @@
         opacity-0 -translate-y-1 scale-[0.98] pointer-events-none';
 @endphp
 
-<div data-toast-container class="fixed left-1/2 top-4 z-50 -translate-x-1/2 w-full sm:w-auto flex flex-col items-center space-y-2">
-    @foreach ($messages as $message)
-        <div
-            data-toast
-            data-timeout="{{ $timeout }}"
-            data-toast-hidden="1"
-            {{ $attributes->merge(['class' => $baseClasses]) }}
-            role="alert"
-            aria-live="polite"
-        >
-            <div class="flex items-center gap-3 py-3 pl-4 pr-10">
-                @if (array_key_exists($type, $variants))
-                    <span class="inline-flex h-6 w-6 shrink-0 {{ $variant['icon'] }}">
-                        <span class="[&>svg]:h-6 [&>svg]:w-6">{!! $icon !!}</span>
-                    </span>
-                @endif
+@foreach ($messages as $message)
+    <div
+        data-toast
+        data-timeout="{{ $timeout }}"
+        data-toast-hidden="1"
+        {{ $attributes->merge(['class' => $baseClasses]) }}
+        role="alert"
+        aria-live="polite"
+    >
+        <div class="flex items-center gap-3 py-3 pl-4 pr-10">
+            @if (array_key_exists($type, $variants))
+                <span class="inline-flex h-6 w-6 shrink-0 {{ $variant['icon'] }}">
+                    <span class="[&>svg]:h-6 [&>svg]:w-6">{!! $icon !!}</span>
+                </span>
+            @endif
 
-                <div class="min-w-0 flex-1">
-                    <div class="mt-0.5 space-y-0.5 text-sm {{ $variant['subtext'] }}">
-                        <p class="whitespace-normal wrap-break-word">{{ $message }}</p>
-                    </div>
+            <div class="min-w-0 flex-1">
+                <div class="mt-0.5 space-y-0.5 text-sm {{ $variant['subtext'] }}">
+                    <p class="whitespace-normal wrap-break-word">{{ $message }}</p>
                 </div>
             </div>
-
-            <x-button class="js-toast-close absolute right-2 top-1/2 -translate-y-1/2 p-1!" variant="ghost">
-                <x-app-icon name="x-mark" variant="m" />
-            </x-button>
         </div>
-    @endforeach
-</div>
+
+        <x-button class="js-toast-close absolute right-2 top-1/2 -translate-y-1/2 p-1!" variant="ghost">
+            <x-app-icon name="x-mark" variant="m" />
+        </x-button>
+    </div>
+@endforeach

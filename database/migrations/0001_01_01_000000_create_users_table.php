@@ -21,10 +21,7 @@ return new class extends Migration {
 
             $table->boolean('is_expert')->default(false);
             $table->boolean('is_top_commentator')->default(false);
-            $table->boolean('is_verified')->default(false);
 
-
-            $table->enum('verified_via', ['email', 'phone'])->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
 

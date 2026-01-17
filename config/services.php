@@ -13,6 +13,11 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'senderge' => [
+        'base_url' => env('SENDERGE_BASE_URL', 'https://sender.ge/api'),
+        'apikey' => env('SENDERGE_APIKEY'),
+        'timeout' => (int) env('SENDERGE_TIMEOUT', 15),
+    ],
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

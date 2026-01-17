@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLogInRequest;
 use App\Http\Requests\StoreSignUpRequest;
+use App\Models\Settings;
 use App\Models\User;
+use App\Services\PhoneVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    // ////////////
+    // pages
     public function login()
     {
         return view('auth.login');
@@ -19,23 +23,20 @@ class AuthController extends Controller
 
     public function signup()
     {
-        return view('auth.register');
+        $is_phone_verification_enabled = Settings::shouldPhoneVerify();
+        return view('auth.register', compact('is_phone_verification_enabled'));
     }
 
-
+    // ////////////
+    // Logic
     public function authenticate(StoreLogInRequest $request)
     {
         $attributes = $request->validated();
 
-        $user = User::where('email', '=', $attributes['email'])->first();
-
-        if (!$user || !Hash::check($attributes['password'], $user->password)) {
-            return back()
-                ->withInput()
-                ->with(['error' => 'ავტორიზაციის მონაცემები არასწორია.']);
+        if (!Auth::attempt(['email' => $attributes['email'], 'password' => $attributes['password']])) {
+            return back()->withInput()->with(['error' => 'ავტორიზაციის მონაცემები არასწორია.']);
         }
 
-        Auth::login($user);
         $request->session()->regenerate();
         return redirect('/')->with('success', 'ავტორიზაცია წარმატებით დასრულდა!');
     }
@@ -52,10 +53,43 @@ class AuthController extends Controller
             'password' => Hash::make($attrs['password']),
         ]);
 
-
         Auth::login($user);
+        $request->session()->regenerate();
 
-        return redirect('/')->with('success', 'რეგისტრაცია წარმატებით დასრულდა!');
+
+        $is_email_verification_enabled = Settings::shouldEmailVerify();
+        $is_phone_verification_enabled = Settings::shouldPhoneVerify();
+
+        $messages = [
+            'success' => 'რეგისტრაცია წარმატებით დასრულდა!',
+        ];
+
+        $redirectToVerification = false;
+
+        if ($is_email_verification_enabled) {
+            $redirectToVerification = true;
+            try {
+                $user->sendEmailVerificationNotification();
+                $messages['info'] = 'ვერიფიკაციის ბმული წარმატებით გაიგზავნა ელ.ფოსტაზე';
+                $request->session()->put('email_verification_sent', true);
+            } catch (\Throwable $e) {
+                $messages['warning'] = 'წარმოიქმნა ხარვეზი გთხოვთ მოგვიანებით სცადეთ, ან დაგვიკავშირდით.';
+            }
+        } elseif ($is_phone_verification_enabled) {
+            $redirectToVerification = true;
+            $result = app(PhoneVerificationService::class)->sendCode($request, $user);
+            if ($result['ok']) {
+                $messages['info'] = 'კოდი წარმატებით გაიგზავნა ტელეფონზე.';
+            } else {
+                $messages['warning'] = $result['message'];
+            }
+        }
+
+        if ($redirectToVerification) {
+            return redirect()->route('profile.verification')->with($messages);
+        }
+
+        return redirect('/')->with($messages);
     }
 
     public function logout(Request $request)

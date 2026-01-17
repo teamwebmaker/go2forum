@@ -26,4 +26,15 @@ class StoreLogInRequest extends FormRequest
             'password' => ['required', 'string', 'min:6',],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        $email = $this->input('email');
+
+        if ($email) {
+            $this->merge([
+                'email' => mb_strtolower(trim((string) $email)),
+            ]);
+        }
+    }
 }

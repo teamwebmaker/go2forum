@@ -12,15 +12,19 @@
 
 </head>
 
-<body class="min-h-screen bg-slate-50 text-slate-900">
+<body class="min-h-screen text-slate-900 bg-slate-50">
   @include('partials.nav')
   @include('partials.toasts')
+  @include('partials.alerts')
+  @include('partials.modals')
 
   <main class="mx-auto flex w-full max-w-6xl min-h-screen flex-1 px-6 py-10">
     @yield('content')
   </main>
 
   @include('partials.footer')
+
+  @stack('scripts')
 </body>
 
 </html>

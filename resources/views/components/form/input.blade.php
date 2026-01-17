@@ -7,6 +7,7 @@
     'required' => false,
 
     'iconPosition' => 'left', // left | right
+    'iconPadding' => '',
 
     'minlength' => null,
     'maxlength' => null,
@@ -37,7 +38,7 @@
     // detect named slot <x-slot:icon>
     $hasIcon = isset($icon) && $icon instanceof Illuminate\View\ComponentSlot && $icon->isNotEmpty();
     
-   $baseInput = 'block w-full rounded-md border bg-white text-sm shadow-sm
+   $baseInput = 'block w-full rounded-md border bg-white text-black text-sm shadow-sm
     placeholder:text-gray-400
     focus:outline-none focus:ring-2 focus:ring-gray-700/10
 
@@ -60,9 +61,7 @@
         ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
         : 'border-gray-300 focus:border-gray-400';
 
-    $iconPadding = $hasIcon
-        ? ($iconPosition === 'left' ? 'pl-10' : 'pr-10')
-        : '';
+    $iconPadding = $iconPadding ?: ($hasIcon ? ($iconPosition === 'left' ? 'pl-10' : 'pr-10') : '');
 
     $inputAttributes = $attributes
         ->class([
