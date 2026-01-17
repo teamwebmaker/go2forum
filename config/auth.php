@@ -119,6 +119,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'verification' => [
-        'expire' => env('AUTH_VERIFICATION_EXPIRE', 20), // minutes
+        'expire' => (int) env('AUTH_VERIFICATION_EXPIRE', 20),
     ],
+
 ];
