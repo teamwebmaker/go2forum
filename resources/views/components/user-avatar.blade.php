@@ -24,14 +24,11 @@
         <x-app-icon name="chevron-down" variant="m" class="ml-0.5" />
     </summary>
 
-    <div
-        class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200/70
+    <div class="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200/70
          bg-white p-1 text-sm shadow-lg shadow-slate-900/5">
-        <a href="{{ route('page.profile') }}"
-            class="flex items-center gap-2 rounded-lg px-3 py-2
+        <a href="{{ route('page.profile') }}" class="flex items-center gap-2 rounded-lg px-3 py-2
              text-slate-700 transition
-             hover:bg-slate-100/80 hover:text-slate-900
-             focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300">
+             hover:bg-slate-100/80 hover:text-slate-900">
             ჩემი პროფილი
         </a>
 
@@ -39,12 +36,10 @@
 
         <form method="POST" action="{{ route('auth.logout') }}">
             @csrf
-            <x-button type="submit" variant="ghost"
-                class="w-full justify-start gap-2 rounded-lg px-3 py-2
+            <x-button type="submit" variant="ghost" class="w-full justify-start gap-2 rounded-lg px-3 py-2
                  text-slate-700 transition
                  hover:bg-slate-100/80 hover:text-slate-900
-                 focus-visible:ring-2 focus-visible:ring-slate-300"
-                data-no_loading>
+                 focus-visible:ring-2 focus-visible:ring-slate-300" data-no_loading>
                 გასვლა
             </x-button>
         </form>

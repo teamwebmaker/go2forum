@@ -1,25 +1,28 @@
 import "./bootstrap";
-import './modal';
+import "./ui/modal";
 
-import { initToasts } from "./toasts";
-import { closeAlert } from "./alerts";
+import { closeAlert } from "./ui/alerts";
+import { initMobileNav } from "./ui/nav";
+import { initToasts } from "./ui/toasts";
+
 document.addEventListener("DOMContentLoaded", () => {
-  initToasts();
-  closeAlert();
+    initToasts();
+    closeAlert();
+    initMobileNav();
 });
 
-// Disable button on form submit
+// Disable button on form submit & show loading
 document.addEventListener("submit", (event) => {
-  const form = event.target;
-  if (!(form instanceof HTMLFormElement)) {
-    return;
-  }
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) {
+        return;
+    }
 
-  const submitButtons = form.querySelectorAll('button[type="submit"]');
-  submitButtons.forEach((button) => {
-    if (button.dataset.no_loading) return;
-    button.disabled = true;
-    button.classList.add("is_loading");
-    button.setAttribute("aria-busy", "true");
-  });
+    const submitButtons = form.querySelectorAll('button[type="submit"]');
+    submitButtons.forEach((button) => {
+        if (button.dataset.no_loading) return;
+        button.disabled = true;
+        button.classList.add("is_loading");
+        button.setAttribute("aria-busy", "true");
+    });
 });
