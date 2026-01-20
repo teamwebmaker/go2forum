@@ -14,12 +14,12 @@
             <x-form.input name="surname" label="გვარი" placeholder="Doe" required />
         </div>
 
-        <x-form.input name="email" type="email" label="ელ.ფოსტა" placeholder="jane@example.com" :displayError="false" 
+        <x-form.input name="email" type="email" label="ელ.ფოსტა" placeholder="jane@example.com" :displayError="false"
             required />
 
 
         <x-form.input name="phone" type="tel" label="ნომერი" placeholder="000 00 00 00" iconPosition="left"
-            iconPadding="pl-12" inputmode="numeric" :displayError="false" 
+            iconPadding="pl-12" inputmode="numeric" :displayError="false"
             pattern="^(\\+995\\s?)?(\\d{3}\\s?\\d{3}\\s?\\d{3}|\\d{3}\\s?\\d{2}\\s?\\d{2}\\s?\\d{2})$"
             :required="$is_phone_verification_enabled" :infoMessage="$is_phone_verification_enabled ? '' : 'სავალდებულო არაა'">
             <x-slot name="icon">
@@ -39,7 +39,7 @@
 
         <p class="text-end text-sm text-slate-600">
             უკვე გაქვთ ანგარიში?
-            <a class="font-medium text-blue-600 hover:underline" href="{{ route('login') }}">შესვლა</a>
+            <a class="font-medium text-blue-600 underline" href="{{ route('login') }}">შესვლა.</a>
         </p>
     </form>
 @endsection
