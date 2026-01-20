@@ -1,4 +1,4 @@
-<header class="sticky top-0 z-50 border-b border-slate-200/70 bg-white shadow-sm">
+<header class="sticky top-0 z-50 border-b border-slate-200/70 bg-white shadow-xs">
     @php
         $isAuth = (bool) Auth::user();
 
