@@ -32,8 +32,9 @@ class AuthController extends Controller
     public function authenticate(StoreLogInRequest $request)
     {
         $attributes = $request->validated();
+        $remember = $request->boolean('remember');
 
-        if (!Auth::attempt(['email' => $attributes['email'], 'password' => $attributes['password']])) {
+        if (!Auth::attempt(['email' => $attributes['email'], 'password' => $attributes['password']], $remember)) {
             return back()->withInput()->with(['error' => 'ავტორიზაციის მონაცემები არასწორია.']);
         }
 

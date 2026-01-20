@@ -20,11 +20,24 @@
             <x-form.input name="password" type="password" label="პაროლი" minlength="6" placeholder="••••••••" required />
         </div>
 
-        <p class="text-end text-sm text-slate-600 mt-1.5">
-            <a class="font-medium text-blue-600 underline" href="{{ route('password.request') }}">
-                დაგავიწყდა პაროლი?
-            </a>
-        </p>
+        <div class="flex justify-between">
+            <label class="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="remember"
+                    class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900/20">
+
+                <x-ui.tooltip position="top"
+                    text="ამ ღილაკის არჩევის შემთხვევაში თქვენ სისტემაში შესული დარჩებით ჩვეულებრივზე მეტ ხანს">
+                    დამიმახსოვრე
+                </x-ui.tooltip>
+            </label>
+
+            <p class="text-end text-sm text-slate-600 mt-1.5">
+                <a class="font-medium text-blue-600 underline" href="{{ route('password.request') }}">
+                    დაგავიწყდა პაროლი?
+                </a>
+            </p>
+        </div>
+
         <x-button type="submit" class="w-full mt-4">
             შესვლა
         </x-button>
