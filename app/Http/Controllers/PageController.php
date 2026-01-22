@@ -19,10 +19,6 @@ class PageController extends Controller
         return redirect()->route('profile.user-info');
     }
 
-    public function profileUserInfo()
-    {
-        return view('profile.user-info');
-    }
 
     public function profileVerification(Request $request)
     {

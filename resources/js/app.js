@@ -1,5 +1,7 @@
 import "./bootstrap";
 import "./ui/modal";
+import { initDirtyCheck } from "./form/dirtyCheck";
+import { initAvatarPreview } from "./profile/avatarPreview";
 
 import { closeAlert } from "./ui/alerts";
 import { initMobileNav } from "./ui/nav";
@@ -9,6 +11,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initToasts();
     closeAlert();
     initMobileNav();
+    initDirtyCheck();
+    initAvatarPreview();
 });
 
 // Disable button on form submit & show loading

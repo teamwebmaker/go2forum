@@ -32,6 +32,23 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * Get the user's initials (first letters of name and surname, uppercased).
+     */
+    public function getInitialsAttribute(): string
+    {
+        $parts = array_filter([
+            $this->name ? mb_substr(trim((string) $this->name), 0, 1) : null,
+            $this->surname ? mb_substr(trim((string) $this->surname), 0, 1) : null,
+        ]);
+
+        if (empty($parts)) {
+            return '?';
+        }
+
+        return mb_strtoupper(implode('', $parts), 'UTF-8');
+    }
+
+    /**
      * Normalize email casing before persisting to keep uniqueness consistent.
      */
     public function setEmailAttribute($value): void

@@ -2,13 +2,9 @@
 
 @php
     $name = $user?->name ?? '';
-    $initial = $name !== '' ? mb_substr($name, 0, 1) : '?';
+    $initial = $user?->initials ?? '?';
     $avatarPath = $user?->image ?? null;
-    $avatarUrl = $avatarPath
-        ? (str_starts_with($avatarPath, 'http') || str_starts_with($avatarPath, '/')
-            ? $avatarPath
-            : asset('storage/' . $avatarPath))
-        : null;
+    $avatarUrl = $avatarPath ? asset($avatarPath) : null;
 @endphp
 
 <details class="relative">

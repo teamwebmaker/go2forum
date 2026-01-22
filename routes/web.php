@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,7 +37,8 @@ Route::middleware('auth')->group(function () {
 
     // Profile
     Route::get('/profile', [PageController::class, 'profile'])->name('page.profile');
-    Route::get('/profile/user-info', [PageController::class, 'profileUserInfo'])->name('profile.user-info');
+    Route::get('/profile/user-info', [ProfileController::class, 'show'])->name('profile.user-info');
+    Route::patch('/profile/user-info', [ProfileController::class, 'update'])->name('profile.user-info.update');
     Route::get('/profile/verification', [PageController::class, 'profileVerification'])->name('profile.verification');
 
     // Email 
