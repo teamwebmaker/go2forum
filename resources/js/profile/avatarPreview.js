@@ -1,13 +1,15 @@
+import { getOne } from "../helpers";
+
 export function initAvatarPreview() {
-    const input = document.querySelector("[data-avatar-input]");
-    const previewWrapper = document.querySelector("[data-avatar-preview]");
+    const input = getOne(document, "[data-avatar-input]");
+    const previewWrapper = getOne(document, "[data-avatar-preview]");
 
     if (!input || !previewWrapper) {
         return;
     }
 
-    const previewImage = previewWrapper.querySelector("[data-avatar-preview-image]");
-    const previewName = previewWrapper.querySelector("[data-avatar-preview-name]");
+    const previewImage = getOne(previewWrapper, "[data-avatar-preview-image]");
+    const previewName = getOne(previewWrapper, "[data-avatar-preview-name]");
 
     input.addEventListener("change", () => {
         const file = input.files?.[0];

@@ -2,6 +2,7 @@ import "./bootstrap";
 import "./ui/modal";
 import { initDirtyCheck } from "./form/dirtyCheck";
 import { initAvatarPreview } from "./profile/avatarPreview";
+import { getAll } from "./helpers";
 
 import { closeAlert } from "./ui/alerts";
 import { initMobileNav } from "./ui/nav";
@@ -22,7 +23,7 @@ document.addEventListener("submit", (event) => {
         return;
     }
 
-    const submitButtons = form.querySelectorAll('button[type="submit"]');
+    const submitButtons = getAll(form, 'button[type="submit"]');
     submitButtons.forEach((button) => {
         if (button.dataset.no_loading) return;
         button.disabled = true;

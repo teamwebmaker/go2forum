@@ -1,6 +1,8 @@
+import { getAll, getOne } from "../helpers";
+
 export const closeAlert = () => {
-    document.querySelectorAll('.alert-component[data-closable="true"]').forEach(function (alert) {
-        var closeBtn = alert.querySelector('.alert-close');
+    getAll(document, '.alert-component[data-closable="true"]').forEach(function (alert) {
+        const closeBtn = getOne(alert, '.alert-close');
 
         if (!closeBtn) return;
 

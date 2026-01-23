@@ -1,3 +1,5 @@
+import { getAll, getOne } from "../helpers";
+
 const TOAST_SELECTOR = "[data-toast]";
 const CONTAINER_SELECTOR = "[data-toast-container]";
 
@@ -12,7 +14,7 @@ const ENTER_HIDE_CLASSES = [
 ];
 const EXIT_CLASSES = ["opacity-0", "-translate-y-1", "scale-[0.98]"];
 
-const getContainer = () => document.querySelector(CONTAINER_SELECTOR);
+const getContainer = () => getOne(document, CONTAINER_SELECTOR);
 
 const clearTimer = (el, key) => {
   const id = Number(el?.dataset?.[key] || 0);
@@ -92,7 +94,7 @@ export const initToasts = () => {
     const container = getContainer();
     if (!container) return;
 
-    const toasts = Array.from(container.querySelectorAll(TOAST_SELECTOR));
+    const toasts = Array.from(getAll(container, TOAST_SELECTOR));
 
     toasts.forEach((toast, i) => setupToast(toast, i));
 
@@ -162,14 +164,14 @@ export const initToasts = () => {
     container.addEventListener("mouseenter", () => {
       if (isDismissPaused) return;
       isDismissPaused = true;
-      const toasts = Array.from(container.querySelectorAll(TOAST_SELECTOR));
+      const toasts = Array.from(getAll(container, TOAST_SELECTOR));
       pauseDismissTimers(toasts);
     });
 
     container.addEventListener("mouseleave", () => {
       if (!isDismissPaused) return;
       isDismissPaused = false;
-      const toasts = Array.from(container.querySelectorAll(TOAST_SELECTOR));
+      const toasts = Array.from(getAll(container, TOAST_SELECTOR));
       resumeDismissTimers(toasts);
     });
   }
@@ -178,7 +180,7 @@ export const initToasts = () => {
   const observer = new MutationObserver(() => {
     const container = getContainer();
     if (!container) return;
-    if (container.querySelector(TOAST_SELECTOR)) reschedule();
+    if (getOne(container, TOAST_SELECTOR)) reschedule();
   });
 
   observer.observe(document.body, { childList: true, subtree: true });

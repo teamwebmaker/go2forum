@@ -1,13 +1,9 @@
+import { getById, getOne } from "../helpers";
+
 (function () {
   const DURATION = 200;
   let urlModalId = null;
-
-  function qs(sel, root = document) { return root.querySelector(sel); }
-  function qsa(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
-
-  function getModal(id) {
-    return document.getElementById(id);
-  }
+  const getModal = (id) => getById(document, id);
 
   function openModal(modal) {
     if (!modal) return;
@@ -18,8 +14,8 @@
 
     // animate in (next frame so transitions apply)
     requestAnimationFrame(() => {
-      qs('.ui-modal-backdrop', modal)?.classList.remove('opacity-0');
-      qs('.ui-modal-panel', modal)?.classList.remove('opacity-0', 'scale-95', 'translate-y-2');
+      getOne(modal, '.ui-modal-backdrop')?.classList.remove('opacity-0');
+      getOne(modal, '.ui-modal-panel')?.classList.remove('opacity-0', 'scale-95', 'translate-y-2');
     });
 
     // document.documentElement.classList.add('overflow-hidden');
@@ -29,15 +25,15 @@
     if (!modal) return;
 
     // animate out
-    qs('.ui-modal-backdrop', modal)?.classList.add('opacity-0');
-    qs('.ui-modal-panel', modal)?.classList.add('opacity-0', 'scale-95', 'translate-y-2');
+    getOne(modal, '.ui-modal-backdrop')?.classList.add('opacity-0');
+    getOne(modal, '.ui-modal-panel')?.classList.add('opacity-0', 'scale-95', 'translate-y-2');
 
     // hide after transition
     window.setTimeout(() => {
       modal.classList.add('hidden');
       modal.setAttribute('aria-hidden', 'true');
 
-      const anyOpen = document.querySelector('.ui-modal[data-modal]:not(.hidden)');
+      const anyOpen = getOne(document, '.ui-modal[data-modal]:not(.hidden)');
       // if (!anyOpen) document.documentElement.classList.remove('overflow-hidden');
     }, DURATION);
 
@@ -78,7 +74,7 @@
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
 
-    const modal = document.querySelector('.ui-modal[data-modal]:not(.hidden)');
+    const modal = getOne(document, '.ui-modal[data-modal]:not(.hidden)');
     if (!modal) return;
 
     const closeEsc = modal.getAttribute('data-close-esc') === 'true';

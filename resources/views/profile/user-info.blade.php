@@ -4,7 +4,7 @@
 
 @section('profile-content')
     <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-black/5">
-        <header class="flex items-start justify-between gap-4">
+        <header class="flex items-start flex-col sm:flex-row justify-between gap-4">
             <div class="space-y-1">
                 <h2 class="text-base font-semibold text-slate-900">ძირითადი ინფორმაცია</h2>
                 <p class="text-sm text-slate-600">ნახე და განაახლე პირადი დეტალები.</p>

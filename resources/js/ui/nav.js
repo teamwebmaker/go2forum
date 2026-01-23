@@ -1,6 +1,8 @@
+import { getOne } from "../helpers";
+
 export const initMobileNav = () => {
-  const menuToggle = document.querySelector("[data-mobile-menu-toggle]");
-  const mobileMenu = document.querySelector("[data-mobile-menu]");
+  const menuToggle = getOne(document, "[data-mobile-menu-toggle]");
+  const mobileMenu = getOne(document, "[data-mobile-menu]");
 
   if (!menuToggle || !mobileMenu) return;
 
