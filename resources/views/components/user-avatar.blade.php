@@ -2,9 +2,8 @@
 
 @php
     $name = $user?->name ?? '';
-    $initial = $user?->initials ?? '?';
-    $avatarPath = $user?->image ?? null;
-    $avatarUrl = $avatarPath ? asset($avatarPath) : null;
+    $initial = $user?->initials ?? '';
+    $avatarUrl = $user?->avatar_url ?? null;
 @endphp
 
 <details class="relative">

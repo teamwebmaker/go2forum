@@ -2,18 +2,23 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Facades\Storage;
+
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, MustVerifyEmailTrait;
+
+
+    public const AVATAR_DIR = 'images/avatars/';
+
 
     /**
      * The attributes that are mass assignable.
@@ -46,6 +51,22 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return mb_strtoupper(implode('', $parts), 'UTF-8');
+    }
+
+    /**
+     * Full avatar URL (public disk).
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!$this->image) {
+            return null;
+        }
+
+        /** @var FilesystemAdapter $disk */
+        $disk = Storage::disk('public');
+
+        // $this->image is already a disk-relative path (e.g., images/avatars/uuid.jpg)
+        return $disk->url($this->image);
     }
 
     /**

@@ -31,9 +31,7 @@ class ProfileController extends Controller
             ? (bool) $user->isVerified()
             : false;
 
-        $avatarPath = $user->image;
-
-        $avatarUrl = $avatarPath ? asset($avatarPath) : null;
+        $avatarUrl = $user->avatar_url;
         $avatarInitial = $user->initials ?? '?';
 
 

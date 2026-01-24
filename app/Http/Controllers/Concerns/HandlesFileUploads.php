@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Concerns;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 trait HandlesFileUploads
@@ -23,12 +23,7 @@ trait HandlesFileUploads
             return null;
         }
 
-        $relativePath = rtrim($destinationPath, '/');
-        $relativePath = $relativePath ? $relativePath . '/' : '';
-        $absolutePath = public_path($relativePath);
-
-        // Ensure the destination exists before moving the file.
-        File::ensureDirectoryExists($absolutePath);
+        $relativeDir = trim($destinationPath, '/');
 
         $fileName = sprintf(
             '%s.%s',
@@ -36,24 +31,16 @@ trait HandlesFileUploads
             $uploadedFile->getClientOriginalExtension()
         );
 
-        $uploadedFile->move($absolutePath, $fileName);
+        // Store on the public disk
+        Storage::disk('public')->putFileAs($relativeDir, $uploadedFile, $fileName);
 
         if ($oldFile) {
-            $oldRelative = ltrim($oldFile, '/');
-            $candidates = [
-                public_path($oldRelative),
-                public_path($relativePath . $oldRelative),
-            ];
-
-            foreach ($candidates as $path) {
-                if (File::exists($path)) {
-                    File::delete($path);
-                    break;
-                }
-            }
+            Storage::disk('public')->delete($oldFile);
         }
 
-        return $relativePath . $fileName;
+        // $storedPath = $relativeDir ? $relativeDir . '/' . $fileName : $fileName;
+
+        return $fileName;
     }
 
     /**
@@ -65,11 +52,8 @@ trait HandlesFileUploads
             return;
         }
 
-        $relative = ltrim($relativePath, '/');
-        $candidate = public_path($relative);
+        $normalized = ltrim($relativePath, '/');
 
-        if (File::exists($candidate)) {
-            File::delete($candidate);
-        }
+        Storage::disk('public')->delete($normalized);
     }
 }
