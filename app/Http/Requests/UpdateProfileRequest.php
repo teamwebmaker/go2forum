@@ -29,8 +29,8 @@ class UpdateProfileRequest extends FormRequest
         array_unshift($phoneRules, $requirePhone ? 'required' : 'nullable');
 
         return [
-            'name' => ['required', 'string', 'max:30'],
-            'surname' => ['required', 'string', 'max:40'],
+            'name' => ['required', 'string', 'min:2', 'max:30'],
+            'surname' => ['required', 'string', 'min:2', 'max:40'],
             'email' => [
                 'required',
                 'string',

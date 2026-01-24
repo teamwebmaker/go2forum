@@ -27,8 +27,8 @@ class StoreSignUpRequest extends FormRequest
         $shouldPhoneVerify = Settings::shouldPhoneVerify();
 
         return [
-            'name' => ['required', 'string', 'max:30'],
-            'surname' => ['required', 'string', 'max:40'],
+            'name' => ['required', 'string', 'min:2', 'max:30'],
+            'surname' => ['required', 'string', 'min:2', 'max:40'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => [
                 Rule::requiredIf($shouldPhoneVerify),
