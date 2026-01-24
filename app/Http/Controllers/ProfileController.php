@@ -80,7 +80,7 @@ class ProfileController extends Controller
 
         // Handle avatar removal
         if ($removeImage && $user->image) {
-            $this->deleteUploadedFile($user->image);
+            $this->deleteUploadedFile($user->image, $this->fileFields['image']);
             $updates['image'] = null;
         }
 

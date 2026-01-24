@@ -65,8 +65,12 @@ class User extends Authenticatable implements MustVerifyEmail
         /** @var FilesystemAdapter $disk */
         $disk = Storage::disk('public');
 
-        // $this->image is already a disk-relative path (e.g., images/avatars/uuid.jpg)
-        return $disk->url($this->image);
+        $path = ltrim($this->image, '/');
+        if (!str_contains($path, '/')) {
+            $path = trim(self::AVATAR_DIR, '/') . '/' . $path;
+        }
+
+        return $disk->url($path);
     }
 
     /**
