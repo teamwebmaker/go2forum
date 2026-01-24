@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             SettingsSeeder::class,
             AdsSeeder::class,
             CategorySeeder::class,
+            PublicDocumentsSeeder::class,
         ]);
     }
 }
