@@ -27,6 +27,15 @@
     --color-primary-950: #2e2518;
 }
 
+a,
+button,
+input,
+select,
+textarea,
+summary {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+}
+
 @keyframes button-spinner {
     to {
         transform: rotate(360deg);

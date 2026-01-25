@@ -1,7 +1,7 @@
 @props([
     'id',
     'title' => null,
-    'size' => 'md',             // sm | md | lg | xl | 2xl | full
+    'size' => 'md',             // sm | md | lg | xl | 2xl | 4xl | 6xl | full
     'closeOnOutside' => true,
     'closeOnEsc' => true,
 ])
@@ -13,6 +13,8 @@
         'lg'   => 'max-w-lg',
         'xl'   => 'max-w-xl',
         '2xl'  => 'max-w-2xl',
+        '4xl'  => 'max-w-4xl',
+        '6xl'  => 'max-w-6xl',
         'full' => 'w-full h-full max-w-none',
     ];
     $panelSize = $sizes[$size] ?? $sizes['md'];

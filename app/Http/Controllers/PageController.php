@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
+use App\Models\PublicDocument;
 use App\Models\PhoneVerificationOtp;
 use App\Models\Settings;
 use Illuminate\Http\Request;
@@ -11,7 +13,16 @@ class PageController extends Controller
 {
     public function home()
     {
-        return view('pages.home');
+        $categories = Category::with('ads')
+            ->visible()
+            ->orderBy('name')
+            ->get();
+
+        $documents = PublicDocument::query()
+            ->orderBy('name')
+            ->get();
+
+        return view('pages.home', compact('categories', 'documents'));
     }
 
     public function profile()
