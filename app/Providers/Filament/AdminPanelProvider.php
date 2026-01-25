@@ -27,7 +27,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->sidebarCollapsibleOnDesktop()
-            ->brandName('ადმინისტრატორის პანელი')
+            ->brandName('go2forum ･ ადმინისტრატორის პანელი')
             ->id('admin')
             ->path('admin')
             ->login()
