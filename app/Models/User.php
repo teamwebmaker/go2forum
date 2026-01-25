@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +13,7 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, MustVerifyEmailTrait;
@@ -145,5 +147,14 @@ class User extends Authenticatable implements MustVerifyEmail
         } else {
             return false;
         }
+    }
+
+    /**
+     * Gate Filament admin access.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Only allow admins to access the admin panel
+        return (bool) ($this->role === 'admin' ?? false);
     }
 }
