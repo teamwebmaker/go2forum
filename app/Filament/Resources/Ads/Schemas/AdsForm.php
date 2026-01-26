@@ -18,7 +18,9 @@ class AdsForm
                 TextInput::make('name')
                     ->label(AdsResource::labelFor('name'))
                     ->required(),
-
+                TextInput::make('link')
+                    ->label(AdsResource::labelFor('link'))
+                    ->required(),
                 FileUpload::make('image')
                     ->label(AdsResource::labelFor('image'))
                     ->image()
@@ -47,9 +49,6 @@ class AdsForm
                             disk: 'public',
                         );
                     }),
-                TextInput::make('link')
-                    ->label(AdsResource::labelFor('link'))
-                    ->required(),
                 Toggle::make('visibility')
                     ->label(AdsResource::labelFor('visibility'))
                     ->required(),

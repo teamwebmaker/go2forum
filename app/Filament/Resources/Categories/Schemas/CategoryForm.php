@@ -8,6 +8,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 
 class CategoryForm
 {
@@ -15,18 +16,21 @@ class CategoryForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->label(CategoryResource::labelFor('name'))
-                    ->required(),
-                Select::make('ad_id')
-                    ->label(CategoryResource::labelFor('ad_id'))
-                    ->relationship('ad', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->nullable(),
-                Toggle::make('visibility')
-                    ->label(CategoryResource::labelFor('visibility'))
-                    ->required(),
+                Section::make()
+                    ->schema([
+                        TextInput::make('name')
+                            ->label(CategoryResource::labelFor('name'))
+                            ->required(),
+                        Select::make('ad_id')
+                            ->label(CategoryResource::labelFor('ad_id'))
+                            ->relationship('ad', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->nullable(),
+                        Toggle::make('visibility')
+                            ->label(CategoryResource::labelFor('visibility'))
+                            ->required(),
+                    ])
             ]);
     }
 }
