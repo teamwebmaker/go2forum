@@ -13,7 +13,7 @@ class PageController extends Controller
 {
     public function home()
     {
-        $categories = Category::with('ads')
+        $categories = Category::with('ad')
             ->visible()
             ->orderBy('name')
             ->get();

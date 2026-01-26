@@ -9,10 +9,10 @@
 		<ul role="list" class="space-y-3">
 			@forelse ($categories ?? [] as $category)
 				@php
-					$hasAd = filled($category->ads ?? null);
+					$hasAd = filled($category->ad ?? null);
 
-					$adImage = $hasAd && filled($category->ads->image ?? null)
-						? Storage::url('images/ads/' . $category->ads->image)
+					$adImage = $hasAd && filled($category->ad->image ?? null)
+						? Storage::url($category->ad->image)
 						: null;
 				@endphp
 
@@ -29,24 +29,24 @@
 
 								@if ($hasAd)
 									@if ($adImage)
-										<div class="relative me-auto h-10 w-32 shrink-0 sm:m-auto">
+										<div class="relative me-auto h-10 w-36 shrink-0 sm:m-auto">
 											<span
 												class="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-md bg-blue-500 px-1 text-[10px] font-bold leading-none text-white shadow-sm">
 												AD
 											</span>
-											<a href="{{ $category->ads->link }}" target="_blank" class="cursor-alias">
-												<img src="{{ $adImage }}" alt="{{ $category->ads->name }} რეკლამა" loading="lazy"
-													class="h-full w-full rounded-lg object-cover ring-1 ring-slate-200">
+											<a href="{{ $category->ad->link }}" target="_blank" class="cursor-alias">
+												<img src="{{ $adImage }}" alt="{{ $category->ad->name }} რეკლამა" loading="lazy"
+													class="h-full w-full rounded-lg object-contain p-0.5  ring-1 ring-slate-200">
 											</a>
 										</div>
 									@else
-										<a href="{{ $category->ads->link }}" target="_blank" class="cursor-alias">
+										<a href="{{ $category->ad->link }}" target="_blank" class="cursor-alias">
 											<div
 												class="me-auto inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 sm:m-auto">
 												<x-app-icon name="megaphone" class="h-4 w-4 shrink-0 text-orange-500" />
 
 												<span class="wrap-break-word whitespace-normal underline">
-													{{ $category->ads->name }}
+													{{ $category->ad->name }}
 												</span>
 											</div>
 										</a>

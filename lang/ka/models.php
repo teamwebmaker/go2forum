@@ -14,4 +14,55 @@ return [
             'edit' => 'პარამეტრების რედაქტირება',
         ],
     ],
+    'categories' => [
+        'singular' => 'კატეგორია',
+        'plural' => 'კატეგორები',
+        'fields' => [
+            'name' => 'სახელი',
+            'ad_id' => 'რეკლამა',
+            'topics_count' => 'თემების რაოდენობა',
+            'visibility' => 'ხილვადობა',
+            'created_at' => 'შეიქმნა',
+            'updated_at' => 'ბოლოს განახლდა',
+        ],
+        'titles' => [
+            'edit' => 'კატეგორიის რედაქტირება',
+        ],
+        'actions' => [
+            'delete' => [
+                'heading' => 'კატეგორიის წაშლა',
+                'headingBulk' => 'კატეგორიების წაშლა',
+                'description' => '',
+                'actionLabel' => ''
+            ]
+        ]
+    ],
+    'ads' => [
+        'singular' => 'რეკლამა',
+        'plural' => 'რეკლამები',
+        'fields' => [
+            'name' => 'სახელი',
+            'image' => 'სურათი',
+            'link' => 'ბმული',
+            'visibility' => 'ხილვადობა',
+            'created_at' => 'შეიქმნა',
+            'updated_at' => 'ბოლოს განახლდა',
+        ],
+        'titles' => [
+            'edit' => 'რეკლამის რედაქტირება',
+        ],
+        'actions' => [
+            'delete' => [
+                'heading' => 'რეკლამის წაშლა',
+                'headingBulk' => 'რეკლამების წაშლა',
+                'description' => '',
+                'actionLabel' => ''
+            ],
+            'view' => [
+                'heading' => 'რეკლამის ნახვა',
+                'description' => '',
+                'actionLabel' => '',
+            ],
+        ]
+    ],
 ];

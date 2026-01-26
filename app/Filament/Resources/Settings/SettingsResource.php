@@ -11,6 +11,7 @@ use App\Filament\Resources\Settings\Schemas\SettingsInfolist;
 use App\Filament\Resources\Settings\Tables\SettingsTable;
 use App\Models\Settings;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -19,6 +20,8 @@ use Filament\Tables\Table;
 class SettingsResource extends Resource
 {
     protected static ?string $model = Settings::class;
+
+    protected static ?int $navigationSort = 5;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 

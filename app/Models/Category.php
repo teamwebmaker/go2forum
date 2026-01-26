@@ -11,6 +11,8 @@ class Category extends Model
 
     protected $fillable = [
         'name',
+        'ad_id',
+        'topics_count',
         'visibility',
     ];
 
@@ -43,7 +45,7 @@ class Category extends Model
     |---------------------------------
     */
 
-    public function ads()
+    public function ad()
     {
         return $this->belongsTo(Ads::class, 'ad_id');
     }
