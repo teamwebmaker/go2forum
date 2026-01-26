@@ -17,23 +17,6 @@ class EditAds extends EditRecord
         return __('models.ads.titles.edit');
     }
 
-    // Delete old image if new image is uploaded
-    protected function mutateFormDataBeforeSave(array $data): array
-    {
-        // Old file path from DB
-        $old = $this->record->image;
-
-        // New file path from form (can be null if user clicked X)
-        $new = $data['image'] ?? null;
-
-        // If image changed OR removed => delete old file
-        if ($old && $old !== $new) {
-            Storage::disk('public')->delete($old);
-        }
-
-        return $data;
-    }
-
     protected function getHeaderActions(): array
     {
         return [

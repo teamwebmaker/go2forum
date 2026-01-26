@@ -3,14 +3,11 @@
 namespace App\Filament\Resources\Ads\Schemas;
 
 use App\Filament\Resources\Ads\AdsResource;
+use App\Services\ImageUploadService;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Intervention\Image\Laravel\Facades\Image;
-use Spatie\LaravelImageOptimizer\Facades\ImageOptimizer;
 
 class AdsForm
 {
@@ -28,16 +25,28 @@ class AdsForm
                     ->disk('public')
                     ->directory('ads')
                     ->visibility('public')
-                    ->imageEditor()
                     ->acceptedFileTypes([
                         'image/png',
                         'image/jpeg',
                         'image/webp',
                     ])
-                    ->maxSize(20) // 20 KB
-                    ->helperText('დაშვებული ფორმატები: PNG, JPG, WEBP, მაქს ზომა 20KB.')
+                    ->maxSize(20) // KB
+                    ->imageEditor()
                     ->imagePreviewHeight('100')
-                    ->downloadable(),
+                    ->helperText('დაშვებული ფორმატები: PNG, JPG, WEBP, მაქს ზომა 20KB.')
+                    ->downloadable()
+                    ->saveUploadedFileUsing(function ($file, callable $get, $record) {
+                        $old = $record?->image ?? $get('image');
+
+                        return ImageUploadService::handleOptimizedImageUpload(
+                            file: $file,
+                            destinationPath: 'ads',
+                            oldFile: $old,
+                            webpQuality: 80,
+                            optimize: true,
+                            disk: 'public',
+                        );
+                    }),
                 TextInput::make('link')
                     ->label(AdsResource::labelFor('link'))
                     ->required(),
