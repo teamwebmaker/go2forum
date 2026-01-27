@@ -5,26 +5,28 @@ namespace App\Filament\Resources\Ads;
 use App\Filament\Resources\Ads\Pages\CreateAds;
 use App\Filament\Resources\Ads\Pages\EditAds;
 use App\Filament\Resources\Ads\Pages\ListAds;
-use App\Filament\Resources\Ads\Pages\ViewAds;
 use App\Filament\Resources\Ads\Schemas\AdsForm;
 use App\Filament\Resources\Ads\Schemas\AdsInfolist;
 use App\Filament\Resources\Ads\Tables\AdsTable;
 use App\Models\Ads;
+
 use BackedEnum;
+
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
+
 class AdsResource extends Resource
 {
     protected static ?string $model = Ads::class;
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-    protected static bool $isGloballySearchable = false;
 
-    protected static ?string $navigationParentItem = 'კატეგორები';
-    protected static ?string $recordTitleAttribute = 'Ads';
+    protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?string $navigationParentItem = 'კატეგორიები';
+    protected static bool $isGloballySearchable = false;
 
 
     public static function labelFor(string $field): string

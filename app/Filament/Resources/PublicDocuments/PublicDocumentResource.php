@@ -26,9 +26,11 @@ class PublicDocumentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
+
+    protected static ?string $recordTitleAttribute = 'name';
     protected static bool $isGloballySearchable = false;
     protected static ?int $navigationSort = 4;
-    protected static ?string $recordTitleAttribute = 'name';
+
 
     public static function labelFor(string $field): string
     {
