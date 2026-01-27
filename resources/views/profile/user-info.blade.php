@@ -71,8 +71,8 @@
                 ])
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <x-form.input name="name" label="სახელი" required value="{{ $user->name }}" />
-                    <x-form.input name="surname" label="გვარი" required value="{{ $user->surname }}" />
+                    <x-form.input name="name" label="სახელი" minlength="2" required value="{{ $user->name }}" />
+                    <x-form.input name="surname" label="გვარი" minlength="2" required value="{{ $user->surname }}" />
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -10,11 +10,11 @@
     <form method="POST" action="{{ route('auth.register') }}" class="space-y-4">
         @csrf
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <x-form.input name="name" label="სახელი" placeholder="Jane" required />
-            <x-form.input name="surname" label="გვარი" placeholder="Doe" required />
+            <x-form.input name="name" label="სახელი" placeholder="Jane" minlength="2" required />
+            <x-form.input name="surname" label="გვარი" placeholder="Doe" minlength="2" required />
         </div>
 
-        <x-form.input name="email" type="email" label="ელ.ფოსტა" placeholder="jane@example.com" :displayError="false"
+        <x-form.input name=" email" type="email" label="ელ.ფოსტა" placeholder="jane@example.com" :displayError="false"
             required />
 
 
