@@ -13,9 +13,11 @@ class PageController extends Controller
 {
     public function home()
     {
-        $categories = Category::with('ad')
+        $categories = Category::with([
+            'ad' => fn($q) => $q->visible(),
+        ])
             ->visible()
-            ->orderBy('name')
+            ->orderBy('order')
             ->get();
 
         $documents = PublicDocument::query()

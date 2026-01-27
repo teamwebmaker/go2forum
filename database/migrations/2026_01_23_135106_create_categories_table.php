@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->string('slug')->unique();
             $table->foreignId('ad_id')->nullable()->constrained('ads')->nullOnDelete();
             $table->integer('topics_count')->default(0);
+
+            $table->integer('order')->default(0);
             $table->boolean('visibility')->default(true)->index();
             $table->timestamps();
         });
