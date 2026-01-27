@@ -16,7 +16,7 @@ return [
     ],
     'categories' => [
         'singular' => 'კატეგორია',
-        'plural' => 'კატეგორები',
+        'plural' => 'კატეგორიები',
         'fields' => [
             'name' => 'სახელი',
             'ad_id' => 'რეკლამა',
@@ -64,6 +64,30 @@ return [
                 'description' => '',
                 'actionLabel' => '',
             ],
+        ]
+    ],
+    'public_documents' => [
+        'singular' => 'დოკუმენტი',
+        'plural' => 'დოკუმენტები',
+        'fields' => [
+            'name' => 'სახელი',
+            'document' => 'დოკუმენტი',
+            'link' => 'ბმული',
+            'order' => 'რიგითობა',
+            'visibility' => 'ხილვადობა',
+            'created_at' => 'შეიქმნა',
+            'updated_at' => 'ბოლოს განახლდა',
+        ],
+        'titles' => [
+            'edit' => 'დოკუმენტის რედაქტირება',
+        ],
+        'actions' => [
+            'delete' => [
+                'heading' => 'დოკუმენტის წაშლა',
+                'headingBulk' => 'დოკუმენტების წაშლა',
+                'description' => '',
+                'actionLabel' => ''
+            ]
         ]
     ],
 ];

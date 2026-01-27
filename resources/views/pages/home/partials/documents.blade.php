@@ -1,5 +1,6 @@
 @php
     use Illuminate\Support\Facades\Storage;
+    use App\Filament\Resources\PublicDocuments\PublicDocumentResource;
 @endphp
 
 <section aria-labelledby="public-documents">
@@ -7,7 +8,9 @@
         @forelse($documents ?? [] as $document)
             @php
                 $hasDocument = filled($document->document ?? null);
-                $documentPath = $hasDocument ? 'documents/public_documents/' . $document->document : null;
+                $documentPath = $hasDocument
+                    ? PublicDocumentResource::STORAGE_DIR . '/' . $document->document
+                    : null;
                 $documentExists = $documentPath ? Storage::disk('public')->exists($documentPath) : false;
                 $isFile = $hasDocument && $documentExists;
                 $hasLink = filled($document->link ?? null);
