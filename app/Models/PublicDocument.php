@@ -9,6 +9,17 @@ class PublicDocument extends Model
     protected $fillable = [
         'name',
         'document',
+        'visibility',
+        'order',
         'link',
     ];
+
+    protected $casts = [
+        'visibility' => 'boolean',
+    ];
+
+    public function scopeVisible($query)
+    {
+        return $query->where('visibility', true);
+    }
 }

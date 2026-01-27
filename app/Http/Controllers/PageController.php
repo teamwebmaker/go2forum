@@ -21,7 +21,8 @@ class PageController extends Controller
             ->get();
 
         $documents = PublicDocument::query()
-            ->orderBy('name')
+            ->visible()
+            ->orderBy('order')
             ->get();
 
         return view('pages.home', compact('categories', 'documents'));

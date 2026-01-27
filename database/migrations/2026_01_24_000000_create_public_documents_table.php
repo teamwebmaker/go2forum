@@ -15,6 +15,9 @@ return new class extends Migration {
             $table->string('name')->unique();
             $table->text('document')->nullable();
             $table->string('link')->nullable()->unique();
+
+            $table->boolean('visibility')->default(true)->index();
+            $table->integer('order')->default(0);
             $table->timestamps();
         });
     }
