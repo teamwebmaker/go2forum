@@ -6,12 +6,23 @@
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         @forelse($documents ?? [] as $document)
             @php
-                $isFile = filled($document->document ?? null);
+                $hasDocument = filled($document->document ?? null);
+                $documentPath = $hasDocument ? 'documents/public_documents/' . $document->document : null;
+                $documentExists = $documentPath ? Storage::disk('public')->exists($documentPath) : false;
+                $isFile = $hasDocument && $documentExists;
+                $hasLink = filled($document->link ?? null);
+
+                // Flag items that have neither an existing file nor a link
+                $skipDocument = !$isFile && !$hasLink;
 
                 $targetUrl = $isFile
-                    ? Storage::url('documents/public_documents/' . $document->document)
+                    ? Storage::disk('public')->url($documentPath)
                     : ($document->link ?? '#');
             @endphp
+
+            @if ($skipDocument)
+                @continue
+            @endif
 
             @php
                 $baseClasses = 'group flex w-full flex-col justify-center gap-3 rounded-2xl border border-gray-200 bg-blue-100/80 p-3 transition hover:-translate-y-0.5';
