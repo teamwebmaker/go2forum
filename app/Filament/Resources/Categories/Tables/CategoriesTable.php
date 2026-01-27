@@ -27,6 +27,9 @@ class CategoriesTable
                     ->label(CategoryResource::labelFor('topics_count'))
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('order')
+                    ->label(CategoryResource::labelFor('order'))
+                    ->sortable(),
                 IconColumn::make('visibility')
                     ->label(CategoryResource::labelFor('visibility'))
                     ->boolean(),

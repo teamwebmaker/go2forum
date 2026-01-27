@@ -13,6 +13,7 @@ class Category extends Model
         'name',
         'ad_id',
         'topics_count',
+        'order',
         'visibility',
     ];
 

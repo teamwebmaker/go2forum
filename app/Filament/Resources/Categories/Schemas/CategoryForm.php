@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Categories\Schemas;
 
 use App\Filament\Resources\Categories\CategoryResource;
-use App\Models\Ads;
+use App\Models\Category;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -27,6 +27,16 @@ class CategoryForm
                             ->searchable()
                             ->preload()
                             ->nullable(),
+                        TextInput::make('order')
+                            ->label(CategoryResource::labelFor('order'))
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0)
+                            ->unique(
+                                table: Category::class,
+                                column: 'order',
+                                ignorable: fn(?Category $record) => $record
+                            ),
                         Toggle::make('visibility')
                             ->label(CategoryResource::labelFor('visibility'))
                             ->required(),
