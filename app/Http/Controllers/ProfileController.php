@@ -6,6 +6,7 @@ use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Models\Settings;
 use App\Models\User;
+use App\Services\AccountDeletionService;
 use App\Services\ImageUploadService;
 use App\Services\PasswordUpdateService;
 use Illuminate\Http\RedirectResponse;
@@ -138,6 +139,17 @@ class ProfileController extends Controller
         return redirect()
             ->route('profile.user-info')
             ->with('success', 'პაროლი წარმატებით განახლდა.');
+    }
+
+    public function destroy(AccountDeletionService $accountDeletionService): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $accountDeletionService->delete($user);
+
+        return redirect()
+            ->route('page.home')
+            ->with('success', 'ანგარიში წარმატებით წაიშალა.');
     }
 
 }
