@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [PageController::class, 'profile'])->name('page.profile');
         Route::get('/profile/user-info', [ProfileController::class, 'show'])->name('profile.user-info');
         Route::patch('/profile/user-info', [ProfileController::class, 'update'])->name('profile.user-info.update');
+        Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::get('/profile/verification', [PageController::class, 'profileVerification'])->name('profile.verification');
     });
 

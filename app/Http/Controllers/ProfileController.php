@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Models\Settings;
 use App\Models\User;
 use App\Services\ImageUploadService;
+use App\Services\PasswordUpdateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -24,10 +26,19 @@ class ProfileController extends Controller
         $requireEmailVerification = Settings::shouldEmailVerify();
         $requirePhoneVerification = Settings::shouldPhoneVerify();
 
+        $isPasswordEditing =
+            request()->boolean('password') ||
+            old('_password_edit') === '1';
+
         $isEditing =
             request()->boolean('edit') ||
             old('_editing') === '1' ||
             session()->has('errors');
+
+        // Keep the sections mutually exclusive
+        if ($isPasswordEditing) {
+            $isEditing = false;
+        }
 
         $isVerified = method_exists($user, 'isVerified')
             ? (bool) $user->isVerified()
@@ -45,6 +56,7 @@ class ProfileController extends Controller
             'avatarInitial',
             'requireEmailVerification',
             'requirePhoneVerification',
+            'isPasswordEditing',
         ));
     }
 
@@ -115,6 +127,17 @@ class ProfileController extends Controller
         return redirect()
             ->route('profile.user-info')
             ->with('success', 'პროფილი წარმატებით განახლდა.');
+    }
+
+    public function updatePassword(
+        UpdatePasswordRequest $request,
+        PasswordUpdateService $passwordUpdater
+    ): RedirectResponse {
+        $passwordUpdater->update($request->user(), $request->validated('password'));
+
+        return redirect()
+            ->route('profile.user-info')
+            ->with('success', 'პაროლი წარმატებით განახლდა.');
     }
 
 }
