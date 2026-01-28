@@ -90,4 +90,41 @@ return [
             ]
         ]
     ],
+    'users' => [
+        'singular' => 'მომხმარებელი',
+        'plural' => 'მომხმარებლები',
+        'fields' => [
+            'name' => 'სახელი',
+            'surname' => 'გვარი',
+            'email' => 'ელ.ფოსტა',
+            'phone' => 'ტელეფონი',
+            'role' => 'როლი',
+            'image' => 'სურათი',
+            'is_expert' => 'ექსპერტი',
+            'is_top_commentator' => 'ტოპ კომენტატორი',
+            'is_blocked' => 'დაბლოკილი',
+            'email_verified_at' => 'ელ.ფოსტა დამოწმდა',
+            'phone_verified_at' => 'ტელეფონი დამოწმდა',
+            'password' => 'პაროლი',
+            'created_at' => 'შეიქმნა',
+            'updated_at' => 'ბოლოს განახლდა',
+        ],
+        'titles' => [
+            'create' => 'მომხმარებლის შექმნა',
+            'edit' => 'მომხმარებლის რედაქტირება',
+        ],
+        'actions' => [
+            'delete' => [
+                'heading' => 'მომხმარებლის წაშლა',
+                'headingBulk' => 'მომხმარებლების წაშლა',
+                'description' => '',
+                'actionLabel' => ''
+            ],
+            'view' => [
+                'heading' => 'მომხმარებლის ნახვა',
+                'description' => '',
+                'actionLabel' => '',
+            ],
+        ],
+    ],
 ];

@@ -42,7 +42,7 @@ class UpdateProfileRequest extends FormRequest
             'image' => [
                 'nullable',
                 'image',
-                'max:2048', // 2MB
+                'max:1024', // 1MB
                 'mimes:jpg,jpeg,png,webp',
             ],
             'remove_image' => ['nullable', 'boolean'],

@@ -19,7 +19,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     use HasFactory, Notifiable, MustVerifyEmailTrait;
 
 
-    public const AVATAR_DIR = 'images/avatars/';
+    public const AVATAR_DIR = 'avatars/';
 
 
     /**
@@ -35,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         'image',
         'is_expert',
         'is_top_commentator',
+        'is_blocked',
         'password',
     ];
 
@@ -109,7 +110,29 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 
             'is_expert' => 'boolean',
             'is_top_commentator' => 'boolean',
+            'is_blocked' => 'boolean',
         ];
+    }
+
+    /**
+     * Cleanup avatar file on delete.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            if (!$user->image) {
+                return;
+            }
+
+            $path = ltrim($user->image, '/');
+
+            // If only filename stored, prepend default avatar directory
+            if (!str_contains($path, '/')) {
+                $path = trim(self::AVATAR_DIR, '/') . '/' . $path;
+            }
+
+            Storage::disk('public')->delete($path);
+        });
     }
 
     // public function markEmailAsVerified()
@@ -119,7 +142,6 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     //     ])->save();
     // }
 
-    // Temporary check only email
     public function isVerified()
     {
         $emailEnabled = Settings::value('is_email_verification_enabled') ?? false;
