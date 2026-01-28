@@ -39,14 +39,14 @@ class StoreSignUpRequest extends FormRequest
                 'unique:users,phone',
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'terms' => ['accepted'],
         ];
     }
 
     public function messages(): array
     {
         // Use generic messages to reduce account enumeration signals.
-        $genericDuplicate = 'რეგისტრაცია ვერ მოხერხდა. თუ უკვე გაქვთ ანგარიში, სცადოთ ხელახლა ან შედით სისტემაში.';
-
+        $genericDuplicate = 'რეგისტრაცია ვერ მოხერხდა. თუ უკვე გაქვთ ანგარიში, შედით სისტემაში ან სცადეთ ხელახლა.';
         return [
             'email.unique' => $genericDuplicate,
             'phone.unique' => $genericDuplicate,
