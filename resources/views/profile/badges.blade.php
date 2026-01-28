@@ -26,10 +26,12 @@
             @endforeach
         </div>
 
-        <div class="rounded-xl border border-slate-200 max-w-fit px-4 py-3 flex align-center gap-2 ">
-            <p class="text-slate-900">ამჟამინდელი ბეიჯი:</p>
-            <x-ui.avatar-badge iconClass="{{ $badgeColor }}" iconSizeClass="size-6!" wrapperClass="h-6!"
-                badgeClass="inline-block!" />
-        </div>
+        @if($user->is_expert || $user->is_top_commentator)
+            <div class="rounded-xl border border-slate-200 max-w-fit px-4 py-3 flex align-center gap-2 ">
+                <p class="text-slate-900">ამჟამინდელი ბეიჯი:</p>
+                <x-ui.avatar-badge iconClass="{{ $badgeColor }}" iconSizeClass="size-6!" wrapperClass="h-6!"
+                    badgeClass="inline-block!" />
+            </div>
+        @endif
     </section>
 @endsection
