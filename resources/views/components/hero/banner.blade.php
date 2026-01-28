@@ -7,7 +7,7 @@
     'class' => '',
 ])
 
-<div {{ $attributes->merge(['class' => trim('relative flex w-full flex-col gap-2 text-center '.$class)]) }}>
+<div {{ $attributes->merge(['class' => trim('relative flex w-full flex-col gap-2  z-1  text-center '.$class)]) }}>
    <div aria-hidden="true"
       class="pointer-events-none absolute -top-16 left-1/2 h-40 w-screen -translate-x-1/2 overflow-hidden sm:h-36 sm:-top-14">
       <div class="absolute inset-0 bg-cover bg-center brightness-110"

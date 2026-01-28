@@ -45,16 +45,10 @@ class ProfileController extends Controller
             ? (bool) $user->isVerified()
             : false;
 
-        $avatarUrl = $user->avatar_url;
-        $avatarInitial = $user->initials ?? '?';
-
-
         return view('profile.user-info', compact(
             'user',
             'isEditing',
             'isVerified',
-            'avatarUrl',
-            'avatarInitial',
             'requireEmailVerification',
             'requirePhoneVerification',
             'isPasswordEditing',

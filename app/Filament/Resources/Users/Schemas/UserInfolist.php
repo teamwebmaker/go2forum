@@ -6,7 +6,6 @@ use App\Filament\Resources\Users\UserResource;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 
 class UserInfolist
@@ -29,8 +28,8 @@ class UserInfolist
                     ->placeholder('-'),
                 ImageEntry::make('image')
                     ->label(UserResource::labelFor('image'))
+                    ->disk('public')
                     ->placeholder('-'),
-
                 IconEntry::make('is_expert')
                     ->label(UserResource::labelFor('is_expert'))
                     ->boolean(),
@@ -40,8 +39,6 @@ class UserInfolist
                 IconEntry::make('is_blocked')
                     ->label(UserResource::labelFor('is_blocked'))
                     ->boolean(),
-
-
                 TextEntry::make('email_verified_at')
                     ->label(UserResource::labelFor('email_verified_at'))
                     ->dateTime()

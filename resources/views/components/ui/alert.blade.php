@@ -5,27 +5,43 @@
 ])
 
 @php
-    $colors = [
-        'success' => 'bg-green-100 text-green-800 border-green-300',
-        'error'   => 'bg-red-100 text-red-800 border-red-300',
-        'warning' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
-        'info'    => 'bg-blue-100 text-blue-800 border-blue-300',
+    $styles = [
+        'success' => [
+            'bg' => 'bg-green-50',
+            'text' => 'text-green-800',
+            'border' => 'border-green-200',
+        ],
+        'error' => [
+            'bg' => 'bg-red-50',
+            'text' => 'text-red-800',
+            'border' => 'border-red-200',
+        ],
+        'warning' => [
+            'bg' => 'bg-amber-50',
+            'text' => 'text-amber-800',
+            'border' => 'border-amber-200',
+        ],
+        'info' => [
+            'bg' => 'bg-blue-50',
+            'text' => 'text-blue-800',
+            'border' => 'border-blue-200',
+        ],
     ];
 
-    $classes = $colors[$type] ?? $colors['info'];
+    $style = $styles[$type] ?? $styles['info'];
 @endphp
 
 <div
-    class="alert-component w-full border-y {{ $classes }}"
+    class="alert-component relative z-40 w-full border px-4 {{ $style['bg'] }} {{ $style['border'] }}"
     data-closable="{{ $closable ? 'true' : 'false' }}"
 >
-    <div class="max-w-6xl mx-auto px-6 py-3 flex items-start justify-between gap-4">
-        <!-- Content -->
-        <div class="flex flex-wrap items-center gap-3 text-sm font-medium {{ $slotClasses }}">
+    <div
+        class="relative mx-auto flex max-w-6xl items-start justify-between gap-4 rounded-xl px-5 py-3 text-sm font-medium {{ $style['text'] }}"
+    >
+        <div class="flex flex-wrap items-center gap-3 {{ $slotClasses }}">
             {{ $slot }}
         </div>
 
-        <!-- Close button -->
         @if ($closable)
             <button
                 type="button"

@@ -1,21 +1,11 @@
-@props(['user'])
-
-@php
-    $name = $user?->name ?? '';
-    $initial = $user?->initials ?? '';
-    $avatarUrl = $user?->avatar_url ?? null;
-@endphp
+@props([
+    'user',
+    'size' => 'sm',
+])
 
 <details class="relative">
     <summary class="list-none cursor-pointer flex items-center">
-        <span
-            class="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
-            @if ($avatarUrl)
-                <img src="{{ $avatarUrl }}" alt="{{ $name }}" class="h-full w-full object-cover" />
-            @else
-                {{ $initial }}
-            @endif
-        </span>
+        <x-ui.avatar :user="$user" :size="$size" badgeX="left" />
         <x-app-icon name="chevron-down" variant="m" class="ml-0.5" />
     </summary>
 

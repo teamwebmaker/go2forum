@@ -1,21 +1,15 @@
 @props([
     'user',
-    'avatarUrl' => null,
-    'avatarInitial' => '?',
     'isEditing' => false,
     'isVerified' => false,
 ])
 
+@php
+    $avatarUrl = $user?->avatar_url ?? null;
+@endphp
+
 <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
-    <div class="h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-        @if ($avatarUrl)
-            <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="h-full w-full object-cover" />
-        @else
-            <div class="flex h-full w-full items-center justify-center text-xl font-semibold text-slate-600">
-                {{ $avatarInitial }}
-            </div>
-        @endif
-    </div>
+    <x-ui.avatar :user="$user" size="xl" />
 
     @if ($isEditing)
         <div class="flex-1 space-y-2">

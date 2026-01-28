@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\PublicDocument;
 use App\Models\PhoneVerificationOtp;
 use App\Models\Settings;
+use App\Support\BadgeColors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,7 +31,18 @@ class PageController extends Controller
 
     public function profile()
     {
-        return redirect()->route('profile.user-info');
+        $user = Auth::user();
+        return redirect()->route('profile.user-info', compact('user'));
+    }
+
+    public function profileBadges()
+    {
+        $user = Auth::user();
+        return view('profile.badges', [
+            'user' => $user,
+            'data' => config('badges.examples'),
+            'badgeColor' => BadgeColors::forUser($user),
+        ]);
     }
 
 

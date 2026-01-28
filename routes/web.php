@@ -46,6 +46,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/user-info', [ProfileController::class, 'show'])
             ->name('profile.user-info');
 
+        Route::get('/profile/badges', [PageController::class, 'profileBadges'])
+            ->name('profile.badges');
+
         Route::patch('/profile/user-info', [ProfileController::class, 'update'])
             ->name('profile.user-info.update');
 
