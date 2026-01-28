@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserIsFullyVerified;
+use App\Http\Middleware\RedirectAdminFromProfile;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'verified' => EnsureEmailIsVerified::class,
             'verified.full' => EnsureUserIsFullyVerified::class,
+            'redirect.admin' => RedirectAdminFromProfile::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

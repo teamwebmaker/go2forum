@@ -35,11 +35,13 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-    // Profile
-    Route::get('/profile', [PageController::class, 'profile'])->name('page.profile');
-    Route::get('/profile/user-info', [ProfileController::class, 'show'])->name('profile.user-info');
-    Route::patch('/profile/user-info', [ProfileController::class, 'update'])->name('profile.user-info.update');
-    Route::get('/profile/verification', [PageController::class, 'profileVerification'])->name('profile.verification');
+    // Profile (redirect admins to /admin)
+    Route::middleware('redirect.admin')->group(function () {
+        Route::get('/profile', [PageController::class, 'profile'])->name('page.profile');
+        Route::get('/profile/user-info', [ProfileController::class, 'show'])->name('profile.user-info');
+        Route::patch('/profile/user-info', [ProfileController::class, 'update'])->name('profile.user-info.update');
+        Route::get('/profile/verification', [PageController::class, 'profileVerification'])->name('profile.verification');
+    });
 
     // Email 
     Route::post('/email/verification-notification', [VerificationController::class, 'resend'])

@@ -38,6 +38,17 @@ class AuthController extends Controller
             return back()->withInput()->with(['error' => 'ავტორიზაციის მონაცემები არასწორია.']);
         }
 
+        // Deny admin login
+        if (Auth::user()->role === 'admin') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'ავტორიზაციის მონაცემები არასწორია.']);
+        }
+
         $request->session()->regenerate();
         return redirect('/')->with('success', 'ავტორიზაცია წარმატებით დასრულდა!');
     }
