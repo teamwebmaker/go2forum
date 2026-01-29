@@ -14,13 +14,14 @@ class CategorySeeder extends Seeder
         $faker = Faker::create();
         $ads = Ads::all();
 
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 3; $i++) {
             $category = new Category([
+                'id' => $i,
                 'name' => ucfirst($faker->unique()->words(2, true)),
+                'order' => $i,
                 'visibility' => true,
             ]);
 
-            // randomly assign an ad (or leave null if none)
             if ($ads->isNotEmpty()) {
                 $category->ad_id = $ads->random()->id;
             }

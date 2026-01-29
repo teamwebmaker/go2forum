@@ -51,6 +51,11 @@ class Category extends Model
         return $this->belongsTo(Ads::class, 'ad_id');
     }
 
+    public function topics()
+    {
+        return $this->hasMany(Topic::class);
+    }
+
     /*
     |---------------------------------
     | Scopes

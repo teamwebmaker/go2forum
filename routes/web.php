@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TopicController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -80,14 +81,12 @@ Route::middleware('auth')->group(function () {
         ->name('verification.phone.verify');
 });
 
+// Topics
+Route::get('/categories/{category}/topics', [TopicController::class, 'category'])->name('categories.topics');
+// Topics
+Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])
+    ->middleware('verified.full')->name('topics.show');
+
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
     ->middleware(['auth', 'signed', 'throttle:email-verify'])
     ->name('verification.verify');
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/verified-test', function () {
-        return 'Verified user access granted.';
-    })->name('test.verified');
-
-
-});

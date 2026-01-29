@@ -60,10 +60,11 @@
 									{{ $category->topics_count ?? 0 }} თემა
 								</span>
 
-								<span
+								<a href="{{ route('categories.topics', $category) }}" <span
 									class="grid h-10 w-10 place-items-center rounded-full cursor-pointer border border-slate-200 bg-slate-50 text-slate-600">
 									<x-app-icon name="chevron-right" class="h-4 w-4" />
-								</span>
+									</span>
+								</a>
 							</div>
 
 						</div>

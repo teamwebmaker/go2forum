@@ -6,7 +6,7 @@
 @source '../**/*.js';
 
 @theme {
-    --breakpoint-xs: 30rem;
+    --breakpoint-xs: 25rem;
     --font-sans:
         "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
@@ -33,7 +33,7 @@ input,
 select,
 textarea,
 summary {
-    @apply outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
 }
 
 @keyframes button-spinner {
