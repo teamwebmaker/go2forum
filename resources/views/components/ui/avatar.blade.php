@@ -21,7 +21,18 @@
         'lg' => ['container' => 'h-16 w-16 text-xl', 'icon' => 'size-6!',],
         'xl' => ['container' => 'h-20 w-20 text-2xl','icon' => 'size-7!',],
     ];
-    $position = "absolute -{$badgeY}-0.5 -{$badgeX}-0.5";
+
+    $posY = [
+        'top' => '-top-0.5',
+        'bottom' => '-bottom-0.5',
+    ][$badgeY] ?? '-bottom-0.5';
+
+    $posX = [
+        'left' => '-left-0.5',
+        'right' => '-right-0.5',
+    ][$badgeX] ?? '-right-0.5';
+
+    $position = "absolute {$posY} {$posX}";
     $currentSize = $sizes[$size] ?? $sizes['md'];
 @endphp
 
