@@ -35,6 +35,7 @@ class Topic extends Model
 
     protected static function booted(): void
     {
+        // Generate slug
         static::saving(function (Topic $topic) {
             if (!$topic->title) {
                 return;
@@ -44,6 +45,34 @@ class Topic extends Model
                 $topic->slug = SlugGenerator::unique(static::class, $topic->title, 'slug');
             }
         });
+
+        static::created(function (Topic $topic) {
+            static::syncCategoryCount($topic->category_id);
+        });
+
+        static::updated(function (Topic $topic) {
+            if (!$topic->wasChanged('category_id')) {
+                return;
+            }
+
+            static::syncCategoryCount($topic->getOriginal('category_id'));
+            static::syncCategoryCount($topic->category_id);
+        });
+
+        static::deleted(function (Topic $topic) {
+            static::syncCategoryCount($topic->category_id);
+        });
+    }
+
+    protected static function syncCategoryCount(?int $categoryId): void
+    {
+        if (!$categoryId) {
+            return;
+        }
+
+        Category::whereKey($categoryId)->update([
+            'topics_count' => static::where('category_id', $categoryId)->count(),
+        ]);
     }
 
     /*
@@ -55,6 +84,17 @@ class Topic extends Model
     public function scopeVisible($query)
     {
         return $query->where('visibility', true);
+    }
+
+    //
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status) {
+            'active' => 'success',
+            'closed' => 'gray',
+            'disabled' => 'danger',
+            default => 'secondary',
+        };
     }
 
 

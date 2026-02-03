@@ -38,6 +38,48 @@ return [
             ]
         ]
     ],
+    'topics' => [
+        'singular' => 'თემა',
+        'plural' => 'თემები',
+        'fields' => [
+            'user_id' => 'მომხმარებელი',
+            'category_id' => 'კატეგორია',
+            'title' => 'სათაური',
+            'status' => 'სტატუსი',
+            'slug' => 'სლაგი',
+            'messages_count' => 'შეტყობინებების რაოდენობა',
+            'pinned' => 'აპინული',
+            'visibility' => 'ხილვადობა',
+            'created_at' => 'შეიქმნა',
+            'updated_at' => 'ბოლოს განახლდა',
+        ],
+        'statuses' => [
+            'active' => 'აქტიური',
+            'closed' => 'დახურული',
+            'disabled' => 'გათიშული',
+        ],
+        'titles' => [
+            'create' => 'თემის შექმნა',
+            'edit' => 'თემის რედაქტირება',
+        ],
+        'actions' => [
+            'delete' => [
+                'heading' => 'თემის წაშლა',
+                'headingBulk' => 'თემების წაშლა',
+                'description' => '',
+                'actionLabel' => ''
+            ],
+            'view' => [
+                'heading' => 'თემის ნახვა',
+                'description' => '',
+                'actionLabel' => '',
+            ],
+        ],
+        'filters' => [
+            'with_category' => 'კატეგორიით',
+            'without_category' => 'კატეგორიის გარეშე',
+        ],
+    ],
     'ads' => [
         'singular' => 'რეკლამა',
         'plural' => 'რეკლამები',

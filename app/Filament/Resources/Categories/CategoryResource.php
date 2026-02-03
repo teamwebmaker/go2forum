@@ -21,7 +21,7 @@ class CategoryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
     protected static bool $isGloballySearchable = false;
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
 
     public static function labelFor(string $field): string
