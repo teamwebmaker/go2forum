@@ -83,7 +83,8 @@ Route::middleware('auth')->group(function () {
 
 // Topics
 Route::get('/categories/{category}/topics', [TopicController::class, 'category'])->name('categories.topics');
-// Topics
+
+// Topic chat
 Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])
     ->middleware('verified.full')->name('topics.show');
 

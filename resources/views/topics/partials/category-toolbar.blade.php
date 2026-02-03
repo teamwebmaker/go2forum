@@ -1,12 +1,26 @@
 @php
+    use Illuminate\Support\Facades\Auth;
+
+    $currUser = Auth::user();
+
+    $isAuthorized = Auth::check();
+    $isVerified = $currUser?->isVerified() ?? false;
+
     $mine = $mine ?? false;
     $scope = $scope ?? 'all';
-    $canFilterMine = auth()->check();
+    $canFilterMine = $isAuthorized;
+
+    // Topic open state
+    $canOpenTopic = $isAuthorized && $isVerified;
+
+    $topicDisabledMessage = !$isAuthorized
+        ? 'ფუნქციის გამოსაყენებლად ავტორიზაციაა საჭირო'
+        : 'ფუნქციის გამოსაყენებლად ვერიფიკაციაა საჭირო';
 @endphp
 
 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-    {{-- Create Topic Button --}}
+    {{-- Topic Button --}}
     @if ($canOpenTopic)
         <a href="#" @class([
             'inline-flex max-w-max items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition bg-primary-500 hover:bg-primary-600',
@@ -15,11 +29,16 @@
             <x-app-icon name="plus" class="h-4 w-4" />
         </a>
     @else
-        <x-ui.tooltip text="ამ ფუნქციონალის გამოსაყენებლად ვერიფიკაცია სავალდებულოა" position="top"
-            titleClasses="text-amber-600!">
+        <x-ui.tooltip
+            text="{{ $topicDisabledMessage }}"
+            position="top"
+            titleClasses="text-amber-600!"
+        >
             <span
                 class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm bg-slate-300 cursor-not-allowed"
-                role="button" aria-disabled="true">
+                role="button"
+                aria-disabled="true"
+            >
                 თემის გახსნა
                 <x-app-icon name="plus" class="h-4 w-4" />
             </span>
@@ -46,23 +65,25 @@
             </div>
 
             {{-- Filter Select --}}
-            <div class="flex items-center gap-2 text-sm text-slate-700 w-30">
+            <div class="flex items-center gap-2 text-sm text-slate-700 w-full xs:w-30">
                 <label class="flex w-full flex-col gap-1">
                     <div class="relative">
                         <select name="scope"
-                            class="w-full rounded-lg ring-1 ring-slate-200 bg-white  py-2 pl-3 text-sm text-slate-800 shadow-sm"
+                            class="w-full rounded-lg  border border-gray-300 bg-white py-2 pl-3 text-sm text-slate-800 shadow-sm"
                             onchange="this.form.submit()">
                             <option value="all" {{ $scope === 'all' ? 'selected' : '' }}>ყველა</option>
-                            <option value="mine" {{ $scope === 'mine' ? 'selected' : '' }} {{ $canFilterMine ? '' : 'disabled' }}>
+                            <option value="mine"
+                                {{ $scope === 'mine' ? 'selected' : '' }}
+                                {{ $canFilterMine ? '' : 'disabled' }}
+                            >
                                 ჩემი შექმნილი
                             </option>
                         </select>
                     </div>
                 </label>
             </div>
+
         </div>
 
     </form>
 </div>
-
-{{-- scripts/ui/searchBar.js --}}
