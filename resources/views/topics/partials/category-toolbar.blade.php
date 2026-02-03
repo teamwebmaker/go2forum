@@ -5,29 +5,32 @@
 
     $isAuthorized = Auth::check();
     $isVerified = $currUser?->isVerified() ?? false;
+    $isCategoryVisible = $category?->visibility ?? true;
 
     $mine = $mine ?? false;
     $scope = $scope ?? 'all';
     $canFilterMine = $isAuthorized;
 
     // Topic open state
-    $canOpenTopic = $isAuthorized && $isVerified;
+    $canOpenTopic = $isAuthorized && $isVerified && $isCategoryVisible;
 
     $topicDisabledMessage = !$isAuthorized
         ? 'ფუნქციის გამოსაყენებლად ავტორიზაციაა საჭირო'
-        : 'ფუნქციის გამოსაყენებლად ვერიფიკაციაა საჭირო';
+        : (!$isVerified
+            ? 'ფუნქციის გამოსაყენებლად ვერიფიკაციაა საჭირო'
+            : 'კატეგორია დამალულია');
 @endphp
 
 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
     {{-- Topic Button --}}
     @if ($canOpenTopic)
-        <a href="#" @class([
+        <button type="button" data-modal-open="topic-create-modal" @class([
             'inline-flex max-w-max items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition bg-primary-500 hover:bg-primary-600',
         ])>
             თემის გახსნა
             <x-app-icon name="plus" class="h-4 w-4" />
-        </a>
+        </button>
     @else
         <x-ui.tooltip
             text="{{ $topicDisabledMessage }}"

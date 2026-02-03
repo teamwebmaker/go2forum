@@ -83,10 +83,14 @@ Route::middleware('auth')->group(function () {
 
 // Topics
 Route::get('/categories/{category}/topics', [TopicController::class, 'category'])->name('categories.topics');
+Route::post('/categories/{category}/topics', [TopicController::class, 'store'])
+    ->middleware(['auth', 'verified.full'])
+    ->name('categories.topics.store');
 
-// Topic chat
+// Topic page
 Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])
-    ->middleware('verified.full')->name('topics.show');
+    ->middleware('verified.full')
+    ->name('topics.show');
 
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
     ->middleware(['auth', 'signed', 'throttle:email-verify'])
