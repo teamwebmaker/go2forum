@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateProfileRequest;
 use App\Models\Settings;
 use App\Models\User;
 use App\Services\AccountDeletionService;
+use App\Services\FileUploadService;
 use App\Services\ImageUploadService;
 use App\Services\PasswordUpdateService;
 use Illuminate\Http\RedirectResponse;
@@ -88,7 +89,7 @@ class ProfileController extends Controller
 
         // Handle avatar removal
         if ($removeImage && $user->image) {
-            $this->deleteUploadedFile($user->image, $this->fileFields['image']);
+            FileUploadService::deleteUploadedFile($user->image, $this->fileFields['image'], 'public');
             $updates['image'] = null;
         }
 

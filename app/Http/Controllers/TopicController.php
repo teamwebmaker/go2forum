@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Topic;
 use App\Models\Category;
+use App\Models\TopicSubscription;
 use Illuminate\Http\Request;
 
 class TopicController extends Controller
@@ -46,19 +47,21 @@ class TopicController extends Controller
 
     public function show(Topic $topic)
     {
-        // Load category
-        $topic->load('category');
+        $topic->loadMissing('category');
+        abort_unless((bool) auth()->user()?->can('view', $topic), 404);
 
-        // Abort if topic or category is not visible
-        abort_unless($topic->visibility, 404);
-        abort_unless($topic->category?->visibility, 404);
+        $canPost = (bool) auth()->user()?->can('post', $topic);
 
-        return view('topics.show', compact('topic'));
+        return view('topics.show', compact(
+            'topic',
+            'canPost'
+        ));
     }
 
     public function store(Category $category, Request $request)
     {
         // Route already has auth + verified.full
+        abort_unless((bool) $request->user()?->can('create', Topic::class), 403);
         abort_unless($category->visibility, 404);
 
         $data = $request->validate([
@@ -69,6 +72,12 @@ class TopicController extends Controller
             'user_id' => $request->user()->id,
             'category_id' => $category->id,
             'title' => $data['title'],
+        ]);
+
+        TopicSubscription::query()->insertOrIgnore([
+            'user_id' => $request->user()->id,
+            'topic_id' => $topic->id,
+            'subscribed_at' => now(),
         ]);
 
         return redirect()->route('topics.show', $topic->slug);

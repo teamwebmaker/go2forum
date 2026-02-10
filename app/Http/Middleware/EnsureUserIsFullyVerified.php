@@ -18,6 +18,12 @@ class EnsureUserIsFullyVerified
         $user = $request->user();
 
         if (!$user || !$user->isVerified()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Verification is required.',
+                ], 403);
+            }
+
             return redirect()->route('profile.verification')
                 ->with('info', 'გთხოვთ დაასრულოთ ვერიფიკაციის პროცესი.');
         }

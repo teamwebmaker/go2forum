@@ -1,57 +1,53 @@
 <?php
 
-namespace App\Http\Controllers\Concerns;
+namespace App\Services;
 
-use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-trait HandlesFileUploads
+class FileUploadService
 {
     /**
      * Store an uploaded file and optionally replace the previous one.
+     * Returns the stored relative path.
      */
-    protected function handleFileUpload(
-        Request $request,
-        string $fieldName,
+    public static function handleFileUpload(
+        UploadedFile $file,
         string $destinationPath,
         ?string $oldFile = null,
-    ): ?string {
-        $uploadedFile = $request->file($fieldName);
-
-        if (!$uploadedFile) {
-            return null;
-        }
-
+        string $disk = 'public',
+    ): string {
         $relativeDir = trim($destinationPath, '/');
 
         $fileName = sprintf(
             '%s.%s',
             Str::uuid()->toString(),
-            $uploadedFile->getClientOriginalExtension()
+            $file->getClientOriginalExtension()
         );
 
-        // Store on the public disk
-        Storage::disk('public')->putFileAs($relativeDir, $uploadedFile, $fileName);
+        Storage::disk($disk)->putFileAs($relativeDir, $file, $fileName);
 
-        // Normalize old file path (it might be stored as just the filename)
         if ($oldFile) {
             $oldNormalized = ltrim($oldFile, '/');
             if ($relativeDir && !str_contains($oldNormalized, '/')) {
                 $oldNormalized = $relativeDir . '/' . $oldNormalized;
             }
-            Storage::disk('public')->delete($oldNormalized);
+            Storage::disk($disk)->delete($oldNormalized);
         }
 
-        $storedPath = $relativeDir ? $relativeDir . '/' . $fileName : $fileName;
-
-        return $fileName;
+        return $relativeDir ? $relativeDir . '/' . $fileName : $fileName;
     }
+
 
     /**
      * Remove a previously stored uploaded file if it exists.
      */
-    protected function deleteUploadedFile(?string $relativePath, ?string $fallbackDir = null): void
+    public static function deleteUploadedFile(
+        ?string $relativePath,
+        ?string $fallbackDir = null,
+        string $disk = 'public',
+    ): void
     {
         if (!$relativePath) {
             return;
@@ -65,8 +61,8 @@ trait HandlesFileUploads
         }
 
         foreach ($candidates as $path) {
-            if (Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
+            if (Storage::disk($disk)->exists($path)) {
+                Storage::disk($disk)->delete($path);
                 break;
             }
         }

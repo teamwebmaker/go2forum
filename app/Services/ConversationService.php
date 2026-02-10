@@ -1,0 +1,106 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Conversation;
+use App\Models\ConversationParticipant;
+use App\Models\Topic;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
+
+class ConversationService
+{
+    public function getOrCreateTopicConversation(int $topicId): Conversation
+    {
+        $topic = Topic::findOrFail($topicId);
+
+        $existing = Conversation::query()
+            ->where('kind', Conversation::KIND_TOPIC)
+            ->where('topic_id', $topic->id)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        Conversation::query()->insertOrIgnore([
+            'kind' => Conversation::KIND_TOPIC,
+            'topic_id' => $topic->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return Conversation::query()
+            ->where('kind', Conversation::KIND_TOPIC)
+            ->where('topic_id', $topic->id)
+            ->firstOrFail();
+    }
+
+    public function getOrCreatePrivateConversation(int $userAId, int $userBId): Conversation
+    {
+        if ($userAId === $userBId) {
+            throw new \InvalidArgumentException('Cannot create a private conversation with the same user.');
+        }
+
+        $user1Id = min($userAId, $userBId);
+        $user2Id = max($userAId, $userBId);
+
+        User::whereKey($user1Id)->firstOrFail();
+        User::whereKey($user2Id)->firstOrFail();
+
+        $conversation = Conversation::query()
+            ->where('kind', Conversation::KIND_PRIVATE)
+            ->where('direct_user1_id', $user1Id)
+            ->where('direct_user2_id', $user2Id)
+            ->first();
+
+        if (!$conversation) {
+            Conversation::query()->insertOrIgnore([
+                'kind' => Conversation::KIND_PRIVATE,
+                'direct_user1_id' => $user1Id,
+                'direct_user2_id' => $user2Id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $conversation = Conversation::query()
+                ->where('kind', Conversation::KIND_PRIVATE)
+                ->where('direct_user1_id', $user1Id)
+                ->where('direct_user2_id', $user2Id)
+                ->firstOrFail();
+        }
+
+        $this->ensureParticipant($conversation->id, $user1Id);
+        $this->ensureParticipant($conversation->id, $user2Id);
+
+        return $conversation;
+    }
+
+    public function listForUser(int $userId): Collection
+    {
+        $conversationIds = ConversationParticipant::query()
+            ->where('user_id', $userId)
+            ->select('conversation_id');
+
+        return Conversation::query()
+            ->whereIn('id', $conversationIds)
+            ->with([
+                'topic:id,title,slug',
+                'directUser1:id,name,surname,image,email_verified_at,is_expert,is_top_commentator',
+                'directUser2:id,name,surname,image,email_verified_at,is_expert,is_top_commentator',
+            ])
+            ->orderByRaw('last_message_at is null')
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    protected function ensureParticipant(int $conversationId, int $userId): void
+    {
+        ConversationParticipant::query()->insertOrIgnore([
+            'conversation_id' => $conversationId,
+            'user_id' => $userId,
+            'joined_at' => now(),
+        ]);
+    }
+}

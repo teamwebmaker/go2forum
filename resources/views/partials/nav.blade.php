@@ -1,7 +1,6 @@
 <header class="sticky top-0 z-50 border-b border-slate-200/70 bg-white shadow-xs">
     @php
         $isAuth = (bool) Auth::user();
-
         $baseLink =
             'relative inline-flex items-center rounded-md px-2 py-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
 
@@ -53,6 +52,8 @@
 
             <div class="flex items-center gap-3">
                 @if ($isAuth)
+                    <livewire:notifications-dropdown />
+
                     <div class="rounded-full ring-1 ring-slate-200/80">
                         <x-user-avatar :user="Auth::user()" />
                     </div>

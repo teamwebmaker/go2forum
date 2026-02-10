@@ -6,19 +6,22 @@
     $isAuthorized = Auth::check();
     $isVerified = $currUser?->isVerified() ?? false;
     $isCategoryVisible = $category?->visibility ?? true;
+    $isBlocked = $currUser?->is_blocked ?? false;
 
     $mine = $mine ?? false;
     $scope = $scope ?? 'all';
     $canFilterMine = $isAuthorized;
 
-    // Topic open state
-    $canOpenTopic = $isAuthorized && $isVerified && $isCategoryVisible;
+    // Topic open state (blocked users should NOT be able to open)
+    $topicDisabledMessage = match (true) {
+        ! $isAuthorized      => 'ფუნქციის გამოსაყენებლად ავტორიზაციაა საჭირო',
+        ! $isVerified        => 'ფუნქციის გამოსაყenებლად ვერიფიკაციაა საჭირო',
+        ! $isCategoryVisible => 'კატეგორია დამალულია',
+        $isBlocked           => 'თქვენი ანგარიში დროებით შეზღუდულია',
+        default              => null,
+    };
 
-    $topicDisabledMessage = !$isAuthorized
-        ? 'ფუნქციის გამოსაყენებლად ავტორიზაციაა საჭირო'
-        : (!$isVerified
-            ? 'ფუნქციის გამოსაყენებლად ვერიფიკაციაა საჭირო'
-            : 'კატეგორია დამალულია');
+    $canOpenTopic = $topicDisabledMessage === null;
 @endphp
 
 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

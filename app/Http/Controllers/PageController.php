@@ -45,6 +45,15 @@ class PageController extends Controller
         ]);
     }
 
+    public function profileMessages(Request $request)
+    {
+        $initialConversationId = $request->integer('conversation') ?: null;
+
+        return view('profile.messages', [
+            'initialConversationId' => $initialConversationId,
+        ]);
+    }
+
 
     public function profileVerification(Request $request)
     {

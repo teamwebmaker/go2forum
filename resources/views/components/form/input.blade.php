@@ -22,6 +22,7 @@
     'infoMessage' => null,
 
     'inputClass' => '',
+    'wrapperClass' => '',
 ])
 
 @php
@@ -86,7 +87,7 @@
     }
 @endphp
 
-<div class="space-y-1.5">
+<div class="space-y-1.5 {{ trim($wrapperClass) }}">
     @if($label)
         <label for="{{ $id }}" class="block text-sm font-medium text-gray-700">
             {{ $label }}

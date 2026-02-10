@@ -6,6 +6,9 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\Api\MessageAttachmentController;
+use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // Pages
@@ -49,6 +52,10 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/profile/badges', [PageController::class, 'profileBadges'])
             ->name('profile.badges');
+
+        Route::get('/profile/messages', [PageController::class, 'profileMessages'])
+            ->middleware('verified.full')
+            ->name('profile.messages');
 
         Route::patch('/profile/user-info', [ProfileController::class, 'update'])
             ->name('profile.user-info.update');
@@ -95,3 +102,37 @@ Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
     ->middleware(['auth', 'signed', 'throttle:email-verify'])
     ->name('verification.verify');
+
+// Messaging (server-side JSON endpoints)
+Route::middleware(['auth', 'verified.full'])->group(function () {
+    Route::post('/topics/{topic}/messages', [MessageController::class, 'sendTopicMessage'])
+        ->middleware('throttle:chat-send');
+    Route::post('/users/{user}/messages', [MessageController::class, 'sendPrivateMessage'])
+        ->middleware('throttle:chat-send');
+
+    Route::get('/conversations/{conversation}/messages', [MessageController::class, 'listConversationMessages']);
+
+    Route::post('/messages/{message}/like', [MessageController::class, 'likeMessage'])
+        ->middleware('throttle:chat-like');
+    Route::delete('/messages/{message}/like', [MessageController::class, 'unlikeMessage'])
+        ->middleware('throttle:chat-like');
+
+    Route::delete('/messages/{message}', [MessageController::class, 'deleteMessage'])
+        ->middleware('throttle:chat-delete');
+
+    Route::post('/topics/{topic}/notifications', [NotificationController::class, 'updateTopic']);
+});
+
+// Notifications
+Route::middleware('auth')->group(function () {
+    Route::get('/messages/attachments/{attachment}', [MessageAttachmentController::class, 'download'])
+        ->middleware('verified.full')
+        ->name('messages.attachments.download');
+
+    Route::delete('/notifications/history', [NotificationController::class, 'clearHistory']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::delete('/notifications', [NotificationController::class, 'clearAll']);
+    Route::get('/notifications/{notification}', [NotificationController::class, 'visit'])
+        ->name('notifications.visit');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy']);
+});
