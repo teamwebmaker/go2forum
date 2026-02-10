@@ -32,7 +32,11 @@ class PageController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        return redirect()->route('profile.user-info', compact('user'));
+        if ($user && $user->role === 'admin') {
+            return redirect()->route('profile.badges');
+        }
+
+        return redirect()->route('profile.user-info');
     }
 
     public function profileBadges()

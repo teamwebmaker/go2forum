@@ -39,34 +39,34 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-    // Profile (redirect admins to /admin)
+    // Profile
+    Route::get('/profile', [PageController::class, 'profile'])
+        ->name('page.profile');
+
+    Route::get('/profile/verification', [PageController::class, 'profileVerification'])
+        ->name('profile.verification');
+
+    // Keep user-info routes inaccessible for admins.
     Route::middleware('redirect.admin')->group(function () {
-        Route::get('/profile', [PageController::class, 'profile'])
-            ->name('page.profile');
-
-        Route::get('/profile/verification', [PageController::class, 'profileVerification'])
-            ->name('profile.verification');
-
         Route::get('/profile/user-info', [ProfileController::class, 'show'])
             ->name('profile.user-info');
-
-        Route::get('/profile/badges', [PageController::class, 'profileBadges'])
-            ->name('profile.badges');
-
-        Route::get('/profile/messages', [PageController::class, 'profileMessages'])
-            ->middleware('verified.full')
-            ->name('profile.messages');
 
         Route::patch('/profile/user-info', [ProfileController::class, 'update'])
             ->name('profile.user-info.update');
 
         Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])
             ->name('profile.password.update');
-
-        Route::delete('/profile', [ProfileController::class, 'destroy'])
-            ->name('profile.destroy');
-
     });
+
+    Route::get('/profile/badges', [PageController::class, 'profileBadges'])
+        ->name('profile.badges');
+
+    Route::get('/profile/messages', [PageController::class, 'profileMessages'])
+        ->middleware('verified.full')
+        ->name('profile.messages');
+
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 
     // Email 
     Route::post('/email/verification-notification', [VerificationController::class, 'resend'])
