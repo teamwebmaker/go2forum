@@ -40,10 +40,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
     // Profile
-    Route::get('/profile', [PageController::class, 'profile'])
+    Route::get('/profile', [ProfileController::class, 'profile'])
         ->name('page.profile');
 
-    Route::get('/profile/verification', [PageController::class, 'profileVerification'])
+    Route::get('/profile/verification', [ProfileController::class, 'profileVerification'])
         ->name('profile.verification');
 
     // Keep user-info routes inaccessible for admins.
@@ -58,12 +58,14 @@ Route::middleware('auth')->group(function () {
             ->name('profile.password.update');
     });
 
-    Route::get('/profile/badges', [PageController::class, 'profileBadges'])
+    Route::get('/profile/badges', [ProfileController::class, 'profileBadges'])
         ->name('profile.badges');
 
-    Route::get('/profile/messages', [PageController::class, 'profileMessages'])
+    Route::get('/profile/messages', [ProfileController::class, 'profileMessages'])
         ->middleware('verified.full')
         ->name('profile.messages');
+
+    Route::get('/profile/activity', [ProfileController::class, 'profileActivity'])->middleware(['verified.full'])->name('profile.activity');
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
@@ -73,7 +75,6 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:email-resend')
         ->name('verification.send');
 
-    // Just In case if we use verify middleware
     Route::get('/email/verify', [VerificationController::class, 'notice'])
         ->name('verification.notice');
 
@@ -86,19 +87,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/phone/verify', [VerificationController::class, 'verifyPhoneCode'])
         ->middleware('throttle:otp-verify')
         ->name('verification.phone.verify');
+
+    // Topics
+    Route::post('/categories/{category}/topics', [TopicController::class, 'store'])
+        ->middleware(['verified.full'])
+        ->name('categories.topics.store');
+
+    Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])
+        ->middleware('verified.full')
+        ->name('topics.show');
 });
 
 // Topics
 Route::get('/categories/{category}/topics', [TopicController::class, 'category'])->name('categories.topics');
-Route::post('/categories/{category}/topics', [TopicController::class, 'store'])
-    ->middleware(['auth', 'verified.full'])
-    ->name('categories.topics.store');
 
-// Topic page
-Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])
-    ->middleware('auth', 'verified.full')
-    ->name('topics.show');
-
+// Email
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
     ->middleware(['auth', 'signed', 'throttle:email-verify'])
     ->name('verification.verify');

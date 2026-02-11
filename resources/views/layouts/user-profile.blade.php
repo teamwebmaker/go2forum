@@ -8,17 +8,22 @@
          <h1 class="text-2xl font-semibold">ჩემი პროფილი</h1>
       </header>
 
-      <nav class="space-y-2 text-sm font-medium sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-2 sm:space-y-0">
+      <nav
+         class="space-y-2 text-sm font-medium sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-2 sm:space-y-0">
          <div class="flex flex-wrap gap-2">
             <a href="{{ route('profile.user-info') }}"
                class="inline-flex min-h-10 items-center justify-center rounded-full border px-3 py-2 transition sm:min-h-0 sm:py-1.5 {{ request()->routeIs('profile.user-info') ? ' border-gray-300 bg-gray-200 text-slate-900' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300' }}">
                ინფორმაცია
             </a>
-
             @if (Auth::user()->isVerified())
+               <a href="{{ route('profile.activity') }}"
+                  class="inline-flex min-h-10 items-center justify-center rounded-full border px-3 py-2 transition sm:min-h-0 sm:py-1.5 {{ request()->routeIs('profile.activity') ? ' border-gray-300 bg-gray-200 text-slate-900' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300' }}">
+                  აქტივობები
+               </a>
+
                <a href="{{ route('profile.messages') }}"
                   class="inline-flex min-h-10 items-center justify-center rounded-full border px-3 py-2 transition sm:min-h-0 sm:py-1.5 {{ request()->routeIs('profile.messages') ? ' border-gray-300 bg-gray-200 text-slate-900' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300' }}">
-                  პირადი ჩატი
+                  პირადი ჩატები
                </a>
             @endif
 
