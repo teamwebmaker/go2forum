@@ -96,7 +96,7 @@ Route::post('/categories/{category}/topics', [TopicController::class, 'store'])
 
 // Topic page
 Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])
-    ->middleware('verified.full')
+    ->middleware('auth', 'verified.full')
     ->name('topics.show');
 
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
