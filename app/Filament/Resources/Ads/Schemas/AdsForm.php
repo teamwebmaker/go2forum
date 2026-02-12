@@ -32,10 +32,10 @@ class AdsForm
                         'image/jpeg',
                         'image/webp',
                     ])
-                    ->maxSize(20) // KB
+                    ->maxSize(50) // KB
                     ->imageEditor()
                     ->imagePreviewHeight('100')
-                    ->helperText('დაშვებული ფორმატები: PNG, JPG, WEBP, მაქს ზომა 20KB.')
+                    ->helperText('დაშვებული ფორმატები: PNG, JPG, WEBP, მაქს ზომა 50KB.')
                     ->downloadable()
                     ->saveUploadedFileUsing(function ($file, callable $get, $record) {
                         $old = $record?->image ?? $get('image');

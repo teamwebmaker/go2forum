@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Ads extends Model
 {
@@ -39,5 +40,17 @@ class Ads extends Model
     public function scopeVisible($query)
     {
         return $query->where('visibility', true);
+    }
+
+    protected static function booted(): void
+    {
+        // Delete image if deleted
+        static::deleted(function (Ads $ad): void {
+            if (!filled($ad->image)) {
+                return;
+            }
+
+            Storage::disk('public')->delete($ad->image);
+        });
     }
 }
