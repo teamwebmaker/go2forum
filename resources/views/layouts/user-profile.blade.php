@@ -16,15 +16,16 @@
                ინფორმაცია
             </a>
             @if (Auth::user()->isVerified())
+               <a href="{{ route('profile.messages') }}"
+                  class="inline-flex min-h-10 items-center justify-center rounded-full border px-3 py-2 transition sm:min-h-0 sm:py-1.5 {{ request()->routeIs('profile.messages') ? ' border-gray-300 bg-gray-200 text-slate-900' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300' }}">
+                  პირადი ჩატები
+               </a>
+
                <a href="{{ route('profile.activity') }}"
                   class="inline-flex min-h-10 items-center justify-center rounded-full border px-3 py-2 transition sm:min-h-0 sm:py-1.5 {{ request()->routeIs('profile.activity') ? ' border-gray-300 bg-gray-200 text-slate-900' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300' }}">
                   აქტივობები
                </a>
 
-               <a href="{{ route('profile.messages') }}"
-                  class="inline-flex min-h-10 items-center justify-center rounded-full border px-3 py-2 transition sm:min-h-0 sm:py-1.5 {{ request()->routeIs('profile.messages') ? ' border-gray-300 bg-gray-200 text-slate-900' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300' }}">
-                  პირადი ჩატები
-               </a>
             @endif
 
             @if (Auth::user()->shouldVerify())

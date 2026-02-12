@@ -3,10 +3,11 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
+use App\Services\AccountDeletionService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class EditUser extends EditRecord
@@ -25,6 +26,11 @@ class EditUser extends EditRecord
         return [
             ViewAction::make(),
             DeleteAction::make()
+                ->using(function (User $record, AccountDeletionService $accountDeletionService): bool {
+                    $accountDeletionService->deleteByAdmin($record);
+
+                    return true;
+                })
                 ->modalHeading(__('models.users.actions.delete.heading'))
         ];
     }

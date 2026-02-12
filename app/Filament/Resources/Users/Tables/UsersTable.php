@@ -3,7 +3,8 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use App\Filament\Resources\Users\UserResource;
-use Filament\Actions\BulkActionGroup;
+use App\Models\User;
+use App\Services\AccountDeletionService;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -11,7 +12,10 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 class UsersTable
 {
@@ -79,6 +83,27 @@ class UsersTable
             ])
             ->toolbarActions([
                 DeleteBulkAction::make()
+                    ->chunkSelectedRecords(100)
+                    ->using(function (
+                        DeleteBulkAction $action,
+                        EloquentCollection | Collection | LazyCollection $records,
+                        AccountDeletionService $accountDeletionService
+                    ): void {
+                        $isFirstException = true;
+
+                        $records->each(function (User $record) use ($action, $accountDeletionService, &$isFirstException): void {
+                            try {
+                                $accountDeletionService->deleteByAdmin($record);
+                            } catch (\Throwable $exception) {
+                                $action->reportBulkProcessingFailure();
+
+                                if ($isFirstException) {
+                                    report($exception);
+                                    $isFirstException = false;
+                                }
+                            }
+                        });
+                    })
                     ->modalHeading(__('models.users.actions.delete.headingBulk')),
             ]);
     }
