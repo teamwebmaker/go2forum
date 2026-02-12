@@ -60,11 +60,6 @@ class TopicsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('category')
-                    ->label(TopicResource::labelFor('category_id'))
-                    ->relationship('category', 'name')
-                    ->searchable()
-                    ->preload(),
                 TernaryFilter::make('has_category')
                     ->label(TopicResource::labelFor('category_id'))
                     ->trueLabel(__('models.topics.filters.with_category'))
@@ -73,6 +68,20 @@ class TopicsTable
                         true: fn($query) => $query->whereNotNull('category_id'),
                         false: fn($query) => $query->whereNull('category_id'),
                     ),
+                SelectFilter::make('category')
+                    ->label(TopicResource::labelFor('category_id'))
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('status')
+                    ->label(TopicResource::labelFor('status'))
+                    ->options([
+                        'active' => __('models.topics.statuses.active'),
+                        'closed' => __('models.topics.statuses.closed'),
+                        'disabled' => __('models.topics.statuses.disabled'),
+                    ])
+                    ->searchable()
+                    ->preload(),
             ])
             ->recordActions([
                 ViewAction::make(),
