@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Topics\Tables;
 
 use App\Filament\Resources\Topics\TopicResource;
+use App\Models\Topic;
+use App\Services\TopicDeletionService;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -12,6 +14,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 class TopicsTable
 {
@@ -90,7 +95,38 @@ class TopicsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->modalHeading(__('models.topics.actions.delete.headingBulk')),
+                        ->label(__('models.topics.actions.delete_only.label'))
+                        ->modalHeading(__('models.topics.actions.delete_only.headingBulk'))
+                        ->modalDescription(__('models.topics.actions.delete_only.description')),
+                    DeleteBulkAction::make('deleteWithThreadData')
+                        ->label(__('models.topics.actions.delete_with_thread.label'))
+                        ->chunkSelectedRecords(100)
+                        ->using(function (
+                            DeleteBulkAction $action,
+                            EloquentCollection|Collection|LazyCollection $records,
+                            TopicDeletionService $topicDeletionService
+                        ): void {
+                            $isFirstException = true;
+
+                            $records->each(function (Topic $record) use (
+                                $action,
+                                $topicDeletionService,
+                                &$isFirstException
+                            ): void {
+                                try {
+                                    $topicDeletionService->deleteWithThreadData($record);
+                                } catch (\Throwable $exception) {
+                                    $action->reportBulkProcessingFailure();
+
+                                    if ($isFirstException) {
+                                        report($exception);
+                                        $isFirstException = false;
+                                    }
+                                }
+                            });
+                        })
+                        ->modalHeading(__('models.topics.actions.delete_with_thread.headingBulk'))
+                        ->modalDescription(__('models.topics.actions.delete_with_thread.description')),
                 ]),
             ]);
     }
