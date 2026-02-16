@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Conversation;
+use App\Models\MessageAttachment;
 use App\Models\Topic;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -17,20 +18,20 @@ class TopicDeletionService
      * - messages / attachments / likes / participants (via FK cascades)
      * - topic notification delivery rows (via message FK cascades)
      * - notifications payload rows that reference this topic_id
-     * - physical attachment files (best effort, after commit)
+     * - physical attachment files (via MessageAttachment model delete listener)
      */
     public function deleteWithThreadData(Topic $topic): void
     {
         $topicId = (int) $topic->getKey();
 
-        $attachmentTargets = DB::transaction(function () use ($topicId): Collection {
+        DB::transaction(function () use ($topicId): void {
             $lockedTopic = Topic::query()
                 ->whereKey($topicId)
                 ->lockForUpdate()
                 ->first();
 
             if (!$lockedTopic) {
-                return collect();
+                return;
             }
 
             $conversationIds = Conversation::query()
@@ -40,17 +41,13 @@ class TopicDeletionService
                 ->map(fn($id) => (int) $id)
                 ->values();
 
-            $attachmentTargets = $this->collectAttachmentTargets($conversationIds);
+            $this->deleteConversationAttachments($conversationIds);
 
             $this->deleteTopicConversations($conversationIds);
             $this->deleteNotificationsByTopicPayload($topicId);
 
             $lockedTopic->delete();
-
-            return $attachmentTargets;
         });
-
-        $this->deletePhysicalAttachmentFiles($attachmentTargets);
     }
 
     /**
@@ -71,33 +68,32 @@ class TopicDeletionService
 
     /**
      * @param Collection<int, int> $conversationIds
-     * @return Collection<int, array{disk:string,path:string}>
      */
-    protected function collectAttachmentTargets(Collection $conversationIds): Collection
+    protected function deleteConversationAttachments(Collection $conversationIds): void
     {
         if ($conversationIds->isEmpty()) {
-            return collect();
+            return;
         }
 
-        /** @var array<string, array{disk:string,path:string}> $targetSet */
-        $targetSet = [];
+        foreach ($conversationIds->chunk(200) as $conversationIdChunk) {
+            DB::table('message_attachments as ma')
+                ->join('messages as m', 'm.id', '=', 'ma.message_id')
+                ->whereIn('m.conversation_id', $conversationIdChunk->all())
+                ->select(['ma.id'])
+                ->chunkById(500, function (Collection $attachmentRows): void {
+                    if ($attachmentRows->isEmpty()) {
+                        return;
+                    }
 
-        DB::table('message_attachments as ma')
-            ->join('messages as m', 'm.id', '=', 'ma.message_id')
-            ->whereIn('m.conversation_id', $conversationIds->all())
-            ->select(['ma.id', 'ma.disk', 'ma.path'])
-            ->chunkById(500, function (Collection $attachments) use (&$targetSet): void {
-                foreach ($attachments as $attachment) {
-                    $disk = (string) $attachment->disk;
-                    $path = (string) $attachment->path;
-                    $targetSet[$disk . '|' . $path] = [
-                        'disk' => $disk,
-                        'path' => $path,
-                    ];
-                }
-            }, 'ma.id', 'id');
+                    $attachments = MessageAttachment::query()
+                        ->whereIn('id', $attachmentRows->pluck('id')->all())
+                        ->get();
 
-        return collect(array_values($targetSet))->values();
+                    foreach ($attachments as $attachment) {
+                        $attachment->delete();
+                    }
+                }, 'ma.id', 'id');
+        }
     }
 
     protected function deleteNotificationsByTopicPayload(int $topicId): void
@@ -121,29 +117,6 @@ class TopicDeletionService
             DB::table('notifications')
                 ->whereIn('id', $idChunk)
                 ->delete();
-        }
-    }
-
-    /**
-     * @param Collection<int, array{disk:string,path:string}> $attachmentTargets
-     */
-    protected function deletePhysicalAttachmentFiles(Collection $attachmentTargets): void
-    {
-        if ($attachmentTargets->isEmpty()) {
-            return;
-        }
-
-        foreach ($attachmentTargets as $attachment) {
-            try {
-                FileUploadService::deleteUploadedFile(
-                    $attachment['path'],
-                    null,
-                    $attachment['disk']
-                );
-            } catch (\Throwable $exception) {
-                // File cleanup should never rollback already committed DB changes.
-                report($exception);
-            }
         }
     }
 }
