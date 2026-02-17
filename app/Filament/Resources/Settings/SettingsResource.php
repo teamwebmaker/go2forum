@@ -25,7 +25,7 @@ class SettingsResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
     // Single settings row; keep it out of global search to avoid bad queries.
     protected static bool $isGloballySearchable = false;
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 777; // just to make it always at the end
 
 
     public static function labelFor(string $field): string

@@ -26,7 +26,6 @@ class MessageResource extends Resource
 
     protected static ?string $navigationParentItem = 'საუბრები';
     protected static bool $isGloballySearchable = false;
-    protected static ?int $navigationSort = 7;
 
     public static function labelFor(string $field): string
     {

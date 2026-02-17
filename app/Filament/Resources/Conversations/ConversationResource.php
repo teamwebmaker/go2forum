@@ -22,7 +22,7 @@ class ConversationResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'id';
     protected static bool $isGloballySearchable = false;
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 4;
 
     public static function labelFor(string $field): string
     {
