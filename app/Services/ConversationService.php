@@ -70,8 +70,7 @@ class ConversationService
                 ->firstOrFail();
         }
 
-        $this->ensureParticipant($conversation->id, $user1Id);
-        $this->ensureParticipant($conversation->id, $user2Id);
+        $this->syncPrivateParticipants($conversation->id, $user1Id, $user2Id);
 
         return $conversation;
     }
@@ -102,5 +101,22 @@ class ConversationService
             'user_id' => $userId,
             'joined_at' => now(),
         ]);
+    }
+
+    /**
+     * Keep private conversation participants aligned with direct_user1/direct_user2.
+     */
+    protected function syncPrivateParticipants(int $conversationId, int $user1Id, int $user2Id): void
+    {
+        $expectedUserIds = [$user1Id, $user2Id];
+
+        ConversationParticipant::query()
+            ->where('conversation_id', $conversationId)
+            ->whereNotIn('user_id', $expectedUserIds)
+            ->delete();
+
+        foreach ($expectedUserIds as $userId) {
+            $this->ensureParticipant($conversationId, $userId);
+        }
     }
 }

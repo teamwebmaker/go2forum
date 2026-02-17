@@ -123,17 +123,12 @@ class MessageServiceSupport
      */
     public function ensureParticipants(Conversation $conversation, int $senderId): void
     {
-        $this->ensureConversationParticipant($conversation->id, $senderId);
-
         if ($conversation->isPrivate()) {
-            $otherId = $conversation->direct_user1_id === $senderId
-                ? $conversation->direct_user2_id
-                : $conversation->direct_user1_id;
-
-            if ($otherId) {
-                $this->ensureConversationParticipant($conversation->id, $otherId);
-            }
+            $this->syncPrivateParticipants($conversation);
+            return;
         }
+
+        $this->ensureConversationParticipant($conversation->id, $senderId);
     }
 
     /**
@@ -185,7 +180,7 @@ class MessageServiceSupport
     }
 
     /**
-     * Ensure the user belongs to the private conversation directly or via participant mapping.
+     * Ensure the user is one of the direct private conversation members.
      *
      * @param Conversation $conversation
      * @param int $userId
@@ -199,16 +194,7 @@ class MessageServiceSupport
             $conversation->direct_user2_id,
         ], true);
 
-        if ($isDirectParticipant) {
-            return;
-        }
-
-        $isMappedParticipant = ConversationParticipant::query()
-            ->where('conversation_id', $conversation->id)
-            ->where('user_id', $userId)
-            ->exists();
-
-        if (!$isMappedParticipant) {
+        if (!$isDirectParticipant) {
             throw new AuthorizationException('You are not allowed to access this private conversation.');
         }
     }
@@ -563,6 +549,30 @@ class MessageServiceSupport
             'user_id' => $userId,
             'joined_at' => now(),
         ]);
+    }
+
+    /**
+     * Keep private participant mapping equal to direct user pair.
+     */
+    protected function syncPrivateParticipants(Conversation $conversation): void
+    {
+        $directUser1Id = $conversation->direct_user1_id ? (int) $conversation->direct_user1_id : null;
+        $directUser2Id = $conversation->direct_user2_id ? (int) $conversation->direct_user2_id : null;
+
+        if (!$directUser1Id || !$directUser2Id) {
+            return;
+        }
+
+        $expectedUserIds = [$directUser1Id, $directUser2Id];
+
+        ConversationParticipant::query()
+            ->where('conversation_id', $conversation->id)
+            ->whereNotIn('user_id', $expectedUserIds)
+            ->delete();
+
+        foreach ($expectedUserIds as $userId) {
+            $this->ensureConversationParticipant($conversation->id, $userId);
+        }
     }
 
     protected function ensureTopicSubscription(int $topicId, int $userId): void
