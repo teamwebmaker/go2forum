@@ -2,3 +2,23 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+
+.fi-ta-table tbody tr.message-row-deleted td {
+    background-color: rgba(254, 242, 242, 0.75);
+}
+
+.fi-ta-table tbody tr.message-row-deleted:hover td {
+    background-color: rgba(254, 226, 226, 0.85);
+}
+
+.dark .fi-ta-table tbody tr.message-row-deleted td {
+    background-color: rgba(127, 29, 29, 0.28);
+}
+
+.dark .fi-ta-table tbody tr.message-row-deleted:hover td {
+    background-color: rgba(127, 29, 29, 0.4);
+}
+
+.message-attachments-repeater .fi-fo-repeater-item-header-collapsible-actions {
+    display: none;
+}
