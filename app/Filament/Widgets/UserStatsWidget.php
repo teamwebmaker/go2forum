@@ -2,8 +2,11 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Ads;
 use App\Models\Category;
+use App\Models\Message;
 use App\Models\PublicDocument;
+use App\Models\Topic;
 use App\Models\User;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget;
@@ -38,23 +41,40 @@ class UserStatsWidget extends StatsOverviewWidget
 
         $totalCategories = Category::count();
         $totalPublicDocuments = PublicDocument::count();
+        $totalTopics = Topic::count();
+        $totalMessages = Message::count();
+        $totalAds = Ads::count();
+
         return [
-            Stat::make('სულ მომხმარებლები', $totalUsers)
+            Stat::make(__('models.users.stats.total'), $totalUsers)
                 ->icon('heroicon-o-user-group')
                 ->color('primary'),
 
-            Stat::make('ახალი მომხმარებლები', $monthlyTotal)
-                ->description('ამჟამინდელი თვის ჭრილში')
+            Stat::make(__('models.users.stats.new_current_month'), $monthlyTotal)
+                ->description(__('models.users.stats.current_month_range'))
                 ->chart($chart)
                 ->color('success'),
 
-            Stat::make('კატეგორიები', $totalCategories)
+            Stat::make(__('models.topics.plural'), $totalTopics)
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->color('warning'),
+
+            Stat::make(__('models.messages.plural'), $totalMessages)
+                ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
+                ->color('success'),
+
+            Stat::make(__('models.categories.plural'), $totalCategories)
                 ->icon('heroicon-o-rectangle-stack')
                 ->color('warning'),
 
-            Stat::make('საჯარო დოკუმენტები', $totalPublicDocuments)
+            Stat::make(__('models.ads.plural'), $totalAds)
+                ->icon('heroicon-o-megaphone')
+                ->color('danger'),
+
+            Stat::make(__('models.public_documents.plural'), $totalPublicDocuments)
                 ->icon('heroicon-o-document-text')
                 ->color('info'),
+
         ];
 
     }

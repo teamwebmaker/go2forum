@@ -259,6 +259,11 @@ return [
     'users' => [
         'singular' => 'მომხმარებელი',
         'plural' => 'მომხმარებლები',
+        'stats' => [
+            'total' => 'სულ მომხმარებლები',
+            'new_current_month' => 'ახალი მომხმარებლები',
+            'current_month_range' => 'ამჟამინდელი თვის ჭრილში',
+        ],
         'fields' => [
             'name' => 'სახელი',
             'surname' => 'გვარი',
