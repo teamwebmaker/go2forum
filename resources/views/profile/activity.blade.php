@@ -56,6 +56,10 @@
 									? ($conversation->topic?->title ?? 'თემა აღარ არსებობს')
 									: ($partner?->full_name ?? 'პირადი მიმოწერა');
 
+								$partnerBadgeColor = $isPrivateConversation
+									? \App\Support\BadgeColors::forUser($partner)
+									: null;
+
 								$conversationUrl = $isTopicConversation
 									? ($conversation->topic?->slug
 										? route('topics.show', $conversation->topic->slug)
@@ -68,9 +72,15 @@
 									<div class="min-w-0 space-y-2">
 										<div class="flex items-center gap-2">
 											@if ($isPrivateConversation && $partner)
-												<x-ui.avatar :user="$partner" size="xs" class="shrink-0" />
+												<x-ui.avatar :user="$partner" size="xs" class="shrink-0" :showBadges="false" />
 											@endif
-											<p class="truncate text-sm font-semibold text-slate-900">{{ $title }}</p>
+											<div class="flex min-w-0 items-center gap-1">
+												@if ($isPrivateConversation && $partnerBadgeColor)
+													<x-ui.avatar-badge iconClass="{{ $partnerBadgeColor }}" iconSizeClass="size-4!"
+														wrapperClass="inline-flex shrink-0" badgeClass="inline-flex" />
+												@endif
+												<p class="truncate text-sm font-semibold text-slate-900">{{ $title }}</p>
+											</div>
 										</div>
 
 										<div class="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-600">

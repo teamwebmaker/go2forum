@@ -84,8 +84,8 @@ class ProfileController extends Controller
             ->withCount('participants')
             ->with([
                 'topic:id,title,slug',
-                'directUser1:id,name,surname,image',
-                'directUser2:id,name,surname,image',
+                'directUser1:id,name,surname,image,is_expert,is_top_commentator',
+                'directUser2:id,name,surname,image,is_expert,is_top_commentator',
                 'participants' => function ($query) use ($user) {
                     $query
                         ->select(['conversation_id', 'user_id', 'joined_at'])
