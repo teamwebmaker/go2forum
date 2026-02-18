@@ -44,13 +44,13 @@
 				</div>
 			</div>
 
-				<div class="mt-3">
-					<x-button type="button" size="sm" wire:click="startConversation" wire:loading.attr="disabled"
-						x-on:click="$dispatch('private-chat-mobile-panels-close')"
-						wire:target="startConversation" :disabled="!$isCurrentUserVerified || ($enforceRecipientVerification && !$recipientPreview['is_email_verified'])">
-						ჩატის გახსნა
-					</x-button>
-				</div>
+			<div class="mt-3">
+				<x-button type="button" size="sm" wire:click="startConversation" wire:loading.attr="disabled"
+					x-on:click="$dispatch('private-chat-mobile-panels-close')" wire:target="startConversation"
+					:disabled="!$isCurrentUserVerified || ($enforceRecipientVerification && !$recipientPreview['is_email_verified'])">
+					ჩატის გახსნა
+				</x-button>
+			</div>
 		</div>
 	@endif
 

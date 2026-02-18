@@ -13,7 +13,7 @@
         wasOpen = open
     " @keydown.escape.window="if (open) open = false">
     <button type="button" x-ref="trigger" @click="open = !open"
-        class="inline-flex items-center rounded-full px-1 py-0.5 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-primary-300"
+        class="inline-flex items-center rounded-full px-1 py-0.5 ring-1 ring-slate-200/80 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-primary-300"
         aria-haspopup="menu" aria-controls="{{ $menuId }}" x-bind:aria-expanded="open ? 'true' : 'false'">
         <x-ui.avatar :user="$user" :size="$size" badgeX="left" />
         <x-app-icon name="chevron-down" variant="m" class="ml-0.5 transition duration-200"

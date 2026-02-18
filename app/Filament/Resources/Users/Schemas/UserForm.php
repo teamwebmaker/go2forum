@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use Filament\Actions\Action;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use App\Services\ImageUploadService;
@@ -11,6 +12,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Database\Eloquent\Model;
 
 class UserForm
@@ -70,9 +72,31 @@ class UserForm
 
                 Grid::make(1)->schema([
                     DateTimePicker::make('email_verified_at')
-                        ->label(UserResource::labelFor('email_verified_at')),
+                        ->label(UserResource::labelFor('email_verified_at'))
+                        ->nullable()
+                        ->dehydrateStateUsing(fn($state) => filled($state) ? $state : null)
+                        ->suffixAction(
+                            Action::make('clearEmailVerifiedAt')
+                                ->icon('heroicon-m-x-mark')
+                                ->color('gray')
+                                ->tooltip(__('models.users.actions.clear_email_verified_at'))
+                                ->visible(fn($state): bool => filled($state))
+                                ->action(fn(Set $set): mixed => $set('email_verified_at', null)),
+                            isInline: true
+                        ),
                     DateTimePicker::make('phone_verified_at')
-                        ->label(UserResource::labelFor('phone_verified_at')),
+                        ->label(UserResource::labelFor('phone_verified_at'))
+                        ->nullable()
+                        ->dehydrateStateUsing(fn($state) => filled($state) ? $state : null)
+                        ->suffixAction(
+                            Action::make('clearPhoneVerifiedAt')
+                                ->icon('heroicon-m-x-mark')
+                                ->color('gray')
+                                ->tooltip(__('models.users.actions.clear_phone_verified_at'))
+                                ->visible(fn($state): bool => filled($state))
+                                ->action(fn(Set $set): mixed => $set('phone_verified_at', null)),
+                            isInline: true
+                        ),
                 ]),
                 TextInput::make('password')
                     ->label(UserResource::labelFor('password'))

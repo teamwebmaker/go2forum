@@ -22,7 +22,7 @@
     @endphp
 
     <nav class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-3">
-        <a class="inline-flex items-center gap-2 rounded-md px-2 py-1 text-lg font-semibold tracking-tight text-slate-900 transition hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+        <a class="inline-flex items-center gap-2 rounded-md px-2 py-1 text-xl font-semibold tracking-tight text-slate-900 transition hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             href="/" aria-label="{{ config('app.name', default: 'go2forum') }}">
             <span class="select-none">{{ config('app.name', default: 'go2forum') }}</span>
         </a>
@@ -54,9 +54,7 @@
                 @if ($isAuth)
                     <livewire:notifications-dropdown />
 
-                    <div class="rounded-full ring-1 ring-slate-200/80">
-                        <x-user-avatar :user="Auth::user()" />
-                    </div>
+                    <x-user-avatar :user="Auth::user()" />
                 @endif
 
                 <button type="button"
