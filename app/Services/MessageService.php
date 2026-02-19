@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Jobs\SendPrivateMessageNotification;
+use App\Jobs\SendTopicReplyNotifications;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageLike;
@@ -70,22 +72,26 @@ class MessageService
                 'last_message_at' => $message->created_at,
             ]);
 
+            $messageId = (int) $message->id;
+            $conversationId = (int) $conversation->id;
+            $topicId = $conversation->topic_id ? (int) $conversation->topic_id : null;
+
             // Send notifications.
             // Notify topic subscribers.
             if ($conversation->isTopic() && $conversation->topic_id) {
                 // Defer notifications until after the transaction commits.
-                DB::afterCommit(function () use ($senderId, $message, $conversation, $support) {
+                DB::afterCommit(function () use ($senderId, $messageId, $conversationId, $topicId): void {
                     try {
-                        $support->notifyTopicSubscribers(
+                        SendTopicReplyNotifications::dispatch(
                             $senderId,
-                            $message->id,
-                            $conversation->topic_id
-                        );
+                            $messageId,
+                            (int) $topicId
+                        )->afterResponse();
                     } catch (\Throwable $exception) {
                         logger()->error('Failed to execute topic notification callback.', [
-                            'message_id' => $message->id,
-                            'conversation_id' => $conversation->id,
-                            'topic_id' => $conversation->topic_id,
+                            'message_id' => $messageId,
+                            'conversation_id' => $conversationId,
+                            'topic_id' => $topicId,
                             'sender_id' => $senderId,
                             'exception_class' => $exception::class,
                             'exception_message' => $exception->getMessage(),
@@ -97,17 +103,17 @@ class MessageService
 
             // Notify private receiver.
             if ($conversation->isPrivate()) {
-                DB::afterCommit(function () use ($senderId, $message, $conversation, $support) {
+                DB::afterCommit(function () use ($senderId, $messageId, $conversationId): void {
                     try {
-                        $support->notifyPrivateReceiver(
+                        SendPrivateMessageNotification::dispatch(
                             $senderId,
-                            $message->id,
-                            $conversation->id
-                        );
+                            $messageId,
+                            $conversationId
+                        )->afterResponse();
                     } catch (\Throwable $exception) {
                         logger()->error('Failed to execute private notification callback.', [
-                            'message_id' => $message->id,
-                            'conversation_id' => $conversation->id,
+                            'message_id' => $messageId,
+                            'conversation_id' => $conversationId,
                             'sender_id' => $senderId,
                             'exception_class' => $exception::class,
                             'exception_message' => $exception->getMessage(),
