@@ -40,4 +40,19 @@
 			</div>
 		@endforelse
 	</div>
+	@if ($hasMoreConversations)
+		<div class="mt-3">
+			<x-button
+				type="button"
+				size="sm"
+				variant="secondary"
+				wire:click="loadMoreConversations"
+				wire:loading.attr="disabled"
+				wire:target="loadMoreConversations"
+				class="w-full justify-center"
+			>
+				მეტის ჩატვირთვა
+			</x-button>
+		</div>
+	@endif
 </div>

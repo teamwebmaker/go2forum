@@ -21,6 +21,8 @@ use Livewire\WithFileUploads;
 
 class PrivateChat extends Component
 {
+    protected const CONVERSATIONS_PER_PAGE = 20;
+
     use WithFileUploads;
     use InteractsWithChatThread;
 
@@ -42,6 +44,8 @@ class PrivateChat extends Component
 
     /** @var array<int, array<string, mixed>> */
     public array $conversations = [];
+    public int $conversationsPage = 1;
+    public bool $hasMoreConversations = false;
 
     /** @var array<int, array<string, mixed>> */
     public array $messages = [];
@@ -175,6 +179,7 @@ class PrivateChat extends Component
         if ($existingConversation) {
             $this->selectedConversationId = $existingConversation->id;
             $this->loadLatest();
+            $this->loadConversations($conversationService);
             return;
         }
 
@@ -364,29 +369,63 @@ class PrivateChat extends Component
         $this->messages[$index]['attachments'] = [];
     }
 
-    protected function loadConversations(ConversationService $conversationService): void
+    public function loadMoreConversations(ConversationService $conversationService): void
     {
-        $conversations = $conversationService->listForUser($this->currentUserId)
-            ->filter(fn(Conversation $conversation) => $conversation->isPrivate())
-            ->values();
+        if (!$this->isCurrentUserVerified || !$this->hasMoreConversations) {
+            return;
+        }
 
-        $this->conversations = $conversations
-            ->map(function (Conversation $conversation) {
-                $otherUser = $this->resolveOtherUser($conversation);
+        $this->loadConversations($conversationService, append: true);
+    }
 
-                return [
-                    'id' => $conversation->id,
-                    'other_user' => $otherUser ? [
-                        'id' => $otherUser->id,
-                        'name' => $otherUser->full_name ?? $otherUser->name,
-                        'avatar' => $otherUser->avatar_url,
-                        'badge_color' => BadgeColors::forUser($otherUser),
-                    ] : null,
-                    'last_message_at' => $conversation->last_message_at,
-                ];
-            })
+    protected function loadConversations(ConversationService $conversationService, bool $append = false): void
+    {
+        $targetPage = $append ? ($this->conversationsPage + 1) : 1;
+
+        $paginator = $conversationService->listForUser(
+            $this->currentUserId,
+            self::CONVERSATIONS_PER_PAGE,
+            $targetPage
+        );
+
+        $mapped = collect($paginator->items())
+            ->filter(fn($conversation): bool => $conversation instanceof Conversation)
+            ->map(fn(Conversation $conversation): array => $this->mapConversationListItem($conversation))
             ->values()
             ->all();
+
+        if ($append) {
+            $this->conversations = collect(array_merge($this->conversations, $mapped))
+                ->unique(fn(array $item): int => (int) ($item['id'] ?? 0))
+                ->values()
+                ->all();
+            $this->conversationsPage = $targetPage;
+            $this->hasMoreConversations = $paginator->hasMorePages();
+            return;
+        }
+
+        $this->conversations = $mapped;
+        $this->conversationsPage = 1;
+        $this->hasMoreConversations = $paginator->hasMorePages();
+
+        if (!$this->selectedConversationId) {
+            return;
+        }
+
+        $alreadyVisible = collect($this->conversations)->contains(
+            fn(array $item): bool => (int) ($item['id'] ?? 0) === (int) $this->selectedConversationId
+        );
+
+        if ($alreadyVisible) {
+            return;
+        }
+
+        $selectedConversation = $this->resolvePrivateConversation($this->selectedConversationId);
+        if (!$selectedConversation) {
+            return;
+        }
+
+        array_unshift($this->conversations, $this->mapConversationListItem($selectedConversation));
     }
 
     protected function resolvePrivateConversation(?int $conversationId): ?Conversation
@@ -447,6 +486,22 @@ class PrivateChat extends Component
         return $conversation->direct_user1_id === $this->currentUserId
             ? $conversation->directUser2
             : $conversation->directUser1;
+    }
+
+    protected function mapConversationListItem(Conversation $conversation): array
+    {
+        $otherUser = $this->resolveOtherUser($conversation);
+
+        return [
+            'id' => $conversation->id,
+            'other_user' => $otherUser ? [
+                'id' => $otherUser->id,
+                'name' => $otherUser->full_name ?? $otherUser->name,
+                'avatar' => $otherUser->avatar_url,
+                'badge_color' => BadgeColors::forUser($otherUser),
+            ] : null,
+            'last_message_at' => $conversation->last_message_at,
+        ];
     }
 
     protected function clearRecipient(): void

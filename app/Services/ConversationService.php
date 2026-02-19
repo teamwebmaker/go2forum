@@ -6,7 +6,7 @@ use App\Models\Conversation;
 use App\Models\ConversationParticipant;
 use App\Models\Topic;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\Paginator as PaginatorContract;
 
 class ConversationService
 {
@@ -75,23 +75,26 @@ class ConversationService
         return $conversation;
     }
 
-    public function listForUser(int $userId): Collection
+    public function listForUser(int $userId, int $perPage = 20, int $page = 1): PaginatorContract
     {
+        $perPage = max(1, $perPage);
+        $page = max(1, $page);
+
         $conversationIds = ConversationParticipant::query()
             ->where('user_id', $userId)
             ->select('conversation_id');
 
         return Conversation::query()
             ->whereIn('id', $conversationIds)
+            ->where('kind', Conversation::KIND_PRIVATE)
             ->with([
-                'topic:id,title,slug',
                 'directUser1:id,name,surname,image,email_verified_at,is_expert,is_top_commentator',
                 'directUser2:id,name,surname,image,email_verified_at,is_expert,is_top_commentator',
             ])
             ->orderByRaw('last_message_at is null')
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
-            ->get();
+            ->simplePaginate($perPage, ['*'], 'page', $page);
     }
 
     protected function ensureParticipant(int $conversationId, int $userId): void
