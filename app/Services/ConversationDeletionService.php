@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Conversation;
+use App\Models\Topic;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -13,31 +14,48 @@ class ConversationDeletionService
      *
      * Removes:
      * - conversation row (DB cascades remove messages, likes, attachments, participants)
-     * - notification rows that reference the conversation_id in JSON payload
+     * - notification rows that reference conversation_id/topic_id in JSON payload
      * - physical attachment files (best effort, after commit)
      */
     public function deleteByAdmin(Conversation $conversation): void
     {
         $conversationId = (int) $conversation->getKey();
 
-        $attachmentTargets = DB::transaction(function () use ($conversationId): Collection {
+        [$attachmentTargets, $notificationContext] = DB::transaction(function () use ($conversationId): array {
             $lockedConversation = Conversation::query()
                 ->whereKey($conversationId)
                 ->lockForUpdate()
                 ->first();
 
             if (!$lockedConversation) {
-                return collect();
+                return [collect(), null];
             }
 
             $attachmentTargets = $this->collectAttachmentTargets($conversationId);
-
-            $this->deleteNotificationsByConversationPayload($conversationId);
+            $notificationContext = [
+                'conversation_id' => $conversationId,
+                'topic_id' => $lockedConversation->topic_id ? (int) $lockedConversation->topic_id : null,
+            ];
 
             $lockedConversation->delete();
 
-            return $attachmentTargets;
+            if ($lockedConversation->isTopic() && $lockedConversation->topic_id) {
+                $this->recalculateTopicMessagesCount((int) $lockedConversation->topic_id);
+            }
+
+            return [$attachmentTargets, $notificationContext];
         });
+
+        if (is_array($notificationContext)) {
+            try {
+                $this->deleteRelatedNotifications(
+                    conversationId: (int) $notificationContext['conversation_id'],
+                    topicId: isset($notificationContext['topic_id']) ? (int) $notificationContext['topic_id'] : null,
+                );
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
 
         $this->deletePhysicalAttachmentFiles($attachmentTargets);
     }
@@ -68,8 +86,40 @@ class ConversationDeletionService
         return collect(array_values($targetSet))->values();
     }
 
-    protected function deleteNotificationsByConversationPayload(int $conversationId): void
+    protected function deleteRelatedNotifications(int $conversationId, ?int $topicId = null): void
     {
+        $conversationId = max(0, $conversationId);
+        $topicId = $topicId && $topicId > 0 ? $topicId : null;
+
+        if ($conversationId === 0 && $topicId === null) {
+            return;
+        }
+
+        try {
+            DB::table('notifications')
+                ->where(function ($query) use ($conversationId, $topicId): void {
+                    if ($conversationId > 0) {
+                        $query->whereRaw(
+                            "JSON_VALID(data) AND CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.conversation_id')) AS UNSIGNED) = ?",
+                            [$conversationId]
+                        );
+                    }
+
+                    if ($topicId !== null) {
+                        $query->orWhereRaw(
+                            "JSON_VALID(data) AND CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.topic_id')) AS UNSIGNED) = ?",
+                            [$topicId]
+                        );
+                    }
+                })
+                ->delete();
+
+            return;
+        } catch (\Throwable $exception) {
+            // Fallback for DB engines/configurations without JSON_* support on text payload.
+            report($exception);
+        }
+
         $deleteIds = [];
 
         foreach (DB::table('notifications')->select(['id', 'data'])->cursor() as $notification) {
@@ -80,7 +130,12 @@ class ConversationDeletionService
             }
 
             $payloadConversationId = isset($payload['conversation_id']) ? (int) $payload['conversation_id'] : null;
-            if ($payloadConversationId === $conversationId) {
+            $payloadTopicId = isset($payload['topic_id']) ? (int) $payload['topic_id'] : null;
+
+            if (
+                ($conversationId > 0 && $payloadConversationId === $conversationId)
+                || ($topicId !== null && $payloadTopicId === $topicId)
+            ) {
                 $deleteIds[] = (string) $notification->id;
             }
         }
@@ -90,6 +145,20 @@ class ConversationDeletionService
                 ->whereIn('id', $idChunk)
                 ->delete();
         }
+    }
+
+    protected function recalculateTopicMessagesCount(int $topicId): void
+    {
+        $messagesCount = (int) DB::table('messages as m')
+            ->join('conversations as c', 'c.id', '=', 'm.conversation_id')
+            ->where('c.kind', Conversation::KIND_TOPIC)
+            ->where('c.topic_id', $topicId)
+            ->whereNull('m.deleted_at')
+            ->count();
+
+        Topic::query()
+            ->whereKey($topicId)
+            ->update(['messages_count' => $messagesCount]);
     }
 
     /**
