@@ -68,6 +68,11 @@ class PrivateChat extends Component
         return ChatAttachmentRules::messages('attachments');
     }
 
+    protected function validationAttributes(): array
+    {
+        return ChatAttachmentRules::attributes('attachments');
+    }
+
     public function mount(?int $initialConversationId = null, ConversationService $conversationService): void
     {
         $user = auth()->user();

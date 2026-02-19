@@ -13,6 +13,7 @@ use App\Models\TopicSubscription;
 use App\Models\User;
 use App\Notifications\PrivateMessageNotification;
 use App\Notifications\TopicReplyNotification;
+use App\Support\ChatAttachmentRules;
 use App\Support\TopicAccessRules;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
@@ -275,6 +276,13 @@ class MessageServiceSupport
             }
 
             $originalMime = $file->getMimeType() ?: 'application/octet-stream';
+
+            if ($originalMime === 'image/svg+xml') {
+                throw ValidationException::withMessages([
+                    'attachments' => [ChatAttachmentRules::svgNotAllowedMessage()],
+                ]);
+            }
+
             $isImage = Str::startsWith($originalMime, 'image/');
 
             try {
@@ -297,7 +305,7 @@ class MessageServiceSupport
                 $mime = $isImage ? 'image/webp' : $originalMime;
             } catch (\Throwable) {
                 throw ValidationException::withMessages([
-                    'attachments' => ['Failed to store one of the attachments.'],
+                    'attachments' => [ChatAttachmentRules::storeFailedMessage()],
                 ]);
             }
 

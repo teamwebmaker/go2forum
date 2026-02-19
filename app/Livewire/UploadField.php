@@ -56,9 +56,14 @@ class UploadField extends Component
                     return;
                 }
 
-                $mime = $value->getMimeType() ?? '';
+                $mime = (string) ($value->getMimeType() ?? '');
+                if ($mime === 'image/svg+xml') {
+                    $fail(ChatAttachmentRules::svgNotAllowedMessage());
+                    return;
+                }
+
                 if (!ChatAttachmentRules::isSupportedMime($mime, $this->docMimes)) {
-                    $fail('The selected file type is not supported.');
+                    $fail(ChatAttachmentRules::unsupportedTypeMessage());
                 }
             },
         ];
@@ -78,6 +83,11 @@ class UploadField extends Component
     protected function messages(): array
     {
         return ChatAttachmentRules::messages('value');
+    }
+
+    protected function validationAttributes(): array
+    {
+        return ChatAttachmentRules::attributes('value');
     }
 
     public function updatedValue(): void

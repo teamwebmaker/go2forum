@@ -24,4 +24,9 @@ class SendMessageRequest extends FormRequest
     {
         return ChatAttachmentRules::messages('attachments');
     }
+
+    public function attributes(): array
+    {
+        return ChatAttachmentRules::attributes('attachments');
+    }
 }

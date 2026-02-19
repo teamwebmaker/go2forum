@@ -79,6 +79,11 @@ class TopicChat extends Component
         return ChatAttachmentRules::messages('attachments');
     }
 
+    protected function validationAttributes(): array
+    {
+        return ChatAttachmentRules::attributes('attachments');
+    }
+
     /* -------------------------------------------------------------------------
      | Lifecycle
      * ------------------------------------------------------------------------- */

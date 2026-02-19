@@ -6,6 +6,8 @@ use Illuminate\Http\UploadedFile;
 
 class ChatAttachmentRules
 {
+    protected const SVG_MIME = 'image/svg+xml';
+
     public static function maxCount(): int
     {
         return max(1, (int) config('chat.attachments_max_count', 5));
@@ -48,6 +50,10 @@ class ChatAttachmentRules
      */
     public static function isSupportedMime(string $mime, ?array $documentMimes = null): bool
     {
+        if ($mime === self::SVG_MIME) {
+            return false;
+        }
+
         if (str_starts_with($mime, 'image/')) {
             return true;
         }
@@ -67,11 +73,16 @@ class ChatAttachmentRules
                 }
 
                 $mime = (string) ($value->getMimeType() ?: '');
+                if ($mime === self::SVG_MIME) {
+                    $fail(static::svgNotAllowedMessage());
+                    return;
+                }
+
                 if (static::isSupportedMime($mime, $documentMimes)) {
                     return;
                 }
 
-                $fail('The selected file type is not supported.');
+                $fail(static::unsupportedTypeMessage());
             },
         ];
     }
@@ -89,10 +100,37 @@ class ChatAttachmentRules
         return 'შეგიძლიათ მაქსიმუმ :max ფაილის ატვირთვა.';
     }
 
+    public static function unsupportedTypeMessage(): string
+    {
+        return 'ფაილის ეს ტიპი მხარდაჭერილი არ არის.';
+    }
+
+    public static function svgNotAllowedMessage(): string
+    {
+        return 'SVG ფაილის ატვირთვა უსაფრთხოების მიზნით აკრძალულია.';
+    }
+
+    public static function storeFailedMessage(): string
+    {
+        return 'ერთ-ერთი დანართის შენახვა ვერ მოხერხდა.';
+    }
+
     public static function messages(string $field = 'attachments'): array
     {
         return [
             $field . '.max' => static::maxCountMessage(),
+            $field . '.array' => 'დანართები არასწორ ფორმატშია გადმოცემული.',
+            $field . '.*.file' => 'გთხოვთ ატვირთოთ სწორი ფაილი.',
+            $field . '.*.max' => 'ფაილის ზომა არ უნდა აღემატებოდეს :max კილობაიტს.',
+            $field . '.*.uploaded' => 'ფაილის ატვირთვა ვერ მოხერხდა.',
+        ];
+    }
+
+    public static function attributes(string $field = 'attachments'): array
+    {
+        return [
+            $field => 'დანართები',
+            $field . '.*' => 'დანართი',
         ];
     }
 }
