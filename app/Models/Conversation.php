@@ -11,6 +11,7 @@ class Conversation extends Model
 
     public const KIND_TOPIC = 'topic';
     public const KIND_PRIVATE = 'private';
+    public const ATTACHMENT_DIR_PREFIX = 'chat/conversation_';
 
     protected $fillable = [
         'kind',

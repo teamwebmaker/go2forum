@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\Topic;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ConversationDeletionService
 {
@@ -16,6 +17,7 @@ class ConversationDeletionService
      * - conversation row (DB cascades remove messages, likes, attachments, participants)
      * - notification rows that reference conversation_id/topic_id in JSON payload
      * - physical attachment files (best effort, after commit)
+     * - physical conversation attachment directory (best effort, after commit)
      */
     public function deleteByAdmin(Conversation $conversation): void
     {
@@ -58,6 +60,18 @@ class ConversationDeletionService
         }
 
         $this->deletePhysicalAttachmentFiles($attachmentTargets);
+
+        if (is_array($notificationContext)) {
+            $disks = $attachmentTargets
+                ->pluck('disk')
+                ->map(fn($disk): string => (string) $disk)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $this->deleteConversationDirectories(collect([(int) $notificationContext['conversation_id']]), $disks);
+        }
     }
 
     /**
@@ -159,6 +173,41 @@ class ConversationDeletionService
         Topic::query()
             ->whereKey($topicId)
             ->update(['messages_count' => $messagesCount]);
+    }
+
+    /**
+     * @param Collection<int, int> $conversationIds
+     * @param array<int, string> $disks
+     */
+    protected function deleteConversationDirectories(Collection $conversationIds, array $disks = []): void
+    {
+        if ($conversationIds->isEmpty()) {
+            return;
+        }
+
+        $defaultDisk = (string) config('chat.attachments_disk', 'public');
+        $allDisks = collect(array_merge([$defaultDisk], $disks))
+            ->map(fn($disk): string => (string) $disk)
+            ->filter()
+            ->unique()
+            ->values();
+
+        foreach ($conversationIds as $conversationId) {
+            $conversationId = (int) $conversationId;
+            if ($conversationId <= 0) {
+                continue;
+            }
+
+            $directory = Conversation::ATTACHMENT_DIR_PREFIX . $conversationId;
+
+            foreach ($allDisks as $disk) {
+                try {
+                    Storage::disk((string) $disk)->deleteDirectory($directory);
+                } catch (\Throwable $exception) {
+                    report($exception);
+                }
+            }
+        }
     }
 
     /**

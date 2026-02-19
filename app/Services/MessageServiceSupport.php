@@ -267,7 +267,7 @@ class MessageServiceSupport
         }
 
         $diskName = config('chat.attachments_disk');
-        $relativeDir = 'chat/conversation_' . $conversation->id;
+        $relativeDir = Conversation::ATTACHMENT_DIR_PREFIX . $conversation->id;
 
         foreach ($files as $file) {
             if (!$file instanceof UploadedFile) {
