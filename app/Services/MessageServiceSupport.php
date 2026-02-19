@@ -66,7 +66,7 @@ class MessageServiceSupport
         if ($conversation->isTopic()) {
             $topic = $this->ensureTopicConversationVisible($conversation);
             $sender = User::find($senderId);
-            if (!$sender || Gate::forUser($sender)->denies('post', $topic)) {
+            if (!($sender instanceof User) || Gate::forUser($sender)->denies('post', $topic)) {
                 throw new AuthorizationException('You are not allowed to post in this topic.');
             }
 
@@ -75,7 +75,7 @@ class MessageServiceSupport
 
         if ($conversation->isPrivate()) {
             $sender = User::find($senderId);
-            if (!$sender || !$sender->isVerified()) {
+            if (!($sender instanceof User) || !$sender->isVerified()) {
                 throw new AuthorizationException('Private chat is available only for verified users.');
             }
 
@@ -154,7 +154,7 @@ class MessageServiceSupport
     public function authorizeMessageReaction(Message $message, int $userId): void
     {
         $reactor = User::find($userId);
-        if (!$reactor) {
+        if (!($reactor instanceof User)) {
             throw new AuthorizationException('You are not allowed to react to this message.');
         }
 
@@ -341,7 +341,11 @@ class MessageServiceSupport
             $message = Message::withTrashed()->find($messageId);
             $sender = User::find($senderId);
 
-            if (!$topic || !$message || !$sender) {
+            if (
+                !($topic instanceof Topic) ||
+                !($message instanceof Message) ||
+                !($sender instanceof User)
+            ) {
                 return;
             }
 
@@ -379,7 +383,7 @@ class MessageServiceSupport
 
             foreach ($pendingIds as $userId) {
                 $receiver = $recipients->get($userId);
-                if (!$receiver) {
+                if (!($receiver instanceof User)) {
                     continue;
                 }
 
@@ -449,10 +453,10 @@ class MessageServiceSupport
             $sender = User::find($senderId);
 
             if (
-                !$conversation ||
+                !($conversation instanceof Conversation) ||
                 !$conversation->isPrivate() ||
-                !$message ||
-                !$sender
+                !($message instanceof Message) ||
+                !($sender instanceof User)
             ) {
                 return;
             }
@@ -468,7 +472,7 @@ class MessageServiceSupport
             $context['receiver_ids'] = [$receiverId];
 
             $receiver = User::find($receiverId);
-            if (!$receiver) {
+            if (!($receiver instanceof User)) {
                 return;
             }
 
@@ -525,7 +529,7 @@ class MessageServiceSupport
             ->select(['id', 'email_verified_at'])
             ->find($receiverId);
 
-        if (!$receiver || is_null($receiver->email_verified_at)) {
+        if (!($receiver instanceof User) || is_null($receiver->email_verified_at)) {
             throw ValidationException::withMessages([
                 'content' => ['მიმოწერა ამ დროისთვის ხელმისაწვდომი არ არის.'],
             ]);
