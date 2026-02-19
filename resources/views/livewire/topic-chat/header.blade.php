@@ -23,15 +23,17 @@
 			</x-button>
 			@auth
 				{{-- Subscribe Bell --}}
-				<x-button type="button" variant="secondary" size="sm" wire:click="toggleSubscription"
-					wire:loading.attr="disabled" wire:target="toggleSubscription"
-					class="rounded-lg! p-1! text-slate-600 hover:text-slate-900 {{ $isSubscribed ? 'text-emerald-600' : 'text-slate-600' }}">
-					@if ($isSubscribed)
-						<x-app-icon name="bell-alert" class="size-5" />
-					@else
-						<x-app-icon name="bell-slash" class="size-5" />
-					@endif
-				</x-button>
+				<x-ui.tooltip position="bottom" text="ამ ღილაკით გამოიწერთ თემას და მიიღებთ შეტყობინებებს.">
+					<x-button type="button" variant="secondary" size="sm" wire:click="toggleSubscription"
+						wire:loading.attr="disabled" wire:target="toggleSubscription"
+						class="rounded-lg! p-1! text-slate-600 hover:text-slate-900 {{ $isSubscribed ? 'text-emerald-600' : 'text-slate-600' }}">
+						@if ($isSubscribed)
+							<x-app-icon name="bell-alert" class="size-5" />
+						@else
+							<x-app-icon name="bell-slash" class="size-5" />
+						@endif
+					</x-button>
+				</x-ui.tooltip>
 			@endauth
 		</div>
 
