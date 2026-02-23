@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 
 // Pages
 Route::get('/', [PageController::class, 'home'])->name('page.home');
+Route::view('/terms', 'pages.terms')->name('page.terms');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');

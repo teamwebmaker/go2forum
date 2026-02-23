@@ -39,7 +39,7 @@
         <div class="flex items-start gap-3 text-sm text-slate-700">
             <input id="terms" type="checkbox" name="terms" value="1" class="mt-1 h-4 w-4 border" {{ old('terms') ? 'checked' : '' }} required>
             <label for="terms" class="leading-5">
-                ვეთანხმები <a href="/terms" class="text-blue-600 underline">წესებს და პირობებს</a>
+                ვეთანხმები <a href="{{ route('page.terms') }}" class="text-blue-600 underline">წესებს და პირობებს</a>
             </label>
         </div>
         @if($errors->has('terms'))

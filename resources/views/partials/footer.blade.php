@@ -11,7 +11,7 @@
           უსაფრთხოება
         </a>
 
-        <a href="/terms" class="transition-colors hover:text-slate-900 hover:underline">
+        <a href="{{ route('page.terms') }}" class="transition-colors hover:text-slate-900 hover:underline">
           წესები & პირობები
         </a>
 
