@@ -7,10 +7,6 @@
       </span>
 
       <nav class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-        <a href="/privacy" class="transition-colors hover:text-slate-900 hover:underline">
-          უსაფრთხოება
-        </a>
-
         <a href="{{ route('page.terms') }}" class="transition-colors hover:text-slate-900 hover:underline">
           წესები & პირობები
         </a>
