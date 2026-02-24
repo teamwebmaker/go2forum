@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\Topic;
-use Illuminate\Support\Facades\Auth;
 
 class TopicAccessRules
 {
@@ -11,9 +10,8 @@ class TopicAccessRules
     {
         $topic->loadMissing('category');
 
-        return Auth::check() && (bool) $topic->visibility
+        return (bool) $topic->visibility
             && (bool) $topic->category?->visibility
             && $topic->status !== 'disabled';
     }
 }
-

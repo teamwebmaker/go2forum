@@ -14,8 +14,8 @@
 
     // Topic open state (blocked users should NOT be able to open)
     $topicDisabledMessage = match (true) {
-        ! $isAuthorized      => 'ფუნქციის გამოსაყენებლად საჭიროა ავტორიზაციაა',
-        ! $isVerified        => 'ფუნქციის გამოსაყენებლად საჭიროა ვერიფიკაციაა',
+        ! $isAuthorized      => 'ფუნქციის გამოსაყენებლად საჭიროა ავტორიზაცია',
+        ! $isVerified        => 'ფუნქციის გამოსაყენებლად საჭიროა ვერიფიკაცია',
         ! $isCategoryVisible => 'კატეგორია დამალულია',
         $isBlocked           => 'თქვენი ანგარიში დროებით შეზღუდულია',
         default              => null,

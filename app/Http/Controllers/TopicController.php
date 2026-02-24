@@ -6,6 +6,7 @@ use App\Models\Topic;
 use App\Models\Category;
 use App\Models\TopicSubscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TopicController extends Controller
 {
@@ -48,7 +49,7 @@ class TopicController extends Controller
     public function show(Topic $topic)
     {
         $topic->loadMissing('category');
-        abort_unless((bool) auth()->user()?->can('view', $topic), 404);
+        abort_unless(Gate::allows('view', $topic), 404);
 
         $canPost = (bool) auth()->user()?->can('post', $topic);
 

@@ -94,13 +94,11 @@ Route::middleware('auth')->group(function () {
         ->middleware(['verified.full'])
         ->name('categories.topics.store');
 
-    Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])
-        ->middleware('verified.full')
-        ->name('topics.show');
 });
 
 // Topics
 Route::get('/categories/{category}/topics', [TopicController::class, 'category'])->name('categories.topics');
+Route::get('/topic/{topic:slug}', [TopicController::class, 'show'])->name('topics.show');
 
 // Email
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
