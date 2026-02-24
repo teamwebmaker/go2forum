@@ -20,7 +20,7 @@
                 class="inline-flex items-center rounded-md bg-primary-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-600/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900/20">
                 მთავარ გვერდზე
             </a>
-            <a href="mailto:info@go2forum" target="_blank" rel="noopener noreferrer"
+            <a href="{{ config('services.support.gmail_compose_url') }}" target="_blank" rel="noopener noreferrer"
                 class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400/20">
                 დაგვიკავშირდით
             </a>

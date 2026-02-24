@@ -11,7 +11,7 @@
           წესები & პირობები
         </a>
 
-        <a href="mailto:info@go2forum" target="_blank" rel="noopener noreferrer"
+        <a href="{{ config('services.support.gmail_compose_url') }}" target="_blank" rel="noopener noreferrer"
           class="transition-colors hover:text-slate-900 hover:underline">
           კონტაქტი
         </a>

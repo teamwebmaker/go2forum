@@ -9,13 +9,13 @@
       <span>
          თქვენს ანგარიშზე დროებითი შეზღუდვები მოქმედებს აპლიკაციის გამოყენების წესების დარღვევის გამო.
          დამატებითი ინფორმაციისთვის გთხოვთ გაეცნოთ
-         <a href="" class="underline font-medium">
+         <a href="{{ route('page.terms') }}" class="underline font-medium">
             წესებსა და პირობებს
          </a>
          ან
-         <a href="" class="underline font-medium">
-            დაგვიკავშირდით
-         </a>.
+         <a href="{{ config('services.support.gmail_compose_url') }}" target="_blank" rel="noopener noreferrer" class="underline font-medium">
+            დაგვიკავშირდით.
+         </a>
       </span>
    </x-ui.alert>
 

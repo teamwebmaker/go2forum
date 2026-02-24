@@ -40,4 +40,12 @@ return [
         ],
     ],
 
+    'support' => [
+        'email' => env('SUPPORT_EMAIL', 'info@go2forum.ge'),
+        'gmail_compose_url' => env(
+            'SUPPORT_GMAIL_COMPOSE_URL',
+            'https://mail.google.com/mail/u/0/?fs=1&to=info@go2forum.ge&tf=cm'
+        ),
+    ],
+
 ];
