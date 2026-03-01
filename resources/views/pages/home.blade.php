@@ -4,8 +4,7 @@
 
 @section('content')
    <div class="relative flex w-full flex-col gap-8 overflow-visible">
-      <x-hero.banner title="ფორუმი" subtitle="აღმოაჩინე კატეგორიები და სასარგებლო საჯარო დოკუმენტები."
-         :image="asset('images/hero-banner.jpg')" position="50% 30%" overlay="bg-cyan-950/70" class="mb-2" />
+      <x-hero.banner :banner="$banner" />
 
       <div class="flex w-full flex-col gap-8 pt-4">
          <div class="grid grid-cols-1 gap-3 lg:grid-cols-[1.1fr_auto_1fr] lg:items-start">

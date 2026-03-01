@@ -232,6 +232,38 @@ return [
             ],
         ]
     ],
+    'banners' => [
+        'singular' => 'ბანერი',
+        'plural' => 'ბანერები',
+        'fields' => [
+            'key' => 'გასაღები',
+            'title' => 'სათაური',
+            'subtitle' => 'ქვესათაური',
+            'image' => 'სურათი',
+            'position' => 'ფონის პოზიცია',
+            'overlay_class' => 'გადაფარვის კლასი',
+            'container_class' => 'კონტეინერის კლასი',
+            'visibility' => 'ხილვადობა',
+            'created_at' => 'შეიქმნა',
+            'updated_at' => 'ბოლოს განახლდა',
+        ],
+        'titles' => [
+            'edit' => 'ბანერის რედაქტირება',
+        ],
+        'actions' => [
+            'delete' => [
+                'heading' => 'ბანერის წაშლა',
+                'headingBulk' => 'ბანერების წაშლა',
+                'description' => '',
+                'actionLabel' => ''
+            ],
+            'view' => [
+                'heading' => 'ბანერის ნახვა',
+                'description' => '',
+                'actionLabel' => '',
+            ],
+        ]
+    ],
     'public_documents' => [
         'singular' => 'დოკუმენტი',
         'plural' => 'დოკუმენტები',

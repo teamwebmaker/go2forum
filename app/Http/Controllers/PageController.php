@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Category;
 use App\Models\PublicDocument;
 
@@ -9,6 +10,11 @@ class PageController extends Controller
 {
     public function home()
     {
+        $banner = Banner::query()
+            ->forKey(Banner::HOME_KEY)
+            ->visible()
+            ->first();
+
         $categories = Category::with([
             'ad' => fn($q) => $q->visible(),
         ])
@@ -21,6 +27,6 @@ class PageController extends Controller
             ->orderBy('order')
             ->get();
 
-        return view('pages.home', compact('categories', 'documents'));
+        return view('pages.home', compact('banner', 'categories', 'documents'));
     }
 }
