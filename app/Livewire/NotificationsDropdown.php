@@ -8,7 +8,7 @@ use Livewire\Component;
 
 class NotificationsDropdown extends Component
 {
-    private const LIST_LIMIT = 10;
+    // private const LIST_LIMIT = 10;
     private const PRUNE_THRESHOLD = 20;
     private const PRUNE_KEEP = 5;
 
@@ -114,7 +114,7 @@ class NotificationsDropdown extends Component
 
         $this->notificationItems = $user->notifications()
             ->latest()
-            ->limit(self::LIST_LIMIT)
+            // ->limit(self::LIST_LIMIT)
             ->get()
             ->map(function ($notification): array {
                 return [

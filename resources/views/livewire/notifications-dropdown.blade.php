@@ -102,22 +102,11 @@
 
         <div
             class="flex items-center rounded-b-xl border-t border-slate-200 bg-white text-sm font-medium text-slate-700">
-            <div class="hidden whitespace-nowrap px-2 py-1.5 text-xs text-slate-500 xs:block">
-                ყველას:
-            </div>
-
             <x-button type="button" variant="ghost" size="md" wire:click="markAllRead" wire:loading.attr="disabled"
                 wire:loading.class="opacity-60" wire:target="markAllRead" :disabled="$unreadCount <= 0"
                 class="flex-1 rounded-none border-x border-slate-200 py-3.5 text-slate-600 hover:bg-slate-100 hover:text-slate-700"
                 textClass="text-xs font-semibold">
-                წაკითხულად მონიშვნა
-            </x-button>
-
-            <x-button type="button" variant="ghost" size="md" wire:click="clearAll" wire:loading.attr="disabled"
-                wire:loading.class="opacity-60" wire:target="clearAll" :disabled="empty($notificationItems)"
-                class="flex-1 rounded-none py-3.5 text-rose-600 hover:bg-slate-100 hover:text-rose-700"
-                textClass="text-xs font-semibold">
-                წაშლა
+                ყველას წაკითხულად მონიშვნა
             </x-button>
         </div>
     </div>
