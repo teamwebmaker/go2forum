@@ -113,15 +113,15 @@
 								</span>
 							@endif
 
-							{{-- Delete --}}
-							@if ($isMine)
-								<button type="button" wire:click="deleteMessage({{ $message['id'] }})" wire:loading.attr="disabled"
-									wire:target="deleteMessage({{ $message['id'] }})"
-									class="rounded-full px-2.5 py-1 text-red-600 ring-1 ring-transparent transition hover:ring-red-200 hover:bg-red-50">
-									<x-app-icon name="trash" class="size-4.5!" />
-									<span class="sr-only">Delete</span>
-								</button>
-							@endif
+							{{-- Disable delete button --}}
+							{{-- @if ($isMine)
+							<button type="button" wire:click="deleteMessage({{ $message['id'] }})" wire:loading.attr="disabled"
+								wire:target="deleteMessage({{ $message['id'] }})"
+								class="rounded-full px-2.5 py-1 text-red-600 ring-1 ring-transparent transition hover:ring-red-200 hover:bg-red-50">
+								<x-app-icon name="trash" class="size-4.5!" />
+								<span class="sr-only">Delete</span>
+							</button>
+							@endif --}}
 						</div>
 					@endif
 				</article>
