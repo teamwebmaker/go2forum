@@ -8,52 +8,28 @@ use App\Models\Message;
 use App\Models\PublicDocument;
 use App\Models\Topic;
 use App\Models\User;
-use Carbon\Carbon;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Database\Eloquent\Builder;
 
-class UserStatsWidget extends StatsOverviewWidget
+class OverviewStatsWidget extends StatsOverviewWidget
 {
+    use InteractsWithPageFilters;
+
     protected function getStats(): array
     {
-        $start = Carbon::now()->startOfMonth();
-        $end = Carbon::now();
-
-        // Get daily counts for current month
-        $countsByDate = User::query()
-            ->whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
-            ->groupBy('day')
-            ->orderBy('day')
-            ->pluck('total', 'day');
-
-        // Build chart array with zero-fill for missing days
-        $chart = [];
-        $cursor = $start->copy();
-        while ($cursor->lessThanOrEqualTo($end)) {
-            $dayKey = $cursor->toDateString();
-            $chart[] = (int) ($countsByDate[$dayKey] ?? 0);
-            $cursor->addDay();
-        }
-
-        $monthlyTotal = array_sum($chart);
-        $totalUsers = User::count();
-
-        $totalCategories = Category::count();
-        $totalPublicDocuments = PublicDocument::count();
-        $totalTopics = Topic::count();
-        $totalMessages = Message::count();
-        $totalAds = Ads::count();
+        $totalUsers = $this->countFor(User::query());
+        $totalCategories = $this->countFor(Category::query());
+        $totalPublicDocuments = $this->countFor(PublicDocument::query());
+        $totalTopics = $this->countFor(Topic::query());
+        $totalMessages = $this->countFor(Message::query());
+        $totalAds = $this->countFor(Ads::query());
 
         return [
-            Stat::make(__('models.users.stats.total'), $totalUsers)
+            Stat::make(__('models.users.plural'), $totalUsers)
                 ->icon('heroicon-o-user-group')
                 ->color('primary'),
-
-            Stat::make(__('models.users.stats.new_current_month'), $monthlyTotal)
-                ->description(__('models.users.stats.current_month_range'))
-                ->chart($chart)
-                ->color('success'),
 
             Stat::make(__('models.topics.plural'), $totalTopics)
                 ->icon('heroicon-o-chat-bubble-left-right')
@@ -77,6 +53,29 @@ class UserStatsWidget extends StatsOverviewWidget
 
         ];
 
+    }
+
+    protected function countFor(Builder $query): int
+    {
+        return $this->applyPeriodFilter($query)->count();
+    }
+
+    protected function applyPeriodFilter(Builder $query): Builder
+    {
+        $period = (string) ($this->pageFilters['period'] ?? 'all');
+
+        if ($period === 'yesterday') {
+            return $query->whereBetween('created_at', [
+                now()->subDay()->startOfDay(),
+                now()->subDay()->endOfDay(),
+            ]);
+        }
+
+        if (!in_array($period, ['1', '3', '6', '12'], true)) {
+            return $query;
+        }
+
+        return $query->where('created_at', '>=', now()->subMonthsNoOverflow((int) $period)->startOfDay());
     }
 
     protected function getColumns(): int|array

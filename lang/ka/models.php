@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'dashboard' => [
+        'filters' => [
+            'heading' => 'ფილტრი',
+            'period' => 'პერიოდი',
+            'options' => [
+                'all' => 'ALL',
+                'yesterday' => 'გუშინ',
+                'past_1_month' => '1 თვის წინ',
+                'past_3_months' => '3 თვის წინ',
+                'past_6_months' => '6 თვის წინ',
+                'past_12_months' => '1 წლის წინ',
+            ],
+        ],
+    ],
     'settings' => [
         'singular' => 'პარამეტრი',
         'plural' => 'პარამეტრები',
