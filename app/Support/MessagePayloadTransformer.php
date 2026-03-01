@@ -28,6 +28,7 @@ class MessagePayloadTransformer
                 'id' => $sender?->id,
                 'name' => $senderName,
                 'avatar' => $sender?->avatar_url,
+                'badge_icon' => BadgeColors::iconForUser($sender),
                 'badge_color' => BadgeColors::forUser($sender),
             ],
             'author_label' => ($currentUserId && (int) ($sender?->id ?? 0) === $currentUserId)

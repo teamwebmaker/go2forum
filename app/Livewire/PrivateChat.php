@@ -34,9 +34,9 @@ class PrivateChat extends Component
     public string $recipientEmail = '';
     public ?int $recipientId = null;
 
-    /** @var array{id:int,name:string,avatar:?string,is_email_verified:bool,badge_color:?string}|null */
+    /** @var array{id:int,name:string,avatar:?string,is_email_verified:bool,badge_icon:?string,badge_color:?string}|null */
     public ?array $recipientPreview = null;
-    /** @var array{id:int,name:string,avatar:?string,is_email_verified:bool,badge_color:?string}|null */
+    /** @var array{id:int,name:string,avatar:?string,is_email_verified:bool,badge_icon:?string,badge_color:?string}|null */
     public ?array $activeRecipient = null;
     public ?int $activeRecipientId = null;
 
@@ -143,6 +143,7 @@ class PrivateChat extends Component
             'name' => $recipient->full_name ?? $recipient->name,
             'avatar' => $recipient->avatar_url,
             'is_email_verified' => !is_null($recipient->email_verified_at),
+            'badge_icon' => BadgeColors::iconForUser($recipient),
             'badge_color' => BadgeColors::forUser($recipient),
         ];
     }
@@ -468,6 +469,7 @@ class PrivateChat extends Component
             'name' => $otherUser->full_name ?? $otherUser->name,
             'avatar' => $otherUser->avatar_url,
             'is_email_verified' => !is_null($otherUser->email_verified_at),
+            'badge_icon' => BadgeColors::iconForUser($otherUser),
             'badge_color' => BadgeColors::forUser($otherUser),
         ];
     }
@@ -498,6 +500,7 @@ class PrivateChat extends Component
                 'id' => $otherUser->id,
                 'name' => $otherUser->full_name ?? $otherUser->name,
                 'avatar' => $otherUser->avatar_url,
+                'badge_icon' => BadgeColors::iconForUser($otherUser),
                 'badge_color' => BadgeColors::forUser($otherUser),
             ] : null,
             'last_message_at' => $conversation->last_message_at,

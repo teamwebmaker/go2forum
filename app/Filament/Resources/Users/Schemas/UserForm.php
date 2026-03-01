@@ -111,9 +111,21 @@ class UserForm
                 Grid::make(2)->schema([
                     Toggle::make('is_expert')
                         ->label(UserResource::labelFor('is_expert'))
+                        ->live()
+                        ->afterStateUpdated(function ($state, Set $set): void {
+                            if ($state) {
+                                $set('is_top_commentator', false);
+                            }
+                        })
                         ->required(),
                     Toggle::make('is_top_commentator')
                         ->label(UserResource::labelFor('is_top_commentator'))
+                        ->live()
+                        ->afterStateUpdated(function ($state, Set $set): void {
+                            if ($state) {
+                                $set('is_expert', false);
+                            }
+                        })
                         ->required(),
                     Toggle::make('is_blocked')
                         ->label(UserResource::labelFor('is_blocked'))

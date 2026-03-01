@@ -27,8 +27,9 @@
 					class="max-w-2xl w-full sm:w-[85%] rounded-2xl border px-4 py-3 shadow-sm {{ $isMine ? 'bg-primary-50/40 border-primary-200' : 'bg-white border-slate-200' }} ">
 					<div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
 						<span class="inline-flex items-center gap-1">
-							@if (!empty($message['sender']['badge_color']))
-								<x-ui.avatar-badge iconClass="{{ $message['sender']['badge_color'] }}" iconSizeClass="size-4!"
+							@if (!empty($message['sender']['badge_icon']))
+								<x-ui.avatar-badge iconName="{{ $message['sender']['badge_icon'] }}"
+									iconClass="{{ $message['sender']['badge_color'] }}" iconSizeClass="size-4!"
 									wrapperClass="inline-flex" badgeClass="inline-flex" />
 							@endif
 							<span class="font-semibold pt-0.5 text-slate-800">{{ $authorLabel }}</span>

@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 {
@@ -130,6 +131,15 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
      */
     protected static function booted(): void
     {
+        static::saving(function (User $user): void {
+            if ($user->is_expert && $user->is_top_commentator) {
+                throw ValidationException::withMessages([
+                    'is_expert' => 'მომხმარებელი ერთდროულად ვერ იქნება ექსპერტიც და ტოპ კომენტატორიც.',
+                    'is_top_commentator' => 'მომხმარებელი ერთდროულად ვერ იქნება ექსპერტიც და ტოპ კომენტატორიც.',
+                ]);
+            }
+        });
+
         static::deleting(function (User $user) {
             // Nothing to cleanup
             if (!$user->image) {

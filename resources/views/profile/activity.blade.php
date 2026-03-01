@@ -59,6 +59,9 @@
 								$partnerBadgeColor = $isPrivateConversation
 									? \App\Support\BadgeColors::forUser($partner)
 									: null;
+								$partnerBadgeIcon = $isPrivateConversation
+									? \App\Support\BadgeColors::iconForUser($partner)
+									: null;
 
 								$conversationUrl = $isTopicConversation
 									? ($conversation->topic?->slug
@@ -75,8 +78,9 @@
 												<x-ui.avatar :user="$partner" size="xs" class="shrink-0" :showBadges="false" />
 											@endif
 											<div class="flex min-w-0 items-center gap-1">
-												@if ($isPrivateConversation && $partnerBadgeColor)
-													<x-ui.avatar-badge iconClass="{{ $partnerBadgeColor }}" iconSizeClass="size-4!"
+												@if ($isPrivateConversation && $partnerBadgeIcon)
+													<x-ui.avatar-badge iconName="{{ $partnerBadgeIcon }}"
+														iconClass="{{ $partnerBadgeColor }}" iconSizeClass="size-4!"
 														wrapperClass="inline-flex shrink-0" badgeClass="inline-flex" />
 												@endif
 												<p class="truncate text-sm font-semibold text-slate-900">{{ $title }}</p>

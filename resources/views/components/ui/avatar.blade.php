@@ -12,6 +12,7 @@
     $initials = $user?->initials ?? '?';
     $avatarUrl = $user?->avatar_url;
 
+    $badgeIcon = BadgeColors::iconForUser($user);
     $badgeColor = BadgeColors::forUser($user);
 
     $sizes = [
@@ -51,8 +52,9 @@
     </span>
 
 @if ($showBadges)
-    @if ($badgeColor)
+    @if ($badgeIcon)
         <x-ui.avatar-badge
+            iconName="{{ $badgeIcon }}"
             iconClass="{{ $badgeColor }}"
             iconSizeClass="{{ $currentSize['icon'] }}"
             wrapperClass="{{ $position }}"

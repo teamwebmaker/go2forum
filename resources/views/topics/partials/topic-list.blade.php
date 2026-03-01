@@ -10,6 +10,7 @@
 
             // User badge
             $showUserBadge = $user && ($user->is_expert || $user->is_top_commentator);
+            $badgeIcon = $user ? BadgeColors::iconForUser($user) : null;
             $badgeColor = $user ? BadgeColors::forUser($user) : null;
 
             // Render <a> when enabled, <div> when disabled (no href="#" anti-pattern)
@@ -49,8 +50,8 @@
 
                         <p class="flex items-center gap-1 text-xs text-slate-500">
                             <span class="flex items-center gap-0.5 font-medium text-slate-700">
-                                @if ($showUserBadge)
-                                    <x-ui.avatar-badge iconClass="{{ $badgeColor }}" iconSizeClass="size-2" />
+                                @if ($showUserBadge && $badgeIcon)
+                                    <x-ui.avatar-badge iconName="{{ $badgeIcon }}" iconClass="{{ $badgeColor }}" iconSizeClass="size-2" />
                                 @endif
 
                                 {{ $user?->name }} {{ $user?->surname }}

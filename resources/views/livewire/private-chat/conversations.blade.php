@@ -24,8 +24,9 @@
 					@endif
 						<div class="min-w-0 flex-1">
 							<div class="flex min-w-0 items-center gap-1 text-sm font-medium text-slate-800">
-								@if (!empty($other['badge_color']))
-									<x-ui.avatar-badge iconClass="{{ $other['badge_color'] }}" iconSizeClass="size-4!"
+								@if (!empty($other['badge_icon']))
+									<x-ui.avatar-badge iconName="{{ $other['badge_icon'] }}"
+										iconClass="{{ $other['badge_color'] }}" iconSizeClass="size-4!"
 										wrapperClass="inline-flex shrink-0" badgeClass="inline-flex" />
 								@endif
 								<span class="truncate">{{ $other['name'] ?? 'Unknown user' }}</span>

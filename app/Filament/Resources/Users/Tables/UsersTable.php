@@ -48,10 +48,12 @@ class UsersTable
                     ->label(UserResource::labelFor('image')),
                 IconColumn::make('is_expert')
                     ->label(UserResource::labelFor('is_expert'))
-                    ->boolean(),
+                    ->icon(fn(bool $state): string => $state ? 'heroicon-o-star' : 'heroicon-o-minus')
+                    ->color(fn(bool $state): string => $state ? 'info' : 'gray'),
                 IconColumn::make('is_top_commentator')
                     ->label(UserResource::labelFor('is_top_commentator'))
-                    ->boolean(),
+                    ->icon(fn(bool $state): string => $state ? 'heroicon-o-check-badge' : 'heroicon-o-minus')
+                    ->color(fn(bool $state): string => $state ? 'warning' : 'gray'),
                 IconColumn::make('is_blocked')
                     ->label(UserResource::labelFor('is_blocked'))
                     ->boolean(),
