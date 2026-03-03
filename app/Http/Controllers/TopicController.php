@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Topic;
 use App\Models\Category;
+use App\Models\Conversation;
 use App\Models\TopicSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -29,6 +30,7 @@ class TopicController extends Controller
             ->with([
                 'user:id,name,surname,is_expert,is_top_commentator',
                 'category:id,name',
+                'conversation:id,topic_id,last_message_at',
             ])
             ->visible()
             ->where('category_id', $category->id)
@@ -38,6 +40,12 @@ class TopicController extends Controller
                 $q->where('title', 'like', "%{$escaped}%");
             })
             ->orderByDesc('pinned')
+            ->orderByDesc(
+                Conversation::query()
+                    ->select('last_message_at')
+                    ->whereColumn('topic_id', 'topics.id')
+                    ->limit(1)
+            )
             ->orderByDesc('messages_count')
             ->orderByDesc('id')
             ->paginate(10)

@@ -15,6 +15,11 @@
 
             // Render <a> when enabled, <div> when disabled (no href="#" anti-pattern)
             $tag = $isDisabled ? 'div' : 'a';
+
+            $lastMessageAt = $topic->conversation?->last_message_at;
+            $lastActivityLabel = $lastMessageAt
+                ? $lastMessageAt->locale('ka')->translatedFormat('d M Y H:i')
+                : null;
         @endphp
 
         <{{ $tag }}
@@ -51,7 +56,8 @@
                         <p class="flex items-center gap-1 text-xs text-slate-500">
                             <span class="flex items-center gap-0.5 font-medium text-slate-700">
                                 @if ($showUserBadge && $badgeIcon)
-                                    <x-ui.avatar-badge iconName="{{ $badgeIcon }}" iconClass="{{ $badgeColor }}" iconSizeClass="size-2" />
+                                    <x-ui.avatar-badge iconName="{{ $badgeIcon }}" iconClass="{{ $badgeColor }}"
+                                        iconSizeClass="size-2" />
                                 @endif
 
                                 {{ $user?->name }} {{ $user?->surname }}
@@ -68,8 +74,16 @@
                     @endif
                 </div>
 
-                {{-- Messages count --}}
-                <x-ui.messages-count :count="$topic->messages_count" class="text-primary-600" />
+                <div class="flex items-center gap-3">
+                    @if ($lastActivityLabel)
+                        <span class="text-[11px] text-slate-500 whitespace-nowrap">
+                            ბოლო აქტივობა: {{ $lastActivityLabel }}
+                        </span>
+                    @endif
+
+                    {{-- Messages count --}}
+                    <x-ui.messages-count :count="$topic->messages_count" class="text-primary-600" />
+                </div>
             </div>
         </{{ $tag }}>
     @empty
