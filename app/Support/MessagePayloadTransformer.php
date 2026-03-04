@@ -20,6 +20,7 @@ class MessagePayloadTransformer
         $isDeleted = $message->trashed();
         $isPrivateConversation = (bool) $message->conversation?->isPrivate();
         $senderName = $sender?->full_name ?? $sender?->name;
+        $canEdit = $message->isEditableBy($currentUserId);
 
         return [
             'id' => $message->id,
@@ -37,6 +38,9 @@ class MessagePayloadTransformer
             'content' => $isDeleted ? null : $message->content,
             'created_at' => $message->created_at?->toISOString(),
             'created_at_label' => $message->created_at?->format('m/d/Y, h:ia'),
+            'edited_at' => $message->edited_at?->toISOString(),
+            'edited_at_label' => $message->edited_at?->format('m/d/Y, h:ia'),
+            'is_edited' => !is_null($message->edited_at),
             'attachments' => $isDeleted
                 ? []
                 : $message->attachments->map(function (MessageAttachment $attachment) use ($isPrivateConversation) {
@@ -56,6 +60,7 @@ class MessagePayloadTransformer
             'is_deleted' => $isDeleted,
             'like_count' => max(0, $likeCount),
             'liked_by_me' => $currentUserId ? $likedByMe : false,
+            'can_edit' => $isDeleted ? false : $canEdit,
         ];
     }
 

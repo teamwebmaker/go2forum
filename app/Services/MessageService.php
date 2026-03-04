@@ -186,6 +186,68 @@ class MessageService
     }
 
     /**
+     * Edit a message content.
+     * - Only author can edit
+     * - Editing is allowed only within the configured edit window (1 day)
+     * - Preserves first/original content and latest edited version in dedicated columns
+     *
+     * @throws AuthorizationException
+     * @throws ValidationException
+     */
+    public function editMessage(
+        Message $message,
+        int $currentUserId,
+        ?string $newContent,
+        bool $topicOnly = false
+    ): Message {
+        $support = $this->support();
+        $message->loadMissing(['conversation', 'attachments', 'sender']);
+
+        if ((int) ($message->sender_id ?? 0) !== $currentUserId) {
+            throw new AuthorizationException('You can only edit your own messages.');
+        }
+
+        $conversation = $message->conversation;
+        if (!$conversation) {
+            throw new AuthorizationException('Conversation not found for this message.');
+        }
+
+        if ($topicOnly && !$conversation->isTopic()) {
+            throw new AuthorizationException('Editing is available only for topic messages.');
+        }
+
+        $support->authorizeConversationRead($conversation, $currentUserId);
+
+        if (!$message->isEditableBy($currentUserId)) {
+            throw ValidationException::withMessages([
+                'content' => ['მესიჯის ჩასწორება შესაძლებელია მხოლოდ 24 საათის განმავლობაში.'],
+            ]);
+        }
+
+        $normalized = $support->normalizeContent($newContent);
+        if (!$normalized) {
+            throw ValidationException::withMessages([
+                'content' => ['შესანახად მიუთითეთ ტექსტი.'],
+            ]);
+        }
+
+        if ($normalized === (string) ($message->content ?? '')) {
+            return $message->load(['attachments', 'sender', 'conversation:id,kind']);
+        }
+
+        return DB::transaction(function () use ($message, $normalized) {
+            $message->forceFill([
+                'original_content' => $message->original_content ?? $message->content,
+                'edited_content' => $normalized,
+                'content' => $normalized,
+                'edited_at' => now(),
+            ])->save();
+
+            return $message->fresh(['attachments', 'sender', 'conversation:id,kind']);
+        });
+    }
+
+    /**
      * Like a message and return the updated like count.
      *
      * @param Message $message

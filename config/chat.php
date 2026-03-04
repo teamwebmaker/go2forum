@@ -22,5 +22,6 @@ return [
         'send_per_minute' => (int) env('CHAT_RATE_LIMIT_SEND_PER_MINUTE', 10),
         'like_per_minute' => (int) env('CHAT_RATE_LIMIT_LIKE_PER_MINUTE', 60),
         'delete_per_minute' => (int) env('CHAT_RATE_LIMIT_DELETE_PER_MINUTE', 30),
+        'edit_per_minute' => (int) env('CHAT_RATE_LIMIT_EDIT_PER_MINUTE', 20),
     ],
 ];

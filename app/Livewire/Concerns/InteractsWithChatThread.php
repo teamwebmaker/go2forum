@@ -153,6 +153,11 @@ trait InteractsWithChatThread
         return max(1, (int) config('chat.rate_limits.delete_per_minute', 30));
     }
 
+    protected function editRateLimit(): int
+    {
+        return max(1, (int) config('chat.rate_limits.edit_per_minute', 20));
+    }
+
     protected function rateLimitDecaySeconds(): int
     {
         return max(1, (int) config('chat.rate_limits.window_seconds', 60));

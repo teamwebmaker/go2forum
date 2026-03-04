@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\Topic;
 use App\Models\TopicSubscription;
 use App\Support\ChatAttachmentRules;
+use App\Support\MessagePayloadTransformer;
 use App\Services\ConversationService;
 use App\Services\MessageService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -51,6 +52,9 @@ class TopicChat extends Component
     public bool $hasMore = true; // When false, there are no more older messages to fetch.
 
     public string $content = ''; // The text being composed by the user
+
+    public ?int $editingMessageId = null;
+    public string $editContent = '';
 
     /**
      * Attachments selected in the composer.
@@ -252,6 +256,92 @@ class TopicChat extends Component
         $this->loadLatest();
     }
 
+    public function startEditMessage(int $messageId): void
+    {
+        if (!$this->currentUserId) {
+            return;
+        }
+
+        $index = $this->findMessageIndex($messageId);
+        if ($index === null) {
+            return;
+        }
+
+        $payload = $this->messages[$index] ?? [];
+        $isMine = (int) ($payload['sender']['id'] ?? 0) === $this->currentUserId;
+        $canEdit = (bool) ($payload['can_edit'] ?? false);
+        $isDeleted = (bool) ($payload['is_deleted'] ?? false);
+
+        if (!$isMine || !$canEdit || $isDeleted) {
+            return;
+        }
+
+        $this->editingMessageId = $messageId;
+        $this->editContent = (string) ($payload['content'] ?? '');
+        $this->resetErrorBag('editContent');
+    }
+
+    public function cancelEditMessage(): void
+    {
+        $this->editingMessageId = null;
+        $this->editContent = '';
+        $this->resetErrorBag('editContent');
+    }
+
+    public function saveEditedMessage(MessageService $messageService): void
+    {
+        if (!$this->currentUserId || !$this->editingMessageId) {
+            return;
+        }
+
+        if ($this->isRateLimited('topic-chat', 'edit', $this->editRateLimit())) {
+            $this->addError('editContent', 'ჩასწორება დროებით შეზღუდულია.');
+            return;
+        }
+
+        $this->resetErrorBag(['editContent', 'chat']);
+
+        $message = Message::query()->find($this->editingMessageId);
+        if (!$message) {
+            $this->cancelEditMessage();
+            return;
+        }
+
+        try {
+            $message = $messageService->editMessage(
+                $message,
+                $this->currentUserId,
+                $this->editContent,
+                true
+            );
+        } catch (ValidationException $exception) {
+            $first = collect($exception->errors())->flatten()->first();
+            $this->addError('editContent', (string) ($first ?: 'ვალიდაციის შეცდომა.'));
+            return;
+        } catch (AuthorizationException $exception) {
+            $this->addError('chat', $exception->getMessage());
+            return;
+        } catch (\Throwable $exception) {
+            report($exception);
+            $this->addError('chat', 'მესიჯის ჩასწორება ვერ მოხერხდა.');
+            return;
+        }
+
+        $index = $this->findMessageIndex($message->id);
+        if ($index !== null) {
+            $likeCount = (int) ($this->messages[$index]['like_count'] ?? 0);
+            $likedByMe = (bool) ($this->messages[$index]['liked_by_me'] ?? false);
+            $this->messages[$index] = app(MessagePayloadTransformer::class)->transform(
+                $message,
+                $this->currentUserId,
+                $likeCount,
+                $likedByMe
+            );
+        }
+
+        $this->cancelEditMessage();
+    }
+
     /**
      * Toggle like/unlike for a given message id.
      * - Updates the DB via MessageService
@@ -347,6 +437,10 @@ class TopicChat extends Component
         $this->messages[$index]['is_deleted'] = true;
         $this->messages[$index]['content'] = null;
         $this->messages[$index]['attachments'] = [];
+
+        if ((int) $this->editingMessageId === $messageId) {
+            $this->cancelEditMessage();
+        }
     }
 
     /* -------------------------------------------------------------------------

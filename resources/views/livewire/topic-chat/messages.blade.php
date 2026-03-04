@@ -16,6 +16,9 @@
 			@php
 				$isMine = (int) ($message['sender']['id'] ?? 0) === $currentUserId;
 				$isDeleted = (bool) ($message['is_deleted'] ?? false);
+				$canEdit = $isMine && (bool) ($message['can_edit'] ?? false) && !$isDeleted;
+				$isEditing = (int) ($editingMessageId ?? 0) === (int) ($message['id'] ?? 0);
+				$isEdited = (bool) ($message['is_edited'] ?? false);
 				$likeCount = (int) ($message['like_count'] ?? 0);
 				$likedByMe = (bool) ($message['liked_by_me'] ?? false);
 				$authorLabel = $message['author_label'] ?? ($isMine ? 'მე' : ($message['sender']['name'] ?? 'User'));
@@ -34,7 +37,12 @@
 							@endif
 							<span class="font-semibold pt-0.5 text-slate-800">{{ $authorLabel }}</span>
 						</span>
-						<span class="tabular-nums">{{ $createdAt }}</span>
+						<span class="inline-flex items-center gap-1 tabular-nums">
+							<span>{{ $createdAt }}</span>
+							@if ($isEdited)
+								<span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">ჩასწორებული</span>
+							@endif
+						</span>
 					</div>
 
 					<div class="mt-2 text-sm leading-relaxed text-slate-800 wrap-break-word">
@@ -42,6 +50,32 @@
 							<span class="text-slate-500 italic">
 								{{ $isMine ? 'თქვენ წაშალაეთ ეს მესიჯი.' : 'ეს მესიჯი წაშლილია ავტორის მიერ.' }}
 							</span>
+						@elseif ($isEditing)
+							<div class="space-y-2">
+								<textarea wire:model.defer="editContent" rows="3"
+									class="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition"></textarea>
+
+								@if ((int) $editingMessageId === (int) $message['id'])
+									@php
+										$editError = $errors->first('editContent');
+									@endphp
+									@if ($editError)
+										<p class="text-xs text-rose-600">{{ $editError }}</p>
+									@endif
+								@endif
+
+								<div class="flex justify-end gap-2">
+									<button type="button" wire:click="cancelEditMessage"
+										class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100">
+										გაუქმება
+									</button>
+									<button type="button" wire:click="saveEditedMessage" wire:loading.attr="disabled"
+										wire:target="saveEditedMessage"
+										class="inline-flex items-center rounded-md border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 transition hover:border-primary-300 hover:bg-primary-100">
+										შენახვა
+									</button>
+								</div>
+							</div>
 						@else
 							{{ $message['content'] ?? '' }}
 						@endif
@@ -113,15 +147,14 @@
 								</span>
 							@endif
 
-							{{-- Disable delete button --}}
-							{{-- @if ($isMine)
-							<button type="button" wire:click="deleteMessage({{ $message['id'] }})" wire:loading.attr="disabled"
-								wire:target="deleteMessage({{ $message['id'] }})"
-								class="rounded-full px-2.5 py-1 text-red-600 ring-1 ring-transparent transition hover:ring-red-200 hover:bg-red-50">
-								<x-app-icon name="trash" class="size-4.5!" />
-								<span class="sr-only">Delete</span>
-							</button>
-							@endif --}}
+							@if ($canEdit && !$isEditing)
+								<button type="button" wire:click="startEditMessage({{ $message['id'] }})"
+									wire:loading.attr="disabled" wire:target="startEditMessage({{ $message['id'] }})"
+									class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-800 hover:ring-slate-300">
+									<x-app-icon name="pencil-square" class="size-4!" />
+									<span>ჩასწორება</span>
+								</button>
+							@endif
 						</div>
 					@endif
 				</article>
