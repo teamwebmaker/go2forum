@@ -31,6 +31,13 @@ class UpdateProfileRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:2', 'max:30'],
             'surname' => ['required', 'string', 'min:2', 'max:40'],
+            'nickname' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                Rule::unique('users', 'nickname')->ignore($userId),
+            ],
             'email' => [
                 'required',
                 'string',
@@ -59,6 +66,13 @@ class UpdateProfileRequest extends FormRequest
             ]);
         }
 
+        $nickname = $this->input('nickname');
+        if (is_string($nickname)) {
+            $this->merge([
+                'nickname' => mb_strtolower(trim($nickname)),
+            ]);
+        }
+
         $rawPhone = $this->input('phone');
         if ($rawPhone) {
             $digits = PhoneNormalizer::normalizeGe((string) $rawPhone);
@@ -73,7 +87,8 @@ class UpdateProfileRequest extends FormRequest
 
         return [
             'email.unique' => 'განახლება ვერ მოხერხდა. გთხოვთ, სცადეთ სხვა ელ.ფოსტა.',
-            'phone.unique' => 'განახლება ვერ მოხერხდა. გთხოვთ, სცადეთ სხვა ტელეფონი.'
+            'phone.unique' => 'განახლება ვერ მოხერხდა. გთხოვთ, სცადეთ სხვა ტელეფონი.',
+            'nickname.unique' => 'განახლება ვერ მოხერხდა. გთხოვთ, სცადეთ სხვა ზედმეტსახელი.',
         ];
     }
 }

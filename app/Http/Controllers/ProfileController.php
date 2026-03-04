@@ -192,7 +192,7 @@ class ProfileController extends Controller
         $updates = [];
         $removeImage = $request->boolean('remove_image');
 
-        foreach (['name', 'surname', 'email', 'phone'] as $field) {
+        foreach (['name', 'surname', 'nickname', 'email', 'phone'] as $field) {
             if (array_key_exists($field, $data) && $data[$field] !== $user->{$field}) {
                 $updates[$field] = $data[$field];
             }

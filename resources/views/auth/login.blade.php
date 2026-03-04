@@ -15,7 +15,8 @@
         @csrf
 
         <div class="space-y-4">
-            <x-form.input name="email" type="email" label="ელ.ფოსტა" placeholder="jane@example.com" required />
+            <x-form.input name="email" type="text" label="ელ.ფოსტა ან ზედმეტსახელი"
+                placeholder="jane@example.com ან janeExample123" required />
 
             <x-form.input name="password" type="password" label="პაროლი" minlength="6" placeholder="••••••••" required />
         </div>

@@ -33,8 +33,21 @@ class AuthController extends Controller
     {
         $attributes = $request->validated();
         $remember = $request->boolean('remember');
+        $identifier = mb_strtolower(trim((string) $attributes['email']));
 
-        if (!Auth::attempt(['email' => $attributes['email'], 'password' => $attributes['password']], $remember)) {
+        $authenticated = Auth::attempt([
+            'email' => $identifier,
+            'password' => $attributes['password'],
+        ], $remember);
+
+        if (!$authenticated) {
+            $authenticated = Auth::attempt([
+                'nickname' => $identifier,
+                'password' => $attributes['password'],
+            ], $remember);
+        }
+
+        if (!$authenticated) {
             return back()->withInput()->with(['error' => 'ავტორიზაციის მონაცემები არასწორია.']);
         }
 
@@ -60,6 +73,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $attrs['name'],
             'surname' => $attrs['surname'],
+            'nickname' => $attrs['nickname'],
             'email' => $attrs['email'],
             'phone' => $attrs['phone'],
             'password' => Hash::make($attrs['password']),

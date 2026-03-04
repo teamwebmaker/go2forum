@@ -29,6 +29,7 @@ class StoreSignUpRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:2', 'max:30'],
             'surname' => ['required', 'string', 'min:2', 'max:40'],
+            'nickname' => ['required', 'string', 'min:2', 'max:50', 'unique:users,nickname'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => [
                 Rule::requiredIf($shouldPhoneVerify),
@@ -50,6 +51,7 @@ class StoreSignUpRequest extends FormRequest
         return [
             'email.unique' => $genericDuplicate,
             'phone.unique' => $genericDuplicate,
+            'nickname.unique' => $genericDuplicate,
         ];
     }
 
@@ -61,6 +63,13 @@ class StoreSignUpRequest extends FormRequest
         if ($email) {
             $this->merge([
                 'email' => mb_strtolower(trim((string) $email)),
+            ]);
+        }
+
+        $nickname = $this->input('nickname');
+        if (is_string($nickname)) {
+            $this->merge([
+                'nickname' => mb_strtolower(trim($nickname)),
             ]);
         }
 

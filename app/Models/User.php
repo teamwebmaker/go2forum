@@ -25,6 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     protected $fillable = [
         'name',
         'surname',
+        'nickname',
         'email',
         'phone',
         'email_verified_at',
@@ -98,6 +99,13 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     public function setEmailAttribute($value): void
     {
         $this->attributes['email'] = is_string($value)
+            ? mb_strtolower(trim($value))
+            : $value;
+    }
+
+    public function setNicknameAttribute($value): void
+    {
+        $this->attributes['nickname'] = is_string($value)
             ? mb_strtolower(trim($value))
             : $value;
     }
