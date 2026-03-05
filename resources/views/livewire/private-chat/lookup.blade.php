@@ -29,20 +29,10 @@
 
 	@if ($recipientPreview)
 		<div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-			<div class="flex items-center gap-2">
-				@if ($recipientPreview['avatar'])
-					<img src="{{ $recipientPreview['avatar'] }}" alt="{{ $recipientPreview['name'] }}"
-						class="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200" />
-				@else
-					<div
-						class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
-						{{ mb_strtoupper(mb_substr($recipientPreview['name'], 0, 1)) }}
-					</div>
-				@endif
-				<div class="min-w-0">
-					<div class="truncate text-sm font-semibold text-slate-900">{{ $recipientPreview['name'] }}</div>
-				</div>
-			</div>
+			<x-chat.user-identity :name="$recipientPreview['name']" :avatar="$recipientPreview['avatar'] ?? null"
+				:showBadge="false" wrapperClass="flex items-center gap-2" textWrapperClass="min-w-0"
+				nameClass="truncate text-sm font-semibold text-slate-900" avatarSizeClass="h-9 w-9 text-xs"
+				avatarFallbackClass="rounded-full bg-slate-200 font-semibold text-slate-700" />
 
 			<div class="mt-3">
 				<x-button type="button" size="sm" wire:click="startConversation" wire:loading.attr="disabled"

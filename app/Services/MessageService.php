@@ -166,7 +166,7 @@ class MessageService
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit($limit)
-            ->with(['sender:id,name,surname,image,is_expert,is_top_commentator', 'attachments', 'conversation:id,kind'])
+            ->with(['sender:id,name,surname,nickname,image,is_expert,is_top_commentator', 'attachments', 'conversation:id,kind'])
             ->get();
 
         $messageIds = $messages->pluck('id');

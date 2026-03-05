@@ -13,27 +13,14 @@
 				x-on:click="$dispatch('private-chat-mobile-panels-close')"
 				class="w-full rounded-xl border px-3 py-2 text-left transition {{ $isActive ? 'border-primary-300 bg-primary-50' : 'border-slate-200 bg-white hover:bg-slate-50' }}">
 				<div class="flex items-center gap-2">
-					@if (!empty($other['avatar']))
-						<img src="{{ $other['avatar'] }}" alt="{{ $other['name'] }}"
-							class="h-8 w-8 rounded-full object-cover ring-1 ring-slate-200" />
-					@else
-						<div
-							class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-700">
-							{{ mb_strtoupper(mb_substr($other['name'] ?? 'U', 0, 1)) }}
-						</div>
-					@endif
-						<div class="min-w-0 flex-1">
-							<div class="flex min-w-0 items-center gap-1 text-sm font-medium text-slate-800">
-								@if (!empty($other['badge_icon']))
-									<x-ui.avatar-badge iconName="{{ $other['badge_icon'] }}"
-										iconClass="{{ $other['badge_color'] }}" iconSizeClass="size-4!"
-										wrapperClass="inline-flex shrink-0" badgeClass="inline-flex" />
-								@endif
-								<span class="truncate">{{ $other['name'] ?? 'Unknown user' }}</span>
-							</div>
-							<div class="text-xs text-slate-500">{{ $lastMessageAt }}</div>
-						</div>
-					</div>
+					<x-chat.user-identity :name="$other['name'] ?? 'Unknown user'" :secondary="$lastMessageAt"
+						:avatar="$other['avatar'] ?? null" :badgeIcon="$other['badge_icon'] ?? null"
+						:badgeColor="$other['badge_color'] ?? ''" badgePlacement="inline"
+						wrapperClass="flex min-w-0 flex-1 items-center gap-2"
+						textWrapperClass="min-w-0 flex-1" nameClass="truncate text-sm font-medium text-slate-800"
+						secondaryClass="text-xs text-slate-500" avatarSizeClass="h-8 w-8 text-[11px]"
+						avatarFallbackClass="rounded-full bg-slate-200 font-semibold text-slate-700" />
+				</div>
 			</button>
 		@empty
 			<div class="rounded-xl border border-dashed border-slate-200 px-3 py-5 text-center text-xs text-slate-500">

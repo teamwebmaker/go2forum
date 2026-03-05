@@ -19,7 +19,7 @@ class MessagePayloadTransformer
         $sender = $message->sender;
         $isDeleted = $message->trashed();
         $isPrivateConversation = (bool) $message->conversation?->isPrivate();
-        $senderName = $sender?->full_name ?? $sender?->name;
+        $senderFullName = $sender?->full_name ?? $sender?->name;
         $canEdit = $message->isEditableBy($currentUserId);
 
         return [
@@ -27,14 +27,16 @@ class MessagePayloadTransformer
             'conversation_id' => $message->conversation_id,
             'sender' => [
                 'id' => $sender?->id,
-                'name' => $senderName,
+                'name' => $senderFullName,
+                'full_name' => $senderFullName,
+                'nickname' => $sender?->nickname,
                 'avatar' => $sender?->avatar_url,
                 'badge_icon' => BadgeColors::iconForUser($sender),
                 'badge_color' => BadgeColors::forUser($sender),
             ],
             'author_label' => ($currentUserId && (int) ($sender?->id ?? 0) === $currentUserId)
                 ? 'მე'
-                : ($senderName ?? 'User'),
+                : ($senderFullName ?? 'User'),
             'content' => $isDeleted ? null : $message->content,
             'created_at' => $message->created_at?->toISOString(),
             'created_at_label' => $message->created_at?->format('m/d/Y, h:ia'),
