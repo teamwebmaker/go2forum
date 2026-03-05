@@ -45,7 +45,7 @@
                 </span>
             @endif
 
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <div class="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
                     {{-- Topic title --}}
                     <div>
@@ -74,15 +74,15 @@
                     @endif
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
                     @if ($lastActivityLabel)
-                        <span class="text-[11px] text-slate-500 whitespace-nowrap">
-                            ბოლო აქტივობა: {{ $lastActivityLabel }}
+                        <span class="min-w-0 text-[11px] text-slate-500 sm:whitespace-nowrap">
+                            <span class="font-medium">ბოლო აქტივობა:</span> {{ $lastActivityLabel }}
                         </span>
                     @endif
 
                     {{-- Messages count --}}
-                    <x-ui.messages-count :count="$topic->messages_count" class="text-primary-600" />
+                    <x-ui.messages-count :count="$topic->messages_count" class="shrink-0 text-primary-600" />
                 </div>
             </div>
         </{{ $tag }}>

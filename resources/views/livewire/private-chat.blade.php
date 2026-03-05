@@ -3,8 +3,7 @@
 	@private-chat-mobile-panels-close.window="mobilePanelsOpen = false"
 	@private-chat-mobile-panels-open.window="mobilePanelsOpen = true">
 	<div class="order-1 lg:hidden">
-		<x-button type="button" size="sm" variant="secondary"
-			@click="
+		<x-button type="button" size="sm" variant="secondary" @click="
 				const next = !mobilePanelsOpen;
 				mobilePanelsOpen = next;
 				if (next) {
@@ -13,15 +12,14 @@
 						block: 'start'
 					}));
 				}
-			"
-			x-bind:aria-expanded="mobilePanelsOpen ? 'true' : 'false'" class="w-full justify-center">
+			" x-bind:aria-expanded="mobilePanelsOpen ? 'true' : 'false'" class="w-full justify-center">
 			<span x-text="mobilePanelsOpen ? 'პანელის დამალვა' : 'ჩატები და მიმღების ძიება'"></span>
 		</x-button>
 	</div>
 
 	<div class="order-3 lg:order-1 lg:col-span-1">
 		<div x-ref="mobilePanels" class="space-y-4 hidden lg:block" x-cloak
-			x-bind:class="mobilePanelsOpen ? '!block' : 'hidden'">
+			x-bind:class="mobilePanelsOpen ? 'block!' : 'hidden'">
 			@include('livewire.private-chat.lookup')
 			@include('livewire.private-chat.conversations')
 		</div>

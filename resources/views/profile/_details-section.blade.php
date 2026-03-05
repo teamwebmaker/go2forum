@@ -1,6 +1,6 @@
 <section class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-black/5"
     aria-labelledby="profile-basic-info-title">
-    <div class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-slate-50/80 to-transparent"></div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-linear-to-b from-slate-50/80 to-transparent"></div>
 
     <div class="relative">
         <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
