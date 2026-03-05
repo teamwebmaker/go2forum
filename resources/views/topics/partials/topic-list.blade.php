@@ -20,6 +20,8 @@
             $lastActivityLabel = $lastMessageAt
                 ? $lastMessageAt->locale('ka')->translatedFormat('d M Y H:i')
                 : null;
+            $fullName = trim(($user?->name ?? '') . ' ' . ($user?->surname ?? ''));
+            $nickname = trim((string) ($user?->nickname ?? ''));
         @endphp
 
         <{{ $tag }}
@@ -53,16 +55,19 @@
                             {{ $topic->title }}
                         </p>
 
-                        <p class="flex items-center gap-1 text-xs text-slate-500">
-                            <span class="flex items-center gap-0.5 font-medium text-slate-700">
-                                @if ($showUserBadge && $badgeIcon)
-                                    <x-ui.avatar-badge iconName="{{ $badgeIcon }}" iconClass="{{ $badgeColor }}"
-                                        iconSizeClass="size-2" />
-                                @endif
+                        <div class="mt-1 flex min-w-0 items-start gap-1">
+                            @if ($showUserBadge && $badgeIcon)
+                                <x-ui.avatar-badge iconName="{{ $badgeIcon }}" iconClass="{{ $badgeColor }}"
+                                    iconSizeClass="size-2" wrapperClass="mt-0.5 shrink-0" />
+                            @endif
 
-                                {{ $user?->name }} {{ $user?->surname }}
-                            </span>
-                        </p>
+                            <div class="min-w-0">
+                                <p class="truncate text-xs font-medium text-slate-700">
+                                    {{ $nickname !== '' ? $nickname : '—' }}
+                                </p>
+                                <p class="truncate text-[11px] text-slate-500">{{ $fullName !== '' ? $fullName : '—' }}</p>
+                            </div>
+                        </div>
                     </div>
 
                     @if ($isDisabled)

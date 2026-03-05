@@ -28,7 +28,7 @@ class TopicController extends Controller
 
         $topics = Topic::query()
             ->with([
-                'user:id,name,surname,is_expert,is_top_commentator',
+                'user:id,name,surname,nickname,is_expert,is_top_commentator',
                 'category:id,name',
                 'conversation:id,topic_id,last_message_at',
             ])
