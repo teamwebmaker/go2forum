@@ -7,7 +7,8 @@
 			toggleAriaLabel="Toggle attachments" contentErrorClass="mt-1 text-xs text-rose-600" sendInline
 			sendWrapperClass="flex align-self-end justify-end" sendButtonVariant="primary" sendButtonSize="md"
 			sendButtonClass="min-w-27.5" uploadOuterClass=""
-			:uploadKey="'topic-chat-upload-' . $this->getId() . '-' . $topic->id" />
+			:uploadKey="'topic-chat-upload-' . $this->getId() . '-' . $topic->id"
+			:replyContext="$replyToContext" cancelReplyAction="cancelReply" />
 	</div>
 @else
 	<div class="border-t border-slate-100 bg-slate-50 px-4 py-4 text-sm text-slate-600">

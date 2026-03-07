@@ -14,7 +14,9 @@ use App\Services\MessageService;
 use App\Services\MessageServiceSupport;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -26,8 +28,11 @@ class PrivateChat extends Component
     use WithFileUploads;
     use InteractsWithChatThread;
 
+    #[Locked]
     public int $currentUserId = 0;
+    #[Locked]
     public bool $isCurrentUserVerified = false;
+    #[Locked]
     public bool $enforceRecipientVerification = false;
     public bool $chatOpen = false;
 
@@ -58,6 +63,10 @@ class PrivateChat extends Component
     public string $content = '';
     /** @var array<int, TemporaryUploadedFile|string|array|null> */
     public array $attachments = [];
+    public ?int $replyToMessageId = null;
+    /** @var array{id:int,author:string,content:string}|null */
+    public ?array $replyToContext = null;
+    public string $composerIdempotencyKey = '';
 
     protected function rules(): array
     {
@@ -83,6 +92,7 @@ class PrivateChat extends Component
         $this->currentUserId = $user?->id ?? 0;
         $this->isCurrentUserVerified = $user ? (bool) $user->isVerified() : false;
         $this->enforceRecipientVerification = Settings::shouldEmailVerify();
+        $this->composerIdempotencyKey = (string) Str::uuid();
 
         if (!$this->isCurrentUserVerified) {
             return;
@@ -103,6 +113,14 @@ class PrivateChat extends Component
     public function findRecipient(): void
     {
         $this->resetErrorBag(['recipientEmail', 'content', 'chat']);
+
+        $user = auth()->user();
+        if (!$user instanceof User) {
+            return;
+        }
+
+        $this->currentUserId = (int) $user->id;
+        $this->isCurrentUserVerified = (bool) $user->isVerified();
 
         if (!$this->ensureVerifiedUser()) {
             return;
@@ -152,6 +170,14 @@ class PrivateChat extends Component
     {
         $this->resetErrorBag(['recipientEmail', 'content', 'chat']);
 
+        $user = auth()->user();
+        if (!$user instanceof User) {
+            return;
+        }
+
+        $this->currentUserId = (int) $user->id;
+        $this->isCurrentUserVerified = (bool) $user->isVerified();
+
         if (!$this->ensureVerifiedUser()) {
             return;
         }
@@ -190,6 +216,14 @@ class PrivateChat extends Component
 
     public function openConversation(int $conversationId, ConversationService $conversationService): void
     {
+        $user = auth()->user();
+        if (!$user instanceof User) {
+            return;
+        }
+
+        $this->currentUserId = (int) $user->id;
+        $this->isCurrentUserVerified = (bool) $user->isVerified();
+
         if (!$this->ensureVerifiedUser()) {
             return;
         }
@@ -214,6 +248,14 @@ class PrivateChat extends Component
         ConversationService $conversationService
     ): void {
         $this->resetErrorBag(['content', 'attachments', 'attachments.*', 'chat']);
+
+        $user = auth()->user();
+        if (!$user instanceof User) {
+            return;
+        }
+
+        $this->currentUserId = (int) $user->id;
+        $this->isCurrentUserVerified = (bool) $user->isVerified();
 
         if (!$this->ensureVerifiedUser()) {
             return;
@@ -251,7 +293,7 @@ class PrivateChat extends Component
 
             try {
                 $conversation = $conversationService->getOrCreatePrivateConversation(
-                    $this->currentUserId,
+                    $user->id,
                     $this->activeRecipientId
                 );
             } catch (\Throwable $exception) {
@@ -266,9 +308,11 @@ class PrivateChat extends Component
         try {
             $messageService->sendMessage(
                 $conversation,
-                $this->currentUserId,
+                $user,
                 $content !== '' ? $content : null,
-                $files
+                $files,
+                $this->replyToMessageId,
+                $this->composerIdempotencyKey
             );
         } catch (ValidationException $exception) {
             $first = collect($exception->errors())->flatten()->first();
@@ -291,9 +335,12 @@ class PrivateChat extends Component
 
     public function toggleLike(int $messageId, MessageService $messageService): void
     {
-        if (!$this->currentUserId || !$this->likeEnabled()) {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId || !$this->likeEnabled()) {
             return;
         }
+
+        $this->currentUserId = $currentUserId;
 
         if ($this->isRateLimited('private-chat', 'like', $this->likeRateLimit())) {
             $this->addError('chat', 'მოქმედება დროებით შეზღუდულია.');
@@ -316,8 +363,8 @@ class PrivateChat extends Component
 
         try {
             $count = $liked
-                ? $messageService->unlikeMessage($message, $this->currentUserId)
-                : $messageService->likeMessage($message, $this->currentUserId);
+                ? $messageService->unlikeMessage($message, $currentUserId)
+                : $messageService->likeMessage($message, $currentUserId);
         } catch (AuthorizationException $exception) {
             $this->addError('chat', $exception->getMessage());
             return;
@@ -333,9 +380,12 @@ class PrivateChat extends Component
 
     public function deleteMessage(int $messageId, MessageService $messageService): void
     {
-        if (!$this->currentUserId) {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId) {
             return;
         }
+
+        $this->currentUserId = $currentUserId;
 
         if ($this->isRateLimited('private-chat', 'delete', $this->deleteRateLimit())) {
             $this->addError('chat', 'წაშლა დროებით შეზღუდულია.');
@@ -350,7 +400,7 @@ class PrivateChat extends Component
         }
 
         try {
-            $messageService->deleteMessage($message, $this->currentUserId, false);
+            $messageService->deleteMessage($message, $currentUserId, false);
         } catch (AuthorizationException $exception) {
             $this->addError('chat', $exception->getMessage());
             return;
@@ -368,6 +418,51 @@ class PrivateChat extends Component
         $this->messages[$index]['is_deleted'] = true;
         $this->messages[$index]['content'] = null;
         $this->messages[$index]['attachments'] = [];
+        $this->messages[$index]['can_edit'] = false;
+
+        $this->syncReplyReferencesForParentPayload($this->messages[$index]);
+
+        if ((int) $this->replyToMessageId === $messageId) {
+            $this->cancelReply();
+        }
+    }
+
+    public function setReplyToMessage(int $messageId): void
+    {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId) {
+            return;
+        }
+
+        $this->currentUserId = $currentUserId;
+
+        if (!$this->ensureVerifiedUser()) {
+            return;
+        }
+
+        $index = $this->findMessageIndex($messageId);
+        if ($index === null) {
+            return;
+        }
+
+        $payload = $this->messages[$index] ?? [];
+        if ((bool) ($payload['is_deleted'] ?? false)) {
+            return;
+        }
+
+        $context = $this->buildReplyContext($payload);
+        if (!$context) {
+            return;
+        }
+
+        $this->replyToMessageId = $messageId;
+        $this->replyToContext = $context;
+    }
+
+    public function cancelReply(): void
+    {
+        $this->replyToMessageId = null;
+        $this->replyToContext = null;
     }
 
     public function loadMoreConversations(ConversationService $conversationService): void
@@ -381,10 +476,18 @@ class PrivateChat extends Component
 
     protected function loadConversations(ConversationService $conversationService, bool $append = false): void
     {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId) {
+            $this->conversations = [];
+            $this->hasMoreConversations = false;
+            return;
+        }
+
+        $this->currentUserId = $currentUserId;
         $targetPage = $append ? ($this->conversationsPage + 1) : 1;
 
         $paginator = $conversationService->listForUser(
-            $this->currentUserId,
+            $currentUserId,
             self::CONVERSATIONS_PER_PAGE,
             $targetPage
         );
@@ -435,6 +538,11 @@ class PrivateChat extends Component
             return null;
         }
 
+        $viewerId = $this->authenticatedUserId();
+        if (!$viewerId) {
+            return null;
+        }
+
         $conversation = Conversation::query()
             ->whereKey($conversationId)
             ->where('kind', Conversation::KIND_PRIVATE)
@@ -447,7 +555,7 @@ class PrivateChat extends Component
         try {
             app(MessageServiceSupport::class)->authorizeConversationRead(
                 $conversation,
-                $this->currentUserId
+                $viewerId
             );
         } catch (AuthorizationException) {
             return null;
@@ -480,12 +588,17 @@ class PrivateChat extends Component
             return null;
         }
 
+        $viewerId = $this->authenticatedUserId();
+        if (!$viewerId) {
+            return null;
+        }
+
         $conversation->loadMissing([
             'directUser1:id,name,surname,image,email_verified_at,is_expert,is_top_commentator',
             'directUser2:id,name,surname,image,email_verified_at,is_expert,is_top_commentator',
         ]);
 
-        return $conversation->direct_user1_id === $this->currentUserId
+        return $conversation->direct_user1_id === $viewerId
             ? $conversation->directUser2
             : $conversation->directUser1;
     }
@@ -528,8 +641,13 @@ class PrivateChat extends Component
             return null;
         }
 
-        $user1Id = min($this->currentUserId, $recipientId);
-        $user2Id = max($this->currentUserId, $recipientId);
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId) {
+            return null;
+        }
+
+        $user1Id = min($currentUserId, $recipientId);
+        $user2Id = max($currentUserId, $recipientId);
 
         return Conversation::query()
             ->where('kind', Conversation::KIND_PRIVATE)
@@ -540,6 +658,14 @@ class PrivateChat extends Component
 
     protected function ensureVerifiedUser(): bool
     {
+        $user = auth()->user();
+        if ($user instanceof User) {
+            $this->currentUserId = (int) $user->id;
+            $this->isCurrentUserVerified = (bool) $user->isVerified();
+        } else {
+            $this->isCurrentUserVerified = false;
+        }
+
         if ($this->isCurrentUserVerified) {
             return true;
         }
@@ -578,6 +704,8 @@ class PrivateChat extends Component
         $this->content = '';
         $this->attachments = [];
         $this->showUploads = false;
+        $this->cancelReply();
+        $this->composerIdempotencyKey = (string) Str::uuid();
     }
 
     public function render()

@@ -31,9 +31,11 @@ class MessageController extends Controller
         $conversation = $conversationService->getOrCreateTopicConversation($topic->id);
         $message = $messageService->sendMessage(
             $conversation,
-            $request->user()->id,
+            $request->user(),
             $request->input('content'),
-            $request->file('attachments', [])
+            $request->file('attachments', []),
+            $request->integer('reply_to_message_id') ?: null,
+            $request->input('idempotency_key')
         );
 
         return response()->json([
@@ -64,9 +66,11 @@ class MessageController extends Controller
         try {
             $message = $messageService->sendMessage(
                 $conversation,
-                $currentUser->id,
+                $currentUser,
                 $request->input('content'),
-                $request->file('attachments', [])
+                $request->file('attachments', []),
+                $request->integer('reply_to_message_id') ?: null,
+                $request->input('idempotency_key')
             );
         } catch (AuthorizationException $exception) {
             return response()->json([

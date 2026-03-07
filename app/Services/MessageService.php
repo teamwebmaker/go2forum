@@ -8,8 +8,10 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageLike;
 use App\Models\Topic;
+use App\Models\User;
 use App\Support\MessagePayloadTransformer;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -24,7 +26,7 @@ class MessageService
      * Create and persist a new message with optional attachments.
      *
      * @param Conversation $conversation
-     * @param int $senderId
+     * @param User $sender
      * @param string|null $content
      * @param array $files
      * @return Message
@@ -35,14 +37,21 @@ class MessageService
 
     public function sendMessage(
         Conversation $conversation,
-        int $senderId,
+        User $sender,
         ?string $content,
-        array $files = []
+        array $files = [],
+        ?int $replyToMessageId = null,
+        ?string $idempotencyKey = null
     ): Message {
         $support = $this->support();
+        $senderId = (int) $sender->id;
 
         $content = $support->normalizeContent($content);
         $files = $support->filterUploadedFiles($files);
+        $replyToMessageId = $replyToMessageId && $replyToMessageId > 0
+            ? $replyToMessageId
+            : null;
+        $idempotencyKey = $this->normalizeIdempotencyKey($idempotencyKey);
 
         if (!$content && empty($files)) {
             throw ValidationException::withMessages([
@@ -52,33 +61,90 @@ class MessageService
 
         $support->authorizeConversationAccess($conversation, $senderId);
 
-        return DB::transaction(function () use ($conversation, $senderId, $content, $files, $support) {
-            $message = Message::create([
-                'conversation_id' => $conversation->id,
-                'sender_id' => $senderId,
-                'content' => $content,
-            ]);
+        return DB::transaction(function () use ($conversation, $senderId, $content, $files, $support, $replyToMessageId, $idempotencyKey) {
+            $lockedConversation = Conversation::query()
+                ->whereKey($conversation->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            $support->storeAttachments($conversation, $message, $files);
-            $support->ensureParticipants($conversation, $senderId);
+            $support->authorizeConversationAccess($lockedConversation, $senderId);
 
-            if ($conversation->isTopic() && $conversation->topic_id) {
-                // Topic-specific bookkeeping.
-                $support->ensureSubscription($conversation->topic_id, $senderId);
-                Topic::whereKey($conversation->topic_id)->increment('messages_count');
+            if ($idempotencyKey) {
+                $existing = Message::query()
+                    ->withTrashed()
+                    ->where('conversation_id', $lockedConversation->id)
+                    ->where('sender_id', $senderId)
+                    ->where('client_token', $idempotencyKey)
+                    ->first();
+
+                if ($existing) {
+                    return $existing->load([
+                        'attachments',
+                        'sender',
+                        'conversation:id,kind',
+                        'replyTo.sender',
+                        'replyTo.attachments',
+                    ]);
+                }
             }
 
-            $conversation->update([
+            $replyTarget = $replyToMessageId
+                ? $this->resolveReplyTargetWithinTransaction($lockedConversation, $replyToMessageId)
+                : null;
+
+            try {
+                $message = Message::create([
+                    'conversation_id' => $lockedConversation->id,
+                    'sender_id' => $senderId,
+                    'reply_to_message_id' => $replyTarget?->id,
+                    'client_token' => $idempotencyKey,
+                    'content' => $content,
+                ]);
+            } catch (QueryException $exception) {
+                if (!$idempotencyKey || !$this->isUniqueConstraintViolation($exception)) {
+                    throw $exception;
+                }
+
+                $existing = Message::query()
+                    ->withTrashed()
+                    ->where('conversation_id', $lockedConversation->id)
+                    ->where('sender_id', $senderId)
+                    ->where('client_token', $idempotencyKey)
+                    ->first();
+
+                if ($existing) {
+                    return $existing->load([
+                        'attachments',
+                        'sender',
+                        'conversation:id,kind',
+                        'replyTo.sender',
+                        'replyTo.attachments',
+                    ]);
+                }
+
+                throw $exception;
+            }
+
+            $support->storeAttachments($lockedConversation, $message, $files);
+            $support->ensureParticipants($lockedConversation, $senderId);
+
+            if ($lockedConversation->isTopic() && $lockedConversation->topic_id) {
+                // Topic-specific bookkeeping.
+                $support->ensureSubscription($lockedConversation->topic_id, $senderId);
+                Topic::whereKey($lockedConversation->topic_id)->increment('messages_count');
+            }
+
+            $lockedConversation->update([
                 'last_message_at' => $message->created_at,
             ]);
 
             $messageId = (int) $message->id;
-            $conversationId = (int) $conversation->id;
-            $topicId = $conversation->topic_id ? (int) $conversation->topic_id : null;
+            $conversationId = (int) $lockedConversation->id;
+            $topicId = $lockedConversation->topic_id ? (int) $lockedConversation->topic_id : null;
 
             // Send notifications.
             // Notify topic subscribers.
-            if ($conversation->isTopic() && $conversation->topic_id) {
+            if ($lockedConversation->isTopic() && $lockedConversation->topic_id) {
                 // Defer notifications until after the transaction commits.
                 DB::afterCommit(function () use ($senderId, $messageId, $conversationId, $topicId): void {
                     try {
@@ -102,7 +168,7 @@ class MessageService
             }
 
             // Notify private receiver.
-            if ($conversation->isPrivate()) {
+            if ($lockedConversation->isPrivate()) {
                 DB::afterCommit(function () use ($senderId, $messageId, $conversationId): void {
                     try {
                         SendPrivateMessageNotification::dispatch(
@@ -123,7 +189,13 @@ class MessageService
                 });
             }
 
-            return $message->load(['attachments', 'sender', 'conversation:id,kind']);
+            return $message->load([
+                'attachments',
+                'sender',
+                'conversation:id,kind',
+                'replyTo.sender',
+                'replyTo.attachments',
+            ]);
         });
     }
 
@@ -166,7 +238,14 @@ class MessageService
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit($limit)
-            ->with(['sender:id,name,surname,nickname,image,is_expert,is_top_commentator', 'attachments', 'conversation:id,kind'])
+            ->with([
+                'sender:id,name,surname,nickname,image,is_expert,is_top_commentator',
+                'attachments',
+                'conversation:id,kind',
+                'replyTo:id,conversation_id,sender_id,content,deleted_at',
+                'replyTo.sender:id,name,surname,nickname,image,is_expert,is_top_commentator',
+                'replyTo.attachments:id,message_id',
+            ])
             ->get();
 
         $messageIds = $messages->pluck('id');
@@ -343,9 +422,59 @@ class MessageService
     protected function payloadTransformer(): MessagePayloadTransformer
     {
         if (!$this->payloadTransformer) {
-            $this->payloadTransformer = new MessagePayloadTransformer();
+            $this->payloadTransformer = app(MessagePayloadTransformer::class);
         }
 
         return $this->payloadTransformer;
+    }
+
+    protected function resolveReplyTargetWithinTransaction(Conversation $conversation, int $replyToMessageId): Message
+    {
+        $replyTarget = Message::withTrashed()
+            ->whereKey($replyToMessageId)
+            ->lockForUpdate()
+            ->first();
+
+        if (
+            !$replyTarget ||
+            (int) $replyTarget->conversation_id !== (int) $conversation->id ||
+            $replyTarget->trashed()
+        ) {
+            throw ValidationException::withMessages([
+                'reply_to_message_id' => ['არჩეული მესიჯი პასუხისთვის ვერ მოიძებნა.'],
+            ]);
+        }
+
+        return $replyTarget;
+    }
+
+    protected function normalizeIdempotencyKey(?string $idempotencyKey): ?string
+    {
+        if (!is_string($idempotencyKey)) {
+            return null;
+        }
+
+        $idempotencyKey = trim($idempotencyKey);
+        if ($idempotencyKey === '') {
+            return null;
+        }
+
+        if (strlen($idempotencyKey) > 64) {
+            return substr($idempotencyKey, 0, 64);
+        }
+
+        return $idempotencyKey;
+    }
+
+    protected function isUniqueConstraintViolation(QueryException $exception): bool
+    {
+        $sqlState = $exception->errorInfo[0] ?? null;
+        $driverCode = (string) ($exception->errorInfo[1] ?? '');
+        $message = $exception->getMessage();
+
+        return $sqlState === '23000'
+            || $sqlState === '23505'
+            || in_array($driverCode, ['1062', '19', '1555', '2067'], true)
+            || str_contains(strtolower($message), 'unique');
     }
 }

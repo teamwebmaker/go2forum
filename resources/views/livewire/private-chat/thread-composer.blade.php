@@ -16,5 +16,6 @@
 		toggleAriaLabel="დანართების დამატება" contentErrorClass="text-xs text-rose-600"
 		:sendDisabled="!$isCurrentUserVerified" uploadOuterClass="max-w-sm"
 		:uploadKey="'private-chat-upload-' . $this->getId() . '-' . ($selectedConversationId ?? 'new')"
-		uploadHelpText="შეგიძლიათ ატვირთოთ სურათები ან დოკუმენტები." />
+		uploadHelpText="შეგიძლიათ ატვირთოთ სურათები ან დოკუმენტები." :replyContext="$replyToContext"
+		cancelReplyAction="cancelReply" />
 </div>

@@ -4,6 +4,7 @@ namespace App\Livewire\Concerns;
 
 use App\Models\Conversation;
 use App\Services\MessageService;
+use App\Support\ReplyPreviewFormatter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\RateLimiter;
@@ -23,6 +24,7 @@ trait InteractsWithChatThread
 
         $messages = $this->fetchThreadMessages(null, null);
         $this->messages = array_reverse($messages);
+        $this->refreshActiveReplyContextFromThread();
         $this->updateThreadCursorFromMessages();
 
         if ($scroll) {
@@ -44,6 +46,7 @@ trait InteractsWithChatThread
 
         $this->messages = array_merge(array_reverse($messages), $this->messages);
         $this->trimRenderedThreadMessages();
+        $this->refreshActiveReplyContextFromThread();
         $this->updateThreadCursorFromMessages();
     }
 
@@ -63,7 +66,7 @@ trait InteractsWithChatThread
             $cursor,
             $cursorId,
             $limit,
-            $this->currentUserId
+            $this->authenticatedUserId()
         );
 
         return $this->normalizeThreadMessages($payload['messages'] ?? []);
@@ -165,7 +168,7 @@ trait InteractsWithChatThread
 
     protected function isRateLimited(string $keyPrefix, string $action, int $maxAttempts): bool
     {
-        $key = $keyPrefix . ':' . $action . ':' . $this->currentUserId . '|' . request()->ip();
+        $key = $keyPrefix . ':' . $action . ':' . $this->authenticatedUserId() . '|' . request()->ip();
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             return true;
@@ -174,6 +177,104 @@ trait InteractsWithChatThread
         RateLimiter::hit($key, $this->rateLimitDecaySeconds());
 
         return false;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array{id:int,author:string,content:string}|null
+     */
+    protected function buildReplyContext(array $payload): ?array
+    {
+        return app(ReplyPreviewFormatter::class)->buildContextFromPayload(
+            $payload,
+            $this->authenticatedUserId()
+        );
+    }
+
+    /**
+     * Keep reply previews synchronized when the parent message changes locally
+     * (edit/delete) without requiring a full thread reload.
+     *
+     * @param array<string, mixed> $parentPayload
+     */
+    protected function syncReplyReferencesForParentPayload(array $parentPayload): void
+    {
+        $parentId = (int) ($parentPayload['id'] ?? 0);
+        if ($parentId <= 0) {
+            return;
+        }
+
+        $formatter = app(ReplyPreviewFormatter::class);
+        $attachments = is_array($parentPayload['attachments'] ?? null)
+            ? $parentPayload['attachments']
+            : [];
+        $isDeleted = (bool) ($parentPayload['is_deleted'] ?? false);
+
+        $replyPayload = [
+            'id' => $parentId,
+            'is_deleted' => $isDeleted,
+            'content' => $isDeleted ? null : ($parentPayload['content'] ?? null),
+            'content_preview' => $formatter->formatContentPreview(
+                $parentPayload['content'] ?? null,
+                count($attachments),
+                $isDeleted,
+                140
+            ),
+            'sender' => is_array($parentPayload['sender'] ?? null) ? $parentPayload['sender'] : null,
+        ];
+
+        foreach ($this->messages as $index => $messagePayload) {
+            $replyTo = is_array($messagePayload['reply_to'] ?? null)
+                ? $messagePayload['reply_to']
+                : null;
+
+            if ((int) ($replyTo['id'] ?? 0) !== $parentId) {
+                continue;
+            }
+
+            $this->messages[$index]['reply_to'] = $replyPayload;
+        }
+
+        if ((int) ($this->replyToMessageId ?? 0) === $parentId) {
+            if ($isDeleted) {
+                $this->cancelReply();
+                return;
+            }
+
+            $this->replyToContext = $this->buildReplyContext($parentPayload);
+        }
+    }
+
+    protected function authenticatedUserId(): int
+    {
+        $id = auth()->id();
+
+        if ($id) {
+            return (int) $id;
+        }
+
+        return (int) ($this->currentUserId ?? 0);
+    }
+
+    protected function refreshActiveReplyContextFromThread(): void
+    {
+        $replyToMessageId = (int) ($this->replyToMessageId ?? 0);
+        if ($replyToMessageId <= 0) {
+            return;
+        }
+
+        $index = $this->findMessageIndex($replyToMessageId);
+        if ($index === null) {
+            return;
+        }
+
+        $payload = $this->messages[$index] ?? [];
+        if ((bool) ($payload['is_deleted'] ?? false)) {
+            $this->cancelReply();
+            return;
+        }
+
+        $this->replyToContext = $this->buildReplyContext($payload);
     }
 
     protected function authorizeThread(): bool

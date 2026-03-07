@@ -8,19 +8,40 @@ use Illuminate\Support\Facades\Storage;
 
 class MessagePayloadTransformer
 {
+    public function __construct(
+        protected ReplyPreviewFormatter $replyPreviewFormatter
+    ) {
+    }
+
     public function transform(
         Message $message,
         ?int $currentUserId = null,
         int $likeCount = 0,
         bool $likedByMe = false
     ): array {
-        $message->loadMissing(['sender', 'attachments', 'conversation']);
+        $message->loadMissing(['sender', 'attachments', 'conversation', 'replyTo.sender', 'replyTo.attachments']);
 
         $sender = $message->sender;
         $isDeleted = $message->trashed();
         $isPrivateConversation = (bool) $message->conversation?->isPrivate();
         $senderFullName = $sender?->full_name ?? $sender?->name;
         $canEdit = $message->isEditableBy($currentUserId);
+        $replyTo = $message->replyTo;
+        $replySender = $replyTo?->sender;
+        $replySenderFullName = $replySender?->full_name ?? $replySender?->name;
+        $replyAttachmentCount = $replyTo ? (int) $replyTo->attachments->count() : 0;
+        $replyIsDeleted = (bool) $replyTo?->trashed();
+        $replyContent = $replyIsDeleted
+            ? null
+            : $this->normalizeReplyContent($replyTo?->content);
+        $replyPreview = $replyTo
+            ? $this->replyPreviewFormatter->formatContentPreview(
+                $replyTo->content,
+                $replyAttachmentCount,
+                $replyIsDeleted,
+                140
+            )
+            : null;
 
         return [
             'id' => $message->id,
@@ -37,6 +58,21 @@ class MessagePayloadTransformer
             'author_label' => ($currentUserId && (int) ($sender?->id ?? 0) === $currentUserId)
                 ? 'მე'
                 : ($senderFullName ?? 'User'),
+            'reply_to' => $replyTo ? [
+                'id' => $replyTo->id,
+                'is_deleted' => $replyIsDeleted,
+                'content' => $replyContent,
+                'content_preview' => $replyPreview,
+                'sender' => [
+                    'id' => $replySender?->id,
+                    'name' => $replySenderFullName,
+                    'full_name' => $replySenderFullName,
+                    'nickname' => $replySender?->nickname,
+                    'avatar' => $replySender?->avatar_url,
+                    'badge_icon' => BadgeColors::iconForUser($replySender),
+                    'badge_color' => BadgeColors::forUser($replySender),
+                ],
+            ] : null,
             'content' => $isDeleted ? null : $message->content,
             'created_at' => $message->created_at?->toISOString(),
             'created_at_label' => $message->created_at?->format('m/d/Y, h:ia'),
@@ -77,5 +113,11 @@ class MessagePayloadTransformer
         }
 
         return Storage::disk($attachment->disk)->url($attachment->path);
+    }
+
+    protected function normalizeReplyContent(?string $content): ?string
+    {
+        $content = is_string($content) ? trim($content) : null;
+        return $content === '' ? null : $content;
     }
 }

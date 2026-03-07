@@ -2,7 +2,7 @@
 	listClass="h-[52dvh] sm:h-[40dvh] space-y-3 overflow-y-auto overscroll-contain pr-1" goDownWrapperClass="bottom-6 sm:bottom-8">
 	@forelse ($messages as $message)
 		<x-chat.message-card :message="$message" :currentUserId="$currentUserId" variant="private"
-			wire:key="message-{{ $message['id'] }}" />
+			:canReply="$isCurrentUserVerified && (bool) $currentUserId" wire:key="message-{{ $message['id'] }}" />
 	@empty
 		<div class="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500">
 			მიმოწერა ჯერ ცარიელია.

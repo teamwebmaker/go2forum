@@ -15,7 +15,11 @@ class SendMessageRequest extends FormRequest
     public function rules(): array
     {
         return array_merge(
-            ['content' => ['nullable', 'string']],
+            [
+                'content' => ['nullable', 'string'],
+                'reply_to_message_id' => ['nullable', 'integer', 'min:1'],
+                'idempotency_key' => ['nullable', 'string', 'max:64'],
+            ],
             ChatAttachmentRules::rules('attachments')
         );
     }

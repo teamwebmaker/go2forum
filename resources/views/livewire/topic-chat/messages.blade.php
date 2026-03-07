@@ -5,7 +5,8 @@
 	{{-- Chat messages --}}
 	@forelse ($messages as $message)
 		<x-chat.message-card :message="$message" :currentUserId="$currentUserId" variant="topic"
-			:editingMessageId="$editingMessageId" wire:key="message-{{ $message['id'] }}" />
+			:editingMessageId="$editingMessageId" :canReply="$canPost && (bool) $currentUserId"
+			wire:key="message-{{ $message['id'] }}" />
 	@empty
 		<div class="mt-4 text-center text-sm text-slate-500">კომენტარები ჯერ არ არის.</div>
 	@endforelse

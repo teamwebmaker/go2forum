@@ -7,12 +7,15 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Topic;
 use App\Models\TopicSubscription;
+use App\Models\User;
 use App\Support\ChatAttachmentRules;
 use App\Support\MessagePayloadTransformer;
 use App\Services\ConversationService;
 use App\Services\MessageService;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -28,6 +31,7 @@ class TopicChat extends Component
     /** Conversation that backs this topic chat (created if missing). */
     public Conversation $conversation;
 
+    #[Locked]
     public bool $canPost = false; //  Whether the current user is allowed to post messages.
 
     public bool $composerOpen = false; // composer UI is expanded/open.
@@ -52,6 +56,9 @@ class TopicChat extends Component
     public bool $hasMore = true; // When false, there are no more older messages to fetch.
 
     public string $content = ''; // The text being composed by the user
+    public ?int $replyToMessageId = null;
+    /** @var array{id:int,author:string,content:string}|null */
+    public ?array $replyToContext = null;
 
     public ?int $editingMessageId = null;
     public string $editContent = '';
@@ -63,7 +70,9 @@ class TopicChat extends Component
      * @var array<int, TemporaryUploadedFile|string|array|null>
      */
     public array $attachments = [];
+    #[Locked]
     public int $currentUserId = 0; // current user id (0 if guest).
+    public string $composerIdempotencyKey = '';
 
     /**
      * Validation rules for the composer.
@@ -106,6 +115,7 @@ class TopicChat extends Component
 
         $this->canPost = $canPost;
         $this->currentUserId = auth()->id() ?? 0;
+        $this->composerIdempotencyKey = (string) Str::uuid();
 
         // If logged in, check whether the user is subscribed to this topic.
         if ($this->currentUserId) {
@@ -149,9 +159,11 @@ class TopicChat extends Component
     public function toggleSubscription(): void
     {
         $user = auth()->user();
-        if (!$this->currentUserId || !$user) {
+        if (!$user instanceof User) {
             return;
         }
+
+        $this->currentUserId = (int) $user->id;
 
         $this->topic->loadMissing('category');
         if (!$user->can('subscribe', $this->topic)) {
@@ -161,7 +173,7 @@ class TopicChat extends Component
         if ($this->isSubscribed) {
             TopicSubscription::query()
                 ->where('topic_id', $this->topic->id)
-                ->where('user_id', $this->currentUserId)
+                ->where('user_id', $user->id)
                 ->delete();
 
             $this->isSubscribed = false;
@@ -169,7 +181,7 @@ class TopicChat extends Component
         }
 
         TopicSubscription::query()->insertOrIgnore([
-            'user_id' => $this->currentUserId,
+            'user_id' => $user->id,
             'topic_id' => $this->topic->id,
             'subscribed_at' => now(),
         ]);
@@ -190,8 +202,15 @@ class TopicChat extends Component
      */
     public function sendMessage(MessageService $messageService): void
     {
-        // Guests and blocked users can't send.
-        if (!$this->canPost || !$this->currentUserId) {
+        $user = auth()->user();
+        if (!$user instanceof User) {
+            return;
+        }
+
+        $this->currentUserId = (int) $user->id;
+
+        // `canPost` is UI-level state; always enforce policy server-side too.
+        if (!$this->canPost || !$user->can('post', $this->topic)) {
             return;
         }
 
@@ -227,9 +246,11 @@ class TopicChat extends Component
         try {
             $messageService->sendMessage(
                 $this->conversation,
-                $this->currentUserId,
+                $user,
                 $content !== '' ? $content : null,
-                $files
+                $files,
+                $this->replyToMessageId,
+                $this->composerIdempotencyKey
             );
         } catch (ValidationException $exception) {
             $first = collect($exception->errors())->flatten()->first();
@@ -248,6 +269,8 @@ class TopicChat extends Component
         $this->content = '';
         $this->attachments = [];
         $this->showUploads = false;
+        $this->cancelReply();
+        $this->composerIdempotencyKey = (string) Str::uuid();
 
         // Posting implies interest; keep UI state consistent.
         $this->isSubscribed = true;
@@ -258,9 +281,12 @@ class TopicChat extends Component
 
     public function startEditMessage(int $messageId): void
     {
-        if (!$this->currentUserId) {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId) {
             return;
         }
+
+        $this->currentUserId = $currentUserId;
 
         $index = $this->findMessageIndex($messageId);
         if ($index === null) {
@@ -268,7 +294,7 @@ class TopicChat extends Component
         }
 
         $payload = $this->messages[$index] ?? [];
-        $isMine = (int) ($payload['sender']['id'] ?? 0) === $this->currentUserId;
+        $isMine = (int) ($payload['sender']['id'] ?? 0) === $currentUserId;
         $canEdit = (bool) ($payload['can_edit'] ?? false);
         $isDeleted = (bool) ($payload['is_deleted'] ?? false);
 
@@ -288,11 +314,53 @@ class TopicChat extends Component
         $this->resetErrorBag('editContent');
     }
 
-    public function saveEditedMessage(MessageService $messageService): void
+    public function setReplyToMessage(int $messageId): void
     {
-        if (!$this->currentUserId || !$this->editingMessageId) {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId) {
             return;
         }
+
+        $this->currentUserId = $currentUserId;
+
+        $user = auth()->user();
+        if (!$this->canPost || !($user instanceof User) || !$user->can('post', $this->topic)) {
+            return;
+        }
+
+        $index = $this->findMessageIndex($messageId);
+        if ($index === null) {
+            return;
+        }
+
+        $payload = $this->messages[$index] ?? [];
+        if ((bool) ($payload['is_deleted'] ?? false)) {
+            return;
+        }
+
+        $context = $this->buildReplyContext($payload);
+        if (!$context) {
+            return;
+        }
+
+        $this->replyToMessageId = $messageId;
+        $this->replyToContext = $context;
+    }
+
+    public function cancelReply(): void
+    {
+        $this->replyToMessageId = null;
+        $this->replyToContext = null;
+    }
+
+    public function saveEditedMessage(MessageService $messageService): void
+    {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId || !$this->editingMessageId) {
+            return;
+        }
+
+        $this->currentUserId = $currentUserId;
 
         if ($this->isRateLimited('topic-chat', 'edit', $this->editRateLimit())) {
             $this->addError('editContent', 'ჩასწორება დროებით შეზღუდულია.');
@@ -310,7 +378,7 @@ class TopicChat extends Component
         try {
             $message = $messageService->editMessage(
                 $message,
-                $this->currentUserId,
+                $currentUserId,
                 $this->editContent,
                 true
             );
@@ -333,10 +401,11 @@ class TopicChat extends Component
             $likedByMe = (bool) ($this->messages[$index]['liked_by_me'] ?? false);
             $this->messages[$index] = app(MessagePayloadTransformer::class)->transform(
                 $message,
-                $this->currentUserId,
+                $currentUserId,
                 $likeCount,
                 $likedByMe
             );
+            $this->syncReplyReferencesForParentPayload($this->messages[$index]);
         }
 
         $this->cancelEditMessage();
@@ -349,9 +418,12 @@ class TopicChat extends Component
      */
     public function toggleLike(int $messageId, MessageService $messageService): void
     {
-        if (!$this->currentUserId || !$this->likeEnabled()) {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId || !$this->likeEnabled()) {
             return;
         }
+
+        $this->currentUserId = $currentUserId;
 
         if ($this->isRateLimited('topic-chat', 'like', $this->likeRateLimit())) {
             $this->addError('chat', 'მოქმედება დროებით შეზღუდულია.');
@@ -377,8 +449,8 @@ class TopicChat extends Component
         // Call service to apply change and return the updated like count.
         try {
             $count = $liked
-                ? $messageService->unlikeMessage($message, $this->currentUserId)
-                : $messageService->likeMessage($message, $this->currentUserId);
+                ? $messageService->unlikeMessage($message, $currentUserId)
+                : $messageService->likeMessage($message, $currentUserId);
         } catch (AuthorizationException $exception) {
             $this->addError('chat', $exception->getMessage());
             return;
@@ -399,9 +471,12 @@ class TopicChat extends Component
      */
     public function deleteMessage(int $messageId, MessageService $messageService): void
     {
-        if (!$this->currentUserId) {
+        $currentUserId = $this->authenticatedUserId();
+        if (!$currentUserId) {
             return;
         }
+
+        $this->currentUserId = $currentUserId;
 
         if ($this->isRateLimited('topic-chat', 'delete', $this->deleteRateLimit())) {
             $this->addError('chat', 'წაშლა დროებით შეზღუდულია.');
@@ -418,7 +493,7 @@ class TopicChat extends Component
 
         // Service enforces deletion behavior.
         try {
-            $messageService->deleteMessage($message, $this->currentUserId, false);
+            $messageService->deleteMessage($message, $currentUserId, false);
         } catch (AuthorizationException $exception) {
             $this->addError('chat', $exception->getMessage());
             return;
@@ -437,9 +512,16 @@ class TopicChat extends Component
         $this->messages[$index]['is_deleted'] = true;
         $this->messages[$index]['content'] = null;
         $this->messages[$index]['attachments'] = [];
+        $this->messages[$index]['can_edit'] = false;
+
+        $this->syncReplyReferencesForParentPayload($this->messages[$index]);
 
         if ((int) $this->editingMessageId === $messageId) {
             $this->cancelEditMessage();
+        }
+
+        if ((int) $this->replyToMessageId === $messageId) {
+            $this->cancelReply();
         }
     }
 
