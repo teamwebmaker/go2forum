@@ -29,6 +29,13 @@ class PublicDocumentsTable
                 IconColumn::make('visibility')
                     ->label(PublicDocumentResource::labelFor('visibility'))
                     ->boolean(),
+                IconColumn::make('requires_auth_to_view')
+                    ->label(PublicDocumentResource::labelFor('requires_auth_to_view'))
+                    ->boolean(),
+                TextColumn::make('views_count')
+                    ->label(PublicDocumentResource::labelFor('views_count'))
+                    ->numeric()
+                    ->sortable(),
                 TextColumn::make('order')
                     ->label(PublicDocumentResource::labelFor('order'))
                     ->numeric()

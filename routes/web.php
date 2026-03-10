@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PublicDocumentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\VerificationController;
@@ -14,6 +15,13 @@ use Illuminate\Support\Facades\Route;
 // Pages
 Route::get('/', [PageController::class, 'home'])->name('page.home');
 Route::view('/terms', 'pages.terms')->name('page.terms');
+Route::get('/public-documents/{publicDocument}/open', [PublicDocumentController::class, 'open'])
+    ->name('public-documents.open');
+Route::get('/public-documents/{publicDocument}/download', [PublicDocumentController::class, 'download'])
+    ->name('public-documents.download');
+Route::post('/public-documents/{publicDocument}/track-view', [PublicDocumentController::class, 'trackView'])
+    ->middleware('throttle:120,1')
+    ->name('public-documents.track-view');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');

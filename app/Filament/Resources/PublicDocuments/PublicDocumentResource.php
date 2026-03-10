@@ -20,7 +20,7 @@ use Filament\Tables\Table;
 
 class PublicDocumentResource extends Resource
 {
-    public const STORAGE_DIR = 'documents/public_documents';
+    public const STORAGE_DIR = PublicDocument::STORAGE_DIR;
 
     protected static ?string $model = PublicDocument::class;
 

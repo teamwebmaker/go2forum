@@ -26,9 +26,8 @@ class PublicDocumentForm
                 FileUpload::make('document')
                     ->label(PublicDocumentResource::labelFor('document'))
                     ->helperText('დაშვებულია მხოლოდ PDF (მაქს 15MB).')
-                    ->disk('public')
+                    ->disk(PublicDocument::STORAGE_DISK)
                     ->directory(PublicDocumentResource::STORAGE_DIR)
-                    ->visibility('public')
                     ->acceptedFileTypes(['application/pdf'])
                     ->maxSize(15_000) // ~15MB
                     ->downloadable()
@@ -62,6 +61,10 @@ class PublicDocumentForm
                     ),
                 Toggle::make('visibility')
                     ->label(PublicDocumentResource::labelFor('visibility'))
+                    ->required(),
+                Toggle::make('requires_auth_to_view')
+                    ->label(PublicDocumentResource::labelFor('requires_auth_to_view'))
+                    ->default(false)
                     ->required(),
             ]);
     }

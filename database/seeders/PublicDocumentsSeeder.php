@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\PublicDocument;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PublicDocumentsSeeder extends Seeder
 {
@@ -37,6 +39,24 @@ class PublicDocumentsSeeder extends Seeder
                     'created_at' => now(),
                 ]
             );
+
+            if (!filled($doc['document'])) {
+                continue;
+            }
+
+            $path = PublicDocument::STORAGE_DIR . '/' . ltrim((string) $doc['document'], '/');
+            $sourceDisk = Storage::disk('public');
+            $targetDisk = Storage::disk(PublicDocument::STORAGE_DISK);
+
+            if ($sourceDisk->exists($path) && !$targetDisk->exists($path)) {
+                $stream = $sourceDisk->readStream($path);
+                if ($stream !== false) {
+                    $targetDisk->writeStream($path, $stream);
+                    if (is_resource($stream)) {
+                        fclose($stream);
+                    }
+                }
+            }
         }
     }
 }

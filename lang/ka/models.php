@@ -285,6 +285,8 @@ return [
             'name' => 'სახელი',
             'document' => 'დოკუმენტი',
             'link' => 'ბმული',
+            'requires_auth_to_view' => 'ნახვაზე ავტორიზაცია',
+            'views_count' => 'ნახვების რაოდენობა',
             'order' => 'რიგითობა',
             'visibility' => 'ხილვადობა',
             'created_at' => 'შეიქმნა',

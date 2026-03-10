@@ -35,7 +35,7 @@
                 aria-disabled="true"
             @endif
             @class([
-                'group relative block rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:shadow-md',
+                'relative block rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:shadow-md',
                 'cursor-not-allowed opacity-70' => $isDisabled,
             ])
             >
@@ -54,7 +54,7 @@
                 <div class="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
                     {{-- Topic title --}}
                     <div>
-                        <p class="text-sm xs:text-base font-semibold text-slate-900 group-hover:text-primary-600">
+                        <p class="text-sm xs:text-base font-semibold text-slate-900 ">
                             {{ $topic->title }}
                         </p>
 

@@ -24,10 +24,21 @@
       {{-- Document preview modal (reuses global modal component) --}}
       <x-ui.modal id="document-viewer" title="დოკუმენტი:" size="6xl">
          <div class="space-y-3">
-
-            <div class="min-w-0">
-               <p class="text-md font-semibold text-slate-900" data-modal-heading>---</p>
-               <p class="text-xs text-slate-500">ფაილი იხსნება ქვემოთ მოცემულ ფანჯარაში.</p>
+            <div class="flex items-start justify-between gap-3">
+               <div class="min-w-0">
+                  <p class="text-md font-semibold text-slate-900" data-modal-heading>---</p>
+                  <p class="text-xs text-slate-500">ფაილი იხსნება ქვემოთ მოცემულ ფანჯარაში.</p>
+               </div>
+               <div class="flex shrink-0 items-center gap-2">
+                  <a href="#" target="_blank" rel="noopener noreferrer" data-document-link
+                     class="hidden rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
+                     ბმულის გახსნა
+                  </a>
+                  <a href="#" data-document-download
+                     class="hidden rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
+                     ჩამოტვირთვა
+                  </a>
+               </div>
             </div>
 
 
@@ -36,6 +47,12 @@
                   class="h-[70vh] w-full bg-slate-50" loading="lazy"></iframe>
             </div>
          </div>
+      </x-ui.modal>
+
+      <x-ui.modal id="document-auth-required" title="დოკუმენტი:" size="md">
+         <p class="text-sm font-medium text-slate-800">
+            ამ დოკუმენტის სანახავად ავტორიზაციაა საჭირო
+         </p>
       </x-ui.modal>
    </div>
 @endsection

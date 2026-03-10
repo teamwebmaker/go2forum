@@ -6,7 +6,6 @@ use App\Filament\Resources\PublicDocuments\PublicDocumentResource;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Storage;
 
 class PublicDocumentInfolist
 {
@@ -24,9 +23,7 @@ class PublicDocumentInfolist
                 ->badge()
                 ->color('gray')
                 ->url(fn($record) => filled($record->document)
-                    ? Storage::disk('public')->url(
-                        PublicDocumentResource::STORAGE_DIR . '/' . $record->document
-                    )
+                    ? route('public-documents.open', ['publicDocument' => $record])
                     : null)
                 ->openUrlInNewTab()
                 ->copyable()
@@ -48,6 +45,15 @@ class PublicDocumentInfolist
                 ->boolean()
                 ->trueColor('success')
                 ->falseColor('danger'),
+            IconEntry::make('requires_auth_to_view')
+                ->label(PublicDocumentResource::labelFor('requires_auth_to_view'))
+                ->boolean()
+                ->trueColor('warning')
+                ->falseColor('gray'),
+            TextEntry::make('views_count')
+                ->label(PublicDocumentResource::labelFor('views_count'))
+                ->numeric()
+                ->placeholder('-'),
 
             TextEntry::make('created_at')
                 ->label(PublicDocumentResource::labelFor('created_at'))
