@@ -49,9 +49,13 @@ class ProfileController extends Controller
     public function profileMessages(Request $request): View
     {
         $initialConversationId = $request->integer('conversation') ?: null;
+        $initialRecipient = $request->query('recipient');
+        $initialRecipient = is_string($initialRecipient) ? trim($initialRecipient) : null;
+        $initialRecipient = filled($initialRecipient) ? $initialRecipient : null;
 
         return view('profile.messages', [
             'initialConversationId' => $initialConversationId,
+            'initialRecipient' => $initialRecipient,
         ]);
     }
 

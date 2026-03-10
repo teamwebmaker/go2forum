@@ -17,6 +17,7 @@
     'textWrapperClass' => 'min-w-0',
     'nameClass' => 'truncate text-sm font-semibold text-slate-800',
     'secondaryClass' => 'truncate text-xs text-slate-500',
+    'statusLabel' => null,
 ])
 
 @php
@@ -40,9 +41,12 @@
         ->map(fn($part) => mb_substr((string) $part, 0, 1))
         ->implode('');
     $initials = $initials !== '' ? mb_strtoupper($initials) : 'U';
+
+    $resolvedStatusLabel = is_string($statusLabel) ? trim($statusLabel) : null;
+    $resolvedStatusLabel = filled($resolvedStatusLabel) ? $resolvedStatusLabel : null;
 @endphp
 
-<div class="{{ $wrapperClass }}">
+<div class="{{ $wrapperClass }} @if($resolvedStatusLabel) relative group @endif">
     @if ($renderAvatar)
         <div class="relative shrink-0">
             @if ($avatarUrl)
@@ -73,4 +77,11 @@
             <p class="{{ $secondaryClass }}">{{ $displaySecondary }}</p>
         @endif
     </div>
+
+    @if ($resolvedStatusLabel)
+        <span
+            class="invisible absolute bottom-full left-25 z-10 mb-2 w-max max-w-44 -translate-x-1/2 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-md opacity-0 transition group-hover:visible group-hover:opacity-100">
+            {{ $resolvedStatusLabel }}
+        </span>
+    @endif
 </div>

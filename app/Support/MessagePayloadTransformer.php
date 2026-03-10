@@ -54,6 +54,7 @@ class MessagePayloadTransformer
                 'avatar' => $sender?->avatar_url,
                 'badge_icon' => BadgeColors::iconForUser($sender),
                 'badge_color' => BadgeColors::forUser($sender),
+                'status_label' => $this->statusLabelForUser($sender),
             ],
             'author_label' => ($currentUserId && (int) ($sender?->id ?? 0) === $currentUserId)
                 ? 'მე'
@@ -71,6 +72,7 @@ class MessagePayloadTransformer
                     'avatar' => $replySender?->avatar_url,
                     'badge_icon' => BadgeColors::iconForUser($replySender),
                     'badge_color' => BadgeColors::forUser($replySender),
+                    'status_label' => $this->statusLabelForUser($replySender),
                 ],
             ] : null,
             'content' => $isDeleted ? null : $message->content,
@@ -119,5 +121,22 @@ class MessagePayloadTransformer
     {
         $content = is_string($content) ? trim($content) : null;
         return $content === '' ? null : $content;
+    }
+
+    protected function statusLabelForUser($user): ?string
+    {
+        if (!$user) {
+            return null;
+        }
+
+        if ((bool) ($user->is_expert ?? false)) {
+            return 'ექსპერტი';
+        }
+
+        if ((bool) ($user->is_top_commentator ?? false)) {
+            return 'ტოპ კომენტატორი';
+        }
+
+        return null;
     }
 }

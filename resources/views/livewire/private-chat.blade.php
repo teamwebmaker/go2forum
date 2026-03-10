@@ -1,16 +1,35 @@
 <section class="grid gap-4 lg:grid-cols-3" data-private-chat-livewire data-component-id="{{ $this->getId() }}"
-	data-has-more="{{ $hasMore ? '1' : '0' }}" x-data="{ mobilePanelsOpen: {{ $chatOpen ? 'false' : 'true' }} }"
+	data-has-more="{{ $hasMore ? '1' : '0' }}"
+	x-data="{
+		mobilePanelsOpen: {{ $chatOpen ? 'false' : 'true' }},
+		scrollMobilePanels() {
+			if (!window.matchMedia('(max-width: 1023px)').matches) {
+				return;
+			}
+
+			this.mobilePanelsOpen = true;
+
+			this.$nextTick(() => {
+				this.$refs.mobilePanels?.scrollIntoView({
+					behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+					block: 'start'
+				});
+			});
+		}
+	}"
+	x-init="
+		if (@js($recipientNickname !== '')) {
+			requestAnimationFrame(() => scrollMobilePanels());
+		}
+	"
 	@private-chat-mobile-panels-close.window="mobilePanelsOpen = false"
-	@private-chat-mobile-panels-open.window="mobilePanelsOpen = true">
+	@private-chat-mobile-panels-open.window="scrollMobilePanels()">
 	<div class="order-1 lg:hidden">
 		<x-button type="button" size="sm" variant="secondary" @click="
-				const next = !mobilePanelsOpen;
-				mobilePanelsOpen = next;
-				if (next) {
-					$nextTick(() => $refs.mobilePanels?.scrollIntoView({
-						behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-						block: 'start'
-					}));
+				if (mobilePanelsOpen) {
+					mobilePanelsOpen = false;
+				} else {
+					scrollMobilePanels();
 				}
 			" x-bind:aria-expanded="mobilePanelsOpen ? 'true' : 'false'" class="w-full justify-center">
 			<span x-text="mobilePanelsOpen ? 'პანელის დამალვა' : 'ჩატები და მიმღების ძიება'"></span>

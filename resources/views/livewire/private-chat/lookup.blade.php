@@ -1,6 +1,6 @@
 <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
 	<h2 class="text-base font-semibold text-slate-900">პირადი მიმოწერა</h2>
-	<p class="mt-1 text-xs text-slate-500">მხოლოდ ზუსტი ელ.ფოსტის შეყვანით.</p>
+	<p class="mt-1 text-xs text-slate-500">მხოლოდ ზედმეტსახელით მოძებნა.</p>
 
 	@if (!$isCurrentUserVerified)
 		<div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -9,14 +9,14 @@
 	@endif
 
 	<form wire:submit.prevent="findRecipient" class="mt-3 space-y-2">
-		<label class="block text-sm font-medium text-slate-700" for="private-chat-recipient-email">
-			მიმღების ელ.ფოსტა
+		<label class="block text-sm font-medium text-slate-700" for="private-chat-recipient-nickname">
+			მიმღების ზედმეტსახელი
 		</label>
-		<input id="private-chat-recipient-email" type="email" wire:model.defer="recipientEmail"
-			placeholder="user@example.com"
+		<input id="private-chat-recipient-nickname" type="text" wire:model.defer="recipientNickname"
+			placeholder="nickname"
 			class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
 			@disabled(!$isCurrentUserVerified) />
-		@error('recipientEmail')
+		@error('recipientNickname')
 			<div class="text-xs text-rose-600">{{ $message }}</div>
 		@enderror
 		<div class="flex items-center justify-end">

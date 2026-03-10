@@ -36,7 +36,7 @@ class PrivateChat extends Component
     public bool $enforceRecipientVerification = false;
     public bool $chatOpen = false;
 
-    public string $recipientEmail = '';
+    public string $recipientNickname = '';
     public ?int $recipientId = null;
 
     /** @var array{id:int,name:string,avatar:?string,is_email_verified:bool,badge_icon:?string,badge_color:?string}|null */
@@ -86,13 +86,22 @@ class PrivateChat extends Component
         return ChatAttachmentRules::attributes('attachments');
     }
 
-    public function mount(?int $initialConversationId = null, ConversationService $conversationService): void
+    public function mount(
+        ?int $initialConversationId = null,
+        ?string $initialRecipient = null,
+        ConversationService $conversationService
+    ): void
     {
         $user = auth()->user();
         $this->currentUserId = $user?->id ?? 0;
         $this->isCurrentUserVerified = $user ? (bool) $user->isVerified() : false;
         $this->enforceRecipientVerification = Settings::shouldEmailVerify();
         $this->composerIdempotencyKey = (string) Str::uuid();
+
+        $initialRecipient = is_string($initialRecipient) ? mb_strtolower(trim($initialRecipient)) : null;
+        if (filled($initialRecipient)) {
+            $this->recipientNickname = $initialRecipient;
+        }
 
         if (!$this->isCurrentUserVerified) {
             return;
@@ -105,6 +114,10 @@ class PrivateChat extends Component
             return;
         }
 
+        if ($this->recipientNickname !== '') {
+            return;
+        }
+
         if (!empty($this->conversations)) {
             $this->openConversation((int) $this->conversations[0]['id'], $conversationService);
         }
@@ -112,7 +125,7 @@ class PrivateChat extends Component
 
     public function findRecipient(): void
     {
-        $this->resetErrorBag(['recipientEmail', 'content', 'chat']);
+        $this->resetErrorBag(['recipientNickname', 'content', 'chat']);
 
         $user = auth()->user();
         if (!$user instanceof User) {
@@ -128,20 +141,20 @@ class PrivateChat extends Component
 
         $key = 'private-chat-lookup:' . $this->currentUserId . '|' . request()->ip();
         if (RateLimiter::tooManyAttempts($key, 12)) {
-            $this->addError('recipientEmail', 'მიმღების მოძიების მცდელობა დროებით შეზღუდულია.');
+            $this->addError('recipientNickname', 'მიმღების მოძიების მცდელობა დროებით შეზღუდულია.');
             return;
         }
         RateLimiter::hit($key, 60);
 
         $this->validate([
-            'recipientEmail' => ['required', 'email:rfc'],
+            'recipientNickname' => ['required', 'string', 'min:2', 'max:50'],
         ]);
 
-        $email = mb_strtolower(trim($this->recipientEmail));
+        $nickname = mb_strtolower(trim($this->recipientNickname));
 
         $recipient = User::query()
-            ->select(['id', 'name', 'surname', 'image', 'email_verified_at', 'is_expert', 'is_top_commentator'])
-            ->where('email', $email)
+            ->select(['id', 'name', 'surname', 'nickname', 'image', 'email_verified_at', 'is_expert', 'is_top_commentator'])
+            ->where('nickname', $nickname)
             ->when(
                 $this->enforceRecipientVerification,
                 fn($query) => $query->whereNotNull('email_verified_at')
@@ -151,7 +164,7 @@ class PrivateChat extends Component
 
         if (!$recipient) {
             $this->clearRecipient();
-            $this->addError('recipientEmail', 'მიმღები ვერ მოიძებნა.');
+            $this->addError('recipientNickname', 'მიმღები ვერ მოიძებნა.');
             return;
         }
 
@@ -168,7 +181,7 @@ class PrivateChat extends Component
 
     public function startConversation(ConversationService $conversationService): void
     {
-        $this->resetErrorBag(['recipientEmail', 'content', 'chat']);
+        $this->resetErrorBag(['recipientNickname', 'content', 'chat']);
 
         $user = auth()->user();
         if (!$user instanceof User) {
@@ -183,7 +196,7 @@ class PrivateChat extends Component
         }
 
         if (!$this->recipientId) {
-            $this->addError('recipientEmail', 'ჯერ მოძებნეთ მომხმარებელი ელ.ფოსტით.');
+            $this->addError('recipientNickname', 'ჯერ მოძებნეთ მომხმარებელი ზედმეტსახელით.');
             return;
         }
 
@@ -199,7 +212,7 @@ class PrivateChat extends Component
         $this->activeRecipientId = $this->recipientId;
         $this->activeRecipient = $this->recipientPreview;
         $this->clearRecipient();
-        $this->recipientEmail = '';
+        $this->recipientNickname = '';
         $this->resetThreadState();
 
         $existingConversation = $this->findConversationWithRecipient($this->activeRecipientId);
@@ -238,7 +251,7 @@ class PrivateChat extends Component
         $this->syncActiveRecipientFromConversation($conversation);
         $this->clearRecipient();
         $this->resetComposerState();
-        $this->recipientEmail = '';
+        $this->recipientNickname = '';
         $this->loadLatest();
         $this->loadConversations($conversationService);
     }

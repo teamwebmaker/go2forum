@@ -19,6 +19,8 @@
     $sender = $message['sender'] ?? [];
     $senderFullName = trim((string) ($sender['full_name'] ?? $sender['name'] ?? 'User'));
     $senderNickname = trim((string) ($sender['nickname'] ?? ''));
+    $senderStatusLabel = trim((string) ($sender['status_label'] ?? ''));
+    $senderId = (int) ($sender['id'] ?? 0);
     $primaryLabel = $isMine ? 'მე' : ($senderNickname !== '' ? $senderNickname : $senderFullName);
     $secondaryLabel = $isMine ? null : ($senderNickname !== '' && $senderFullName !== '' ? $senderFullName : null);
     $avatarUrl = (string) ($sender['avatar'] ?? '');
@@ -48,16 +50,31 @@
             ($isMine ? 'ml-auto border-primary-200 bg-primary-50/40' : 'mr-auto border-slate-200 bg-white');
 
     $avatarSize = $isTopic ? 'h-9 w-9 text-xs' : 'h-8 w-8 text-[11px]';
+    $privateChatUrl = null;
+    if ($isTopic && $currentUserId && !$isMine && $senderId > 0 && $senderNickname !== '') {
+        $privateChatUrl = route('profile.messages', ['recipient' => $senderNickname]);
+    }
 @endphp
 
 <div {{ $attributes->class($rootClasses) }}>
     <article class="{{ $articleClasses }}">
         <div class="{{ $isTopic ? 'flex flex-col gap-2 text-[11px] text-slate-500 sm:flex-row sm:items-start sm:justify-between sm:gap-3' : 'mb-2 flex flex-col gap-2 text-[11px] text-slate-500 sm:flex-row sm:items-start sm:justify-between sm:gap-3' }}">
-            <x-chat.user-identity :name="$primaryLabel" :secondary="$secondaryLabel"
-                :avatar="$avatarUrl !== '' ? $avatarUrl : null" :badgeIcon="$badgeIcon" :badgeColor="$badgeColor"
-                :avatarAlt="$senderFullName !== '' ? $senderFullName : $primaryLabel" :avatarSizeClass="$avatarSize"
-                wrapperClass="flex min-w-0 flex-1 items-start gap-2" textWrapperClass="min-w-0"
-                nameClass="truncate text-sm font-semibold text-slate-800" secondaryClass="truncate text-xs text-slate-500" />
+            <div class="flex min-w-0  items-start gap-2">
+                <x-chat.user-identity :name="$primaryLabel" :secondary="$secondaryLabel"
+                    :avatar="$avatarUrl !== '' ? $avatarUrl : null" :badgeIcon="$badgeIcon" :badgeColor="$badgeColor"
+                    :avatarAlt="$senderFullName !== '' ? $senderFullName : $primaryLabel" :avatarSizeClass="$avatarSize"
+                    :statusLabel="$senderStatusLabel !== '' ? $senderStatusLabel : null"
+                    wrapperClass="flex min-w-0 flex-1 items-start gap-2" textWrapperClass="min-w-0"
+                    nameClass="truncate text-sm font-semibold text-slate-800" secondaryClass="truncate text-xs text-slate-500" />
+
+                @if ($privateChatUrl)
+                    <a href="{{ $privateChatUrl }}"
+                        class="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                        title="პირადი ჩატი">
+                        <x-app-icon name="chat-bubble-left-ellipsis" class="size-4" />
+                    </a>
+                @endif
+            </div>
 
             @if ($isTopic)
                 <span class="inline-flex shrink-0 self-end items-center gap-1 tabular-nums text-[10px] sm:self-auto sm:text-[11px]">

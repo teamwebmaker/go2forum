@@ -10,7 +10,7 @@
         'xs' => 'w-40',
         'sm' => 'w-64',
         'md' => 'w-80',
-        default => 'w-auto max-w-[calc(100vw-1rem)] sm:max-w-xs',
+        default => 'w-50',
     };
 
        $positionClasses = match ($position) {
