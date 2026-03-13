@@ -18,6 +18,7 @@ class PageController extends Controller
         $categories = Category::with([
             'ad' => fn($q) => $q->visible(),
         ])
+            ->withSum('topics as total_messages_count', 'messages_count')
             ->visible()
             ->orderBy('order')
             ->get();

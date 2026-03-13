@@ -6,19 +6,26 @@
    <div class="relative flex w-full flex-col gap-8 overflow-visible">
       <x-hero.banner :banner="$banner" />
 
-      <div class="flex w-full flex-col gap-8 pt-4">
-         <div class="grid grid-cols-1 gap-3 lg:grid-cols-[1.1fr_auto_1fr] lg:items-start">
-            @if(!empty($categories))
-               @include('pages.home.partials.categories', ['categories' => $categories])
-            @endif
-            <div aria-hidden="true"
-               class="my-2 w-full border-t border-slate-200 lg:my-0 lg:h-full lg:w-px lg:border-l lg:border-t-0 lg:mx-4">
-            </div>
-            @if (!empty($documents))
-               @include('pages.home.partials.documents', ['documents' => $documents])
-            @endif
+      <div class="-mx-1 flex w-full flex-col gap-8 pt-4 sm:mx-0">
+         @php
+            $hasCategories = isset($categories) && is_countable($categories) && count($categories) > 0;
+            $hasDocuments = isset($documents) && is_countable($documents) && count($documents) > 0;
+         @endphp
 
-         </div>
+         @if ($hasCategories || $hasDocuments)
+            <div @class([
+               'grid grid-cols-1 gap-4 xl:gap-5',
+               'lg:grid-cols-[3fr_1fr] lg:items-start' => $hasCategories && $hasDocuments,
+            ])>
+               @if ($hasCategories)
+                  @include('pages.home.partials.categories', ['categories' => $categories])
+               @endif
+
+               @if ($hasDocuments)
+                  @include('pages.home.partials.documents', ['documents' => $documents])
+               @endif
+            </div>
+         @endif
       </div>
 
       {{-- Document preview modal (reuses global modal component) --}}

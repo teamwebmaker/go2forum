@@ -19,7 +19,7 @@
   @include('partials.nav')
   @include('partials.toasts')
   @include('partials.alerts')
-  <main class="mx-auto flex w-full max-w-6xl flex-1 px-6 py-10">
+  <main class="mx-auto flex w-full max-w-7xl flex-1 px-6 py-10">
     @yield('content')
   </main>
 

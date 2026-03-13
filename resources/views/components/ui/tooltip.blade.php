@@ -29,7 +29,7 @@
     <span
   class="invisible absolute z-10 {{ $sizeClasses }} {{ $positionClasses }} {{ $titleClasses }}
     rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-md
-    whitespace-normal break-words leading-snug
+    whitespace-normal wrap-break-words leading-snug
     opacity-0 transition group-hover:visible group-hover:opacity-100">
   {{ $text }}
 </span>
