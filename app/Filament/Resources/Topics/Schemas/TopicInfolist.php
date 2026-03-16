@@ -31,6 +31,10 @@ class TopicInfolist
                 TextEntry::make('messages_count')
                     ->label(TopicResource::labelFor('messages_count'))
                     ->numeric(),
+                TextEntry::make('conversation.last_message_at')
+                    ->label(TopicResource::labelFor('last_message_at'))
+                    ->dateTime()
+                    ->placeholder('-'),
                 IconEntry::make('pinned')
                     ->label(TopicResource::labelFor('pinned'))
                     ->boolean(),

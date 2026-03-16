@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Topics\Tables;
 
 use App\Filament\Resources\Topics\TopicResource;
+use App\Models\Conversation;
 use App\Models\Topic;
 use App\Services\TopicDeletionService;
 use Filament\Actions\BulkActionGroup;
@@ -47,6 +48,17 @@ class TopicsTable
                     ->label(TopicResource::labelFor('messages_count'))
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('conversation.last_message_at')
+                    ->label(TopicResource::labelFor('last_message_at'))
+                    ->dateTime()
+                    ->sortable(query: fn($query, string $direction) => $query->orderBy(
+                        Conversation::query()
+                            ->select('last_message_at')
+                            ->whereColumn('topic_id', 'topics.id')
+                            ->limit(1),
+                        $direction
+                    ))
+                    ->placeholder('-'),
                 IconColumn::make('pinned')
                     ->label(TopicResource::labelFor('pinned'))
                     ->boolean(),

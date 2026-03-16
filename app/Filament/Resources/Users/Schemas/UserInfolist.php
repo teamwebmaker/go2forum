@@ -21,6 +21,9 @@ class UserInfolist
                     ->label(UserResource::labelFor('name')),
                 TextEntry::make('surname')
                     ->label(UserResource::labelFor('surname')),
+                TextEntry::make('nickname')
+                    ->label(UserResource::labelFor('nickname'))
+                    ->placeholder('-'),
                 TextEntry::make('email')
                     ->label(UserResource::labelFor('email')),
                 TextEntry::make('phone')

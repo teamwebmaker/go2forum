@@ -25,10 +25,30 @@ class MessageInfolist
                 TextEntry::make('sender.full_name')
                     ->label(MessageResource::labelFor('sender_id'))
                     ->placeholder('-'),
+                TextEntry::make('reply_to_message_id')
+                    ->label(MessageResource::labelFor('reply_to_message_id'))
+                    ->numeric()
+                    ->placeholder('-'),
+                TextEntry::make('replyTo.content')
+                    ->label(MessageResource::labelFor('reply_preview'))
+                    ->limit(160)
+                    ->placeholder('-')
+                    ->columnSpanFull(),
                 TextEntry::make('content')
                     ->label(MessageResource::labelFor('content'))
                     ->placeholder('-')
                     ->columnSpanFull(),
+                TextEntry::make('original_content')
+                    ->label(MessageResource::labelFor('original_content'))
+                    ->placeholder('-')
+                    ->columnSpanFull(),
+                TextEntry::make('edited_content')
+                    ->label(MessageResource::labelFor('edited_content'))
+                    ->placeholder('-')
+                    ->columnSpanFull(),
+                TextEntry::make('client_token')
+                    ->label(MessageResource::labelFor('client_token'))
+                    ->placeholder('-'),
                 TextEntry::make('attachments_count')
                     ->label(MessageResource::labelFor('attachments_count'))
                     ->numeric()
@@ -65,6 +85,10 @@ class MessageInfolist
                     ->placeholder('-'),
                 TextEntry::make('updated_at')
                     ->label(MessageResource::labelFor('updated_at'))
+                    ->dateTime()
+                    ->placeholder('-'),
+                TextEntry::make('edited_at')
+                    ->label(MessageResource::labelFor('edited_at'))
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('deleted_at')

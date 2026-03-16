@@ -25,6 +25,7 @@ class PublicDocumentsTable
                     ->searchable(),
                 TextColumn::make('link')
                     ->label(PublicDocumentResource::labelFor('link'))
+                    ->limit(30)
                     ->searchable(),
                 IconColumn::make('visibility')
                     ->label(PublicDocumentResource::labelFor('visibility'))

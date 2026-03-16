@@ -28,6 +28,16 @@ class UserForm
                     TextInput::make('surname')
                         ->label(UserResource::labelFor('surname'))
                         ->required(),
+                    TextInput::make('nickname')
+                        ->label(UserResource::labelFor('nickname'))
+                        ->required()
+                        ->minLength(2)
+                        ->maxLength(50)
+                        ->unique(
+                            table: User::class,
+                            column: 'nickname',
+                            ignorable: fn(?User $record) => $record,
+                        ),
                 ]),
                 Grid::make(1)->schema([
                     TextInput::make('email')

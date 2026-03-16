@@ -38,6 +38,9 @@ class UsersTable
                 TextColumn::make('surname')
                     ->label(UserResource::labelFor('surname'))
                     ->searchable(),
+                TextColumn::make('nickname')
+                    ->label(UserResource::labelFor('nickname'))
+                    ->searchable(),
                 TextColumn::make('email')
                     ->label(UserResource::labelFor('email'))
                     ->searchable(),

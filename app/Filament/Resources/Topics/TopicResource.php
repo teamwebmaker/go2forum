@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TopicResource extends Resource
 {
@@ -65,6 +66,16 @@ class TopicResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with([
+                'user:id,name,surname',
+                'category:id,name',
+                'conversation:id,topic_id,last_message_at',
+            ]);
     }
 
     public static function getPages(): array

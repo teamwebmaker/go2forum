@@ -40,10 +40,35 @@ class MessagesTable
                     ->label(MessageResource::labelFor('sender_id'))
                     ->placeholder('-')
                     ->searchable(),
+                TextColumn::make('reply_to_message_id')
+                    ->label(MessageResource::labelFor('reply_to_message_id'))
+                    ->numeric()
+                    ->placeholder('-')
+                    ->sortable(),
                 TextColumn::make('content')
                     ->label(MessageResource::labelFor('content'))
                     ->limit(90)
                     ->searchable(),
+                TextColumn::make('edited_at')
+                    ->label(MessageResource::labelFor('edited_at'))
+                    ->dateTime()
+                    ->placeholder('-')
+                    ->sortable(),
+                TextColumn::make('client_token')
+                    ->label(MessageResource::labelFor('client_token'))
+                    ->limit(24)
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('original_content')
+                    ->label(MessageResource::labelFor('original_content'))
+                    ->limit(80)
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('edited_content')
+                    ->label(MessageResource::labelFor('edited_content'))
+                    ->limit(80)
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('attachments_count')
                     ->label(MessageResource::labelFor('attachments_count'))
                     ->numeric()
@@ -95,6 +120,22 @@ class MessagesTable
                     ->queries(
                         true: fn($query) => $query->whereNotNull('sender_id'),
                         false: fn($query) => $query->whereNull('sender_id'),
+                    ),
+                TernaryFilter::make('is_reply')
+                    ->label(MessageResource::labelFor('reply_to_message_id'))
+                    ->trueLabel(__('models.messages.filters.with_reply'))
+                    ->falseLabel(__('models.messages.filters.without_reply'))
+                    ->queries(
+                        true: fn($query) => $query->whereNotNull('reply_to_message_id'),
+                        false: fn($query) => $query->whereNull('reply_to_message_id'),
+                    ),
+                TernaryFilter::make('is_edited')
+                    ->label(MessageResource::labelFor('edited_at'))
+                    ->trueLabel(__('models.messages.filters.edited_only'))
+                    ->falseLabel(__('models.messages.filters.not_edited_only'))
+                    ->queries(
+                        true: fn($query) => $query->whereNotNull('edited_at'),
+                        false: fn($query) => $query->whereNull('edited_at'),
                     ),
                 TernaryFilter::make('is_deleted')
                     ->label(MessageResource::labelFor('deleted_at'))

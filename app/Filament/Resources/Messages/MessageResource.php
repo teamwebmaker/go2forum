@@ -76,6 +76,7 @@ class MessageResource extends Resource
             ->with([
                 'conversation:id,kind',
                 'sender:id,name,surname',
+                'replyTo:id,content',
             ])
             ->withCount([
                 'attachments',

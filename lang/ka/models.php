@@ -62,6 +62,7 @@ return [
             'status' => 'სტატუსი',
             'slug' => 'სლაგი',
             'messages_count' => 'შეტყობინებების რაოდენობა',
+            'last_message_at' => 'ბოლო აქტივობა',
             'pinned' => 'აპინული',
             'visibility' => 'ხილვადობა',
             'created_at' => 'შეიქმნა',
@@ -170,7 +171,13 @@ return [
             'conversation_id' => 'საუბარი',
             'conversation_kind' => 'საუბრის ტიპი',
             'sender_id' => 'გამომგზავნი',
+            'reply_to_message_id' => 'პასუხი შეტყობინებაზე',
+            'reply_preview' => 'პასუხის ტექსტი',
             'content' => 'ტექსტი',
+            'original_content' => 'საწყისი ტექსტი',
+            'edited_content' => 'ჩასწორებული ტექსტი',
+            'edited_at' => 'ჩასწორების დრო',
+            'client_token' => 'კლიენტის ტოკენი',
             'attachments' => 'დანართები',
             'file' => 'ფაილი',
             'attachments_count' => 'დანართების რაოდენობა',
@@ -212,6 +219,10 @@ return [
             'not_deleted_only' => 'მხოლოდ წაუშლელი',
             'with_sender' => 'გამომგზავნით',
             'without_sender' => 'გამომგზავნის გარეშე',
+            'with_reply' => 'პასუხით',
+            'without_reply' => 'პასუხის გარეშე',
+            'edited_only' => 'მხოლოდ ჩასწორებული',
+            'not_edited_only' => 'მხოლოდ ჩასწორების გარეშე',
         ],
         'types' => [
             'image' => 'სურათი',
@@ -304,6 +315,26 @@ return [
             ]
         ]
     ],
+    'public_document_user_views' => [
+        'singular' => 'დოკუმენტის ნახვა',
+        'plural' => 'დოკუმენტის ნახვები',
+        'fields' => [
+            'id' => 'ID',
+            'public_document_id' => 'დოკუმენტი',
+            'user_id' => 'მომხმარებელი',
+            'user_nickname' => 'ზედმეტსახელი',
+            'created_at' => 'შეიქმნა',
+            'updated_at' => 'ბოლოს განახლდა',
+        ],
+        'titles' => [
+            'list' => 'დოკუმენტის ნახვების ისტორია',
+        ],
+        'filters' => [
+            'all' => 'ყველა',
+            'restricted_only' => 'მხოლოდ ავტორიზაციით დოკუმენტები',
+            'non_restricted_only' => 'მხოლოდ ღია დოკუმენტები',
+        ],
+    ],
     'users' => [
         'singular' => 'მომხმარებელი',
         'plural' => 'მომხმარებლები',
@@ -315,6 +346,7 @@ return [
         'fields' => [
             'name' => 'სახელი',
             'surname' => 'გვარი',
+            'nickname' => 'ზედმეტსახელი',
             'email' => 'ელ.ფოსტა',
             'phone' => 'ტელეფონი',
             'role' => 'როლი',
