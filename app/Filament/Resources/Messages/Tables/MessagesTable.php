@@ -113,14 +113,28 @@ class MessagesTable
 
                         return $query->whereHas('conversation', fn($conversationQuery) => $conversationQuery->where('kind', $value));
                     }),
-                TernaryFilter::make('has_sender')
-                    ->label(MessageResource::labelFor('sender_id'))
-                    ->trueLabel(__('models.messages.filters.with_sender'))
-                    ->falseLabel(__('models.messages.filters.without_sender'))
-                    ->queries(
-                        true: fn($query) => $query->whereNotNull('sender_id'),
-                        false: fn($query) => $query->whereNull('sender_id'),
-                    ),
+                SelectFilter::make('conversation_id')
+                    ->label(MessageResource::labelFor('conversation_id'))
+                    ->options(fn(): array => Conversation::query()
+                        ->with('topic:id,title')
+                        ->orderByDesc('id')
+                        ->get()
+                        ->mapWithKeys(function (Conversation $conversation): array {
+                            $context = $conversation->topic?->title;
+
+                            if (blank($context)) {
+                                $context = $conversation->isPrivate()
+                                    ? __('models.conversations.kinds.private')
+                                    : __('models.conversations.kinds.topic');
+                            }
+
+                            return [
+                                $conversation->id => "#{$conversation->id} · {$context}",
+                            ];
+                        })
+                        ->all())
+                    ->searchable()
+                    ->preload(),
                 TernaryFilter::make('is_reply')
                     ->label(MessageResource::labelFor('reply_to_message_id'))
                     ->trueLabel(__('models.messages.filters.with_reply'))
@@ -137,16 +151,17 @@ class MessagesTable
                         true: fn($query) => $query->whereNotNull('edited_at'),
                         false: fn($query) => $query->whereNull('edited_at'),
                     ),
-                TernaryFilter::make('is_deleted')
-                    ->label(MessageResource::labelFor('deleted_at'))
-                    ->placeholder(__('models.messages.filters.all'))
-                    ->trueLabel(__('models.messages.filters.deleted_only'))
-                    ->falseLabel(__('models.messages.filters.not_deleted_only'))
-                    ->queries(
-                        true: fn($query) => $query->onlyTrashed(),
-                        false: fn($query) => $query->withoutTrashed(),
-                        blank: fn($query) => $query->withTrashed(),
-                    ),
+                // Temporary disabled   
+                // TernaryFilter::make('is_deleted')
+                //     ->label(MessageResource::labelFor('deleted_at'))
+                //     ->placeholder(__('models.messages.filters.all'))
+                //     ->trueLabel(__('models.messages.filters.deleted_only'))
+                //     ->falseLabel(__('models.messages.filters.not_deleted_only'))
+                //     ->queries(
+                //         true: fn($query) => $query->onlyTrashed(),
+                //         false: fn($query) => $query->withoutTrashed(),
+                //         blank: fn($query) => $query->withTrashed(),
+                //     ),
             ])
             ->recordActions([
                 ViewAction::make()
@@ -161,10 +176,7 @@ class MessagesTable
                     ->hidden(false)
                     ->modalHeading(__('models.messages.actions.delete.heading'))
                     ->modalDescription(__('models.messages.actions.delete.description'))
-                    ->using(function (
-                        Message $record,
-                        MessageDeletionService $messageDeletionService
-                    ): bool {
+                    ->using(function (Message $record, MessageDeletionService $messageDeletionService): bool {
                         $messageDeletionService->deleteByAdmin($record);
 
                         return true;
@@ -175,18 +187,10 @@ class MessagesTable
                     DeleteBulkAction::make()
                         ->label(__('models.messages.actions.delete.label'))
                         ->chunkSelectedRecords(100)
-                        ->using(function (
-                            DeleteBulkAction $action,
-                            EloquentCollection|Collection|LazyCollection $records,
-                            MessageDeletionService $messageDeletionService
-                        ): void {
+                        ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records, MessageDeletionService $messageDeletionService): void {
                             $isFirstException = true;
 
-                            $records->each(function (Message $record) use (
-                                $action,
-                                $messageDeletionService,
-                                &$isFirstException
-                            ): void {
+                            $records->each(function (Message $record) use ($action, $messageDeletionService, &$isFirstException): void {
                                 try {
                                     $messageDeletionService->deleteByAdmin($record);
                                 } catch (\Throwable $exception) {
