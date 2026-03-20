@@ -5,9 +5,14 @@ namespace App\Filament\Resources\Users\Tables;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use App\Services\AccountDeletionService;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -16,6 +21,8 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
 class UsersTable
 {
@@ -87,13 +94,84 @@ class UsersTable
                 EditAction::make(),
             ])
             ->toolbarActions([
+                Action::make('exportUsers')
+                    ->label(__('models.users.actions.export.label'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->modalHeading(__('models.users.actions.export.heading'))
+                    ->modalDescription(__('models.users.actions.export.description'))
+                    ->modalSubmitActionLabel(__('models.users.actions.export.submit'))
+                    ->form([
+                        Toggle::make('select_all')
+                            ->label(__('models.users.actions.export.select_all'))
+                            ->default(false)
+                            ->live(),
+                        Select::make('user_ids')
+                            ->label(__('models.users.actions.export.users'))
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->options(fn(): array => self::userOptions())
+                            ->getSearchResultsUsing(fn(string $search): array => self::userOptions($search))
+                            ->getOptionLabelsUsing(fn(array $values): array => self::userOptionsByIds($values))
+                            ->disabled(fn(Get $get): bool => (bool) $get('select_all'))
+                            ->required(fn(Get $get): bool => !(bool) $get('select_all')),
+                    ])
+                    ->action(function (array $data) {
+                        $selectAll = (bool) ($data['select_all'] ?? false);
+                        $selectedIds = collect($data['user_ids'] ?? [])
+                            ->filter(fn($id) => filled($id))
+                            ->map(fn($id): int => (int) $id)
+                            ->unique()
+                            ->values()
+                            ->all();
+
+                        if (!$selectAll && empty($selectedIds)) {
+                            Notification::make()
+                                ->danger()
+                                ->title(__('models.users.actions.export.empty'))
+                                ->send();
+
+                            return null;
+                        }
+
+                        $query = self::baseUsersQuery()
+                            ->select(['name', 'surname', 'nickname', 'email', 'phone']);
+
+                        if (!$selectAll) {
+                            $query->whereKey($selectedIds);
+                        }
+
+                        $users = $query
+                            ->orderBy('name')
+                            ->orderBy('surname')
+                            ->get();
+
+                        $fileName = 'users_export_' . now()->format('Ymd_His') . '.xlsx';
+
+                        return response()->streamDownload(function () use ($users, $fileName): void {
+                            $writer = app(Writer::class);
+                            $writer->openToBrowser($fileName);
+                            $writer->addRow(Row::fromValues(['name', 'surname', 'nickname', 'email', 'phone']));
+
+                            foreach ($users as $user) {
+                                $writer->addRow(Row::fromValues([
+                                    (string) ($user->name ?? ''),
+                                    (string) ($user->surname ?? ''),
+                                    (string) ($user->nickname ?? ''),
+                                    (string) ($user->email ?? ''),
+                                    (string) ($user->phone ?? ''),
+                                ]));
+                            }
+
+                            $writer->close();
+                        }, $fileName, [
+                            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        ]);
+                    }),
                 DeleteBulkAction::make()
                     ->chunkSelectedRecords(100)
-                    ->using(function (
-                        DeleteBulkAction $action,
-                        EloquentCollection | Collection | LazyCollection $records,
-                        AccountDeletionService $accountDeletionService
-                    ): void {
+                    ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records, AccountDeletionService $accountDeletionService): void {
                         $isFirstException = true;
 
                         $records->each(function (User $record) use ($action, $accountDeletionService, &$isFirstException): void {
@@ -111,5 +189,83 @@ class UsersTable
                     })
                     ->modalHeading(__('models.users.actions.delete.headingBulk')),
             ]);
+    }
+
+    protected static function baseUsersQuery()
+    {
+        $query = User::query();
+        $userId = Auth::id();
+
+        if ($userId) {
+            $query->whereKeyNot($userId);
+        }
+
+        return $query;
+    }
+
+    protected static function userOptions(?string $search = null): array
+    {
+        $query = self::baseUsersQuery()
+            ->select(['id', 'name', 'surname', 'nickname', 'email'])
+            ->orderBy('name')
+            ->orderBy('surname');
+
+        if (filled($search)) {
+            $searchTerm = trim((string) $search);
+
+            $query->where(function ($subQuery) use ($searchTerm): void {
+                $subQuery
+                    ->where('name', 'like', "%{$searchTerm}%")
+                    ->orWhere('surname', 'like', "%{$searchTerm}%")
+                    ->orWhere('nickname', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        return $query
+            ->limit(100)
+            ->get()
+            ->mapWithKeys(fn(User $user): array => [
+                $user->id => self::userLabel($user),
+            ])
+            ->all();
+    }
+
+    protected static function userOptionsByIds(array $ids): array
+    {
+        $normalizedIds = collect($ids)
+            ->filter(fn($id) => filled($id))
+            ->map(fn($id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($normalizedIds === []) {
+            return [];
+        }
+
+        return self::baseUsersQuery()
+            ->select(['id', 'name', 'surname', 'nickname', 'email'])
+            ->whereKey($normalizedIds)
+            ->get()
+            ->mapWithKeys(fn(User $user): array => [
+                $user->id => self::userLabel($user),
+            ])
+            ->all();
+    }
+
+    protected static function userLabel(User $user): string
+    {
+        $fullName = trim((string) $user->full_name);
+        $nickname = trim((string) ($user->nickname ?? ''));
+
+        if ($nickname !== '') {
+            return "{$fullName} ({$nickname})";
+        }
+
+        if ($fullName !== '') {
+            return $fullName;
+        }
+
+        return (string) ($user->email ?? $user->id);
     }
 }
