@@ -45,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
                 OverviewStatsWidget::class,
             ])->userMenuItems([
                     Action::make('home')
-                        ->label('სახლი')
+                        ->label('მთავარი')
                         ->url(fn(): string => route('page.home'))
                         ->icon('heroicon-o-home'),
                 ])

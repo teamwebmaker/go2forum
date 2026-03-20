@@ -113,7 +113,7 @@ return [
         'fields' => [
             'id' => 'ID',
             'kind' => 'ტიპი',
-            'topic_id' => 'თემა',
+            'topic_id' => 'თემა ID',
             'direct_user1_id' => 'მომხმარებელი #1',
             'direct_user2_id' => 'მომხმარებელი #2',
             'private_users' => 'პირადი მონაწილეები',
@@ -168,10 +168,10 @@ return [
         'plural' => 'შეტყობინებები',
         'fields' => [
             'id' => 'ID',
-            'conversation_id' => 'საუბარი',
+            'conversation_id' => 'საუბარი ID',
             'conversation_kind' => 'საუბრის ტიპი',
             'sender_id' => 'გამომგზავნი',
-            'reply_to_message_id' => 'პასუხი შეტყობინებაზე',
+            'reply_to_message_id' => 'პასუხი შეტყობინებაზე ID',
             'reply_preview' => 'პასუხის ტექსტი',
             'content' => 'ტექსტი',
             'original_content' => 'საწყისი ტექსტი',

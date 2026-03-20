@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Conversations\Tables;
 
 use App\Filament\Resources\Conversations\ConversationResource;
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Services\ConversationDeletionService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -183,14 +184,24 @@ class ConversationsTable
 
     protected static function participantsForModal(Conversation $record): array
     {
+        $messageCounts = Message::query()
+            ->where('conversation_id', $record->id)
+            ->whereNotNull('sender_id')
+            ->selectRaw('sender_id, COUNT(*) as messages_count')
+            ->groupBy('sender_id')
+            ->pluck('messages_count', 'sender_id');
+
         return $record->participants()
             ->with('user:id,name,surname')
             ->get()
-            ->map(function (Model $participant): array {
+            ->map(function (Model $participant) use ($messageCounts): array {
+                $messagesCount = (int) ($messageCounts->get($participant->user_id) ?? 0);
+
                 return [
                     'key' => "{$participant->conversation_id}-{$participant->user_id}",
                     'name' => self::participantDisplayName($participant),
                     'joined_at' => $participant->joined_at?->format('Y-m-d H:i'),
+                    'messages_count' => $messagesCount,
                 ];
             })
             ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)

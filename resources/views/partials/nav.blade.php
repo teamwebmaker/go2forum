@@ -13,12 +13,12 @@
             'inline-flex items-center rounded-md px-3 py-1.5 text-sm font-semibold shadow-sm bg-primary-500 text-white hover:bg-primary-600/90 focus:ring-2 focus:ring-offset-2 focus:ring-gray-900/20';
 
         $guestLinks = [
-            ['label' => 'სახლი', 'route' => 'page.home'],
+            ['label' => 'მთავარი', 'route' => 'page.home'],
             ['label' => 'შესვლა', 'route' => 'login'],
             ['label' => 'რეგისტრაცია', 'route' => 'register', 'cta' => true],
         ];
 
-        $authLinks = [['label' => 'სახლი', 'route' => 'page.home']];
+        $authLinks = [['label' => 'მთავარი', 'route' => 'page.home']];
     @endphp
 
     <nav class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-3">

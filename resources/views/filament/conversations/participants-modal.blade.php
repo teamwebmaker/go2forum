@@ -37,6 +37,7 @@
             @php
                 $name = $participant['name'] ?? '-';
                 $joinedAt = $participant['joined_at'] ?? '-';
+                $messagesCount = (int) ($participant['messages_count'] ?? 0);
             @endphp
 
             <div class="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2 dark:border-white/10"
@@ -45,6 +46,10 @@
                 <p class="text-sm font-medium text-gray-950 dark:text-white">
                     {{ $name }}
                 </p>
+                <span
+                    class="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-semibold text-gray-700 dark:border-white/15 dark:bg-white/5 dark:text-gray-200">
+                    {{ $messagesCount }}
+                </span>
             </div>
         @endforeach
 
