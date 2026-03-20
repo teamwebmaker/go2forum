@@ -17,6 +17,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
@@ -39,7 +40,17 @@ class MessagesTable
                 TextColumn::make('sender.full_name')
                     ->label(MessageResource::labelFor('sender_id'))
                     ->placeholder('-')
-                    ->searchable(),
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        $searchTerm = trim($search);
+
+                        return $query->whereHas('sender', function (Builder $senderQuery) use ($searchTerm): void {
+                            $senderQuery
+                                ->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('surname', 'like', "%{$searchTerm}%")
+                                ->orWhere('nickname', 'like', "%{$searchTerm}%")
+                                ->orWhere('email', 'like', "%{$searchTerm}%");
+                        });
+                    }),
                 TextColumn::make('reply_to_message_id')
                     ->label(MessageResource::labelFor('reply_to_message_id'))
                     ->numeric()
@@ -114,7 +125,7 @@ class MessagesTable
                         return $query->whereHas('conversation', fn($conversationQuery) => $conversationQuery->where('kind', $value));
                     }),
                 SelectFilter::make('conversation_id')
-                    ->label(MessageResource::labelFor('conversation_id'))
+                    ->label(__('models.messages.filters.conversation'))
                     ->options(fn(): array => Conversation::query()
                         ->with('topic:id,title')
                         ->orderByDesc('id')
@@ -136,7 +147,7 @@ class MessagesTable
                     ->searchable()
                     ->preload(),
                 TernaryFilter::make('is_reply')
-                    ->label(MessageResource::labelFor('reply_to_message_id'))
+                    ->label(__('models.messages.filters.reply_to_message'))
                     ->trueLabel(__('models.messages.filters.with_reply'))
                     ->falseLabel(__('models.messages.filters.without_reply'))
                     ->queries(
@@ -144,7 +155,7 @@ class MessagesTable
                         false: fn($query) => $query->whereNull('reply_to_message_id'),
                     ),
                 TernaryFilter::make('is_edited')
-                    ->label(MessageResource::labelFor('edited_at'))
+                    ->label(__('models.messages.filters.edited'))
                     ->trueLabel(__('models.messages.filters.edited_only'))
                     ->falseLabel(__('models.messages.filters.not_edited_only'))
                     ->queries(

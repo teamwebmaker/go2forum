@@ -113,7 +113,7 @@ return [
         'fields' => [
             'id' => 'ID',
             'kind' => 'ტიპი',
-            'topic_id' => 'თემა ID',
+            'topic_id' => 'თემა ',
             'direct_user1_id' => 'მომხმარებელი #1',
             'direct_user2_id' => 'მომხმარებელი #2',
             'private_users' => 'პირადი მონაწილეები',
@@ -214,6 +214,9 @@ return [
             ],
         ],
         'filters' => [
+            'conversation' => 'საუბარი / თემა',
+            'reply_to_message' => 'პასუხი შეტყობინებაზე',
+            'edited' => 'ჩასწორება',
             'all' => 'ყველა',
             'deleted_only' => 'მხოლოდ წაშლილი',
             'not_deleted_only' => 'მხოლოდ წაუშლელი',

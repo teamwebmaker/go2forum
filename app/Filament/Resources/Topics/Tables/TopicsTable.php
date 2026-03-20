@@ -15,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
@@ -26,7 +27,17 @@ class TopicsTable
         return $table
             ->columns([
                 TextColumn::make('user.full_name')
-                    ->label(TopicResource::labelFor('user_id')),
+                    ->label(TopicResource::labelFor('user_id'))
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        $searchTerm = trim($search);
+
+                        return $query->whereHas('user', function (Builder $userQuery) use ($searchTerm): void {
+                            $userQuery
+                                ->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('surname', 'like', "%{$searchTerm}%")
+                                ->orWhere('nickname', 'like', "%{$searchTerm}%");
+                        });
+                    }),
                 TextColumn::make('category.name')
                     ->label(TopicResource::labelFor('category_id'))
                     ->badge(),

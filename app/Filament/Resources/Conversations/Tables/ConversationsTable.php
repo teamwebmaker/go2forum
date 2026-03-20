@@ -40,8 +40,7 @@ class ConversationsTable
                     ->color(fn(string $state): string => $state === Conversation::KIND_TOPIC ? 'info' : 'success'),
                 TextColumn::make('topic.title')
                     ->label(ConversationResource::labelFor('topic_id'))
-                    ->placeholder('-')
-                    ->searchable(),
+                    ->placeholder('-'),
                 TextColumn::make('participants_count')
                     ->label(ConversationResource::labelFor('participants_count'))
                     ->numeric()
@@ -80,7 +79,6 @@ class ConversationsTable
                         Conversation::KIND_TOPIC => __('models.conversations.kinds.topic'),
                         Conversation::KIND_PRIVATE => __('models.conversations.kinds.private'),
                     ])
-                    ->searchable()
                     ->preload(),
                 TernaryFilter::make('has_topic')
                     ->label(ConversationResource::labelFor('topic_id'))

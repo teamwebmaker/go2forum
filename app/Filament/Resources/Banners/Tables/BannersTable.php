@@ -20,24 +20,19 @@ class BannersTable
             ->columns([
                 TextColumn::make('key')
                     ->label(BannerResource::labelFor('key'))
-                    ->searchable()
                     ->sortable(),
                 TextColumn::make('title')
                     ->label(BannerResource::labelFor('title'))
-                    ->searchable()
                     ->sortable(),
                 ImageColumn::make('resolved_image_url')
                     ->label(BannerResource::labelFor('image')),
                 TextColumn::make('position')
-                    ->label(BannerResource::labelFor('position'))
-                    ->searchable(),
+                    ->label(BannerResource::labelFor('position')),
                 TextColumn::make('overlay_class')
                     ->label(BannerResource::labelFor('overlay_class'))
-                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('container_class')
                     ->label(BannerResource::labelFor('container_class'))
-                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('visibility')
                     ->label(BannerResource::labelFor('visibility'))

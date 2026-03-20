@@ -7,6 +7,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PublicDocumentUserViewsTable
 {
@@ -29,7 +30,17 @@ class PublicDocumentUserViewsTable
                     ->placeholder('-'),
                 TextColumn::make('user.full_name')
                     ->label(PublicDocumentUserViewResource::labelFor('user_id'))
-                    ->searchable()
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        $searchTerm = trim($search);
+
+                        return $query->whereHas('user', function (Builder $userQuery) use ($searchTerm): void {
+                            $userQuery
+                                ->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('surname', 'like', "%{$searchTerm}%")
+                                ->orWhere('nickname', 'like', "%{$searchTerm}%")
+                                ->orWhere('email', 'like', "%{$searchTerm}%");
+                        });
+                    })
                     ->placeholder('-'),
                 TextColumn::make('created_at')
                     ->label(PublicDocumentUserViewResource::labelFor('created_at'))

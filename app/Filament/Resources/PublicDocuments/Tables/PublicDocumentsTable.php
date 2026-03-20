@@ -9,7 +9,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PublicDocumentsTable
 {
@@ -53,7 +55,18 @@ class PublicDocumentsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TernaryFilter::make('visibility')
+                    ->label(PublicDocumentResource::labelFor('visibility'))
+                    ->queries(
+                        true: fn(Builder $query) => $query->where('visibility', true),
+                        false: fn(Builder $query) => $query->where('visibility', false),
+                    ),
+                TernaryFilter::make('requires_auth_to_view')
+                    ->label(PublicDocumentResource::labelFor('requires_auth_to_view'))
+                    ->queries(
+                        true: fn(Builder $query) => $query->where('requires_auth_to_view', true),
+                        false: fn(Builder $query) => $query->where('requires_auth_to_view', false),
+                    ),
             ])
             ->recordActions([
                 ViewAction::make(),
