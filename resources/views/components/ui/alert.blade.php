@@ -2,9 +2,13 @@
     'type' => 'info',   // success | error | warning | info
     'closable' => false,
     'slotClasses' => '',
+    'alertKey' => null,
 ])
 
 @php
+    $resolvedAlertKey = $alertKey ?? $attributes->get('alert-key') ?? $attributes->get('alert_key');
+    $hasPersistentDismiss = $closable && filled($resolvedAlertKey);
+
     $styles = [
         'success' => [
             'bg' => 'bg-green-50',
@@ -32,13 +36,17 @@
 @endphp
 
 <div
-    class="alert-component relative z-40 w-full border px-4 {{ $style['bg'] }} {{ $style['border'] }}"
+    class="alert-component relative z-40 w-full border px-4 {{ $style['bg'] }} {{ $style['border'] }} {{ $hasPersistentDismiss ? 'hidden' : '' }}"
     data-closable="{{ $closable ? 'true' : 'false' }}"
+    data-persist-dismissal="{{ $hasPersistentDismiss ? 'true' : 'false' }}"
+    @if (filled($resolvedAlertKey))
+        data-alert-key="{{ $resolvedAlertKey }}"
+    @endif
 >
     <div
         class="relative mx-auto flex max-w-6xl items-start justify-between gap-4 rounded-xl px-5 py-3 text-sm font-medium {{ $style['text'] }}"
     >
-        <div class="flex flex-wrap items-center gap-3 {{ $slotClasses }}">
+        <div class="flex flex-wrap items-center gap-3 break-words {{ $slotClasses }}">
             {{ $slot }}
         </div>
 

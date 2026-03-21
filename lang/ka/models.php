@@ -338,6 +338,55 @@ return [
             'non_restricted_only' => 'მხოლოდ ღია დოკუმენტები',
         ],
     ],
+    'site_alerts' => [
+        'singular' => 'შეტყობინება',
+        'plural' => 'შეტყობინებები',
+        'fields' => [
+            'title' => 'სათაური',
+            'content' => 'შინაარსი',
+            'type' => 'ტიპი',
+            'is_closable' => 'დახურვადი',
+            'audience' => 'აუდიტორია',
+            'is_active' => 'აქტიური',
+            'sort_order' => 'რიგითობა',
+            'created_at' => 'შეიქმნა',
+            'updated_at' => 'ბოლოს განახლდა',
+        ],
+        'types' => [
+            'success' => 'წარმატება',
+            'error' => 'შეცდომა',
+            'warning' => 'გაფრთხილება',
+            'info' => 'ინფორმაცია',
+        ],
+        'audiences' => [
+            'all' => 'ყველასთვის',
+            'auth' => 'ავტორიზებულებისთვის',
+            'guest' => 'არაავტორიზებულებისთვის',
+        ],
+        'titles' => [
+            'create' => 'შეტყობინების შექმნა',
+            'edit' => 'შეტყობინების რედაქტირება',
+        ],
+        'filters' => [
+            'active_only' => 'მხოლოდ აქტიური',
+            'inactive_only' => 'მხოლოდ არააქტიური',
+            'closable_only' => 'მხოლოდ დახურვადი',
+            'non_closable_only' => 'მხოლოდ არადახურვადი',
+        ],
+        'actions' => [
+            'delete' => [
+                'heading' => 'შეტყობინების წაშლა',
+                'headingBulk' => 'შეტყობინებების წაშლა',
+                'description' => '',
+                'actionLabel' => '',
+            ],
+            'view' => [
+                'heading' => 'შეტყობინების ნახვა',
+                'description' => '',
+                'actionLabel' => '',
+            ],
+        ],
+    ],
     'users' => [
         'singular' => 'მომხმარებელი',
         'plural' => 'მომხმარებლები',
