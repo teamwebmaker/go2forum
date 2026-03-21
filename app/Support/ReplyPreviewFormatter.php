@@ -49,10 +49,6 @@ class ReplyPreviewFormatter
         ?string $senderFullName,
         ?int $currentUserId = null
     ): string {
-        if ($currentUserId && $senderId > 0 && $senderId === $currentUserId) {
-            return self::SELF_AUTHOR;
-        }
-
         $nickname = $this->normalizeString($senderNickname);
         if ($nickname !== null) {
             return $nickname;
@@ -61,6 +57,10 @@ class ReplyPreviewFormatter
         $fullName = $this->normalizeString($senderFullName);
         if ($fullName !== null) {
             return $fullName;
+        }
+
+        if ($currentUserId && $senderId > 0 && $senderId === $currentUserId) {
+            return self::SELF_AUTHOR;
         }
 
         return self::UNKNOWN_AUTHOR;

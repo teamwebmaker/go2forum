@@ -56,9 +56,7 @@ class MessagePayloadTransformer
                 'badge_color' => BadgeColors::forUser($sender),
                 'status_label' => $this->statusLabelForUser($sender),
             ],
-            'author_label' => ($currentUserId && (int) ($sender?->id ?? 0) === $currentUserId)
-                ? 'მე'
-                : ($senderFullName ?? 'User'),
+            'author_label' => $sender?->nickname ?: ($senderFullName ?? (($currentUserId && (int) ($sender?->id ?? 0) === $currentUserId) ? 'მე' : 'User')),
             'reply_to' => $replyTo ? [
                 'id' => $replyTo->id,
                 'is_deleted' => $replyIsDeleted,

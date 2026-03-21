@@ -21,7 +21,7 @@
     $senderNickname = trim((string) ($sender['nickname'] ?? ''));
     $senderStatusLabel = trim((string) ($sender['status_label'] ?? ''));
     $senderId = (int) ($sender['id'] ?? 0);
-    $primaryLabel = $isMine ? 'მე' : ($senderNickname !== '' ? $senderNickname : $senderFullName);
+    $primaryLabel = $senderNickname !== '' ? $senderNickname : $senderFullName;
     $secondaryLabel = $isMine ? null : ($senderNickname !== '' && $senderFullName !== '' ? $senderFullName : null);
     $avatarUrl = (string) ($sender['avatar'] ?? '');
     $badgeIcon = $sender['badge_icon'] ?? null;
@@ -33,9 +33,9 @@
     $replySenderFullName = trim((string) ($replySender['full_name'] ?? $replySender['name'] ?? ''));
     $replySenderNickname = trim((string) ($replySender['nickname'] ?? ''));
     $replySenderId = (int) ($replySender['id'] ?? 0);
-    $replyAuthorLabel = $replySenderId === (int) $currentUserId
-        ? 'მე'
-        : ($replySenderNickname !== '' ? $replySenderNickname : ($replySenderFullName !== '' ? $replySenderFullName : 'მომხმარებელი'));
+    $replyAuthorLabel = $replySenderNickname !== ''
+        ? $replySenderNickname
+        : ($replySenderFullName !== '' ? $replySenderFullName : ($replySenderId === (int) $currentUserId ? 'მე' : 'მომხმარებელი'));
     $replyPreview = trim((string) ($replyTo['content_preview'] ?? $replyTo['content'] ?? ''));
     $replyPreviewText = $replyPreview !== '' ? $replyPreview : 'დანართი';
 
