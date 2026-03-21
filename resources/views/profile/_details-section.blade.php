@@ -57,7 +57,7 @@
                             </div>
 
                             <div class="rounded-lg border border-slate-200/70 bg-slate-50 p-4">
-                                <dt class="text-[11px] font-medium uppercase tracking-wide text-slate-500">ზედმეტსახელი</dt>
+                                <dt class="text-[11px] font-medium uppercase tracking-wide text-slate-500">ნიკი</dt>
                                 <dd class="mt-1 text-sm font-semibold text-slate-900">{{ $user->nickname ?: '—' }}</dd>
                             </div>
                         </dl>
@@ -95,7 +95,7 @@
                     <div class="space-y-4">
                         <x-form.input name="name" label="სახელი" minlength="2" required value="{{ $user->name }}" />
                         <x-form.input name="surname" label="გვარი" minlength="2" required value="{{ $user->surname }}" />
-                        <x-form.input name="nickname" label="ზედმეტსახელი" minlength="2" required
+                        <x-form.input name="nickname" label="ნიკი" minlength="2" required
                             value="{{ $user->nickname }}" />
                     </div>
 

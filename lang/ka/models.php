@@ -325,7 +325,7 @@ return [
             'id' => 'ID',
             'public_document_id' => 'დოკუმენტი',
             'user_id' => 'მომხმარებელი',
-            'user_nickname' => 'ზედმეტსახელი',
+            'user_nickname' => 'ნიკი',
             'created_at' => 'შეიქმნა',
             'updated_at' => 'ბოლოს განახლდა',
         ],
@@ -349,7 +349,7 @@ return [
         'fields' => [
             'name' => 'სახელი',
             'surname' => 'გვარი',
-            'nickname' => 'ზედმეტსახელი',
+            'nickname' => 'ნიკი',
             'email' => 'ელ.ფოსტა',
             'phone' => 'ტელეფონი',
             'role' => 'როლი',

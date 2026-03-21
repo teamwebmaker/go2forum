@@ -90,8 +90,7 @@ class PrivateChat extends Component
         ?int $initialConversationId = null,
         ?string $initialRecipient = null,
         ConversationService $conversationService
-    ): void
-    {
+    ): void {
         $user = auth()->user();
         $this->currentUserId = $user?->id ?? 0;
         $this->isCurrentUserVerified = $user ? (bool) $user->isVerified() : false;
@@ -196,7 +195,7 @@ class PrivateChat extends Component
         }
 
         if (!$this->recipientId) {
-            $this->addError('recipientNickname', 'ჯერ მოძებნეთ მომხმარებელი ზედმეტსახელით.');
+            $this->addError('recipientNickname', 'ჯერ მოძებნეთ მომხმარებელი ნიკით.');
             return;
         }
 

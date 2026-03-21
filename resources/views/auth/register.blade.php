@@ -16,7 +16,7 @@
             <x-form.input name="surname" label="გვარი" placeholder="Doe" minlength="2" required />
         </div>
 
-        <x-form.input name="nickname" label="ზედმეტსახელი" placeholder="janeExample123" minlength="2" required />
+        <x-form.input name="nickname" label="ნიკი" placeholder="janeExample123" minlength="2" required />
 
         {{-- Email --}}
         <x-form.input name="email" type="email" label="ელ.ფოსტა" placeholder="jane@example.com" :displayError="false"
