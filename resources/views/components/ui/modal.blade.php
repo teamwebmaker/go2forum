@@ -1,6 +1,8 @@
 @props([
     'id',
     'title' => null,
+    'headingIcon' => null,
+    'headingIconClass' => 'text-primary-500',
     'size' => 'md',             // sm | md | lg | xl | 2xl | 4xl | 6xl | full
     'closeOnOutside' => true,
     'closeOnEsc' => true,
@@ -46,7 +48,10 @@
             <div class="flex items-start justify-between gap-4 p-4 pb-2 border-b border-gray-200">
                 <div class="min-w-0">
                     @if($title)
-                        <h2 id="{{ $id }}-title" class="text-lg font-semibold truncate">
+                        <h2 id="{{ $id }}-title" class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                            @if (filled($headingIcon))
+                                <x-app-icon name="{{ $headingIcon }}" class="size-5 shrink-0 {{ $headingIconClass }}" />
+                            @endif
                             {{ $title }}
                         </h2>
                     @endif

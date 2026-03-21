@@ -8,6 +8,7 @@ import { closeAlert } from "./ui/alerts";
 import { initMobileNav } from "./ui/nav";
 import { initToasts } from "./ui/toasts";
 import { initSearchBars } from "./ui/searchBar";
+import { initSupportContactModal } from "./ui/supportContactModal";
 
 document.addEventListener("DOMContentLoaded", () => {
     initToasts();
@@ -16,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initDirtyCheck();
     initAvatarPreview();
     initSearchBars();
+    initSupportContactModal();
 });
 
 // Disable button on form submit & show loading
