@@ -30,7 +30,13 @@ class StoreSignUpRequest extends FormRequest
             'name' => ['required', 'string', 'min:2', 'max:30'],
             'surname' => ['required', 'string', 'min:2', 'max:40'],
             'nickname' => ['required', 'string', 'min:2', 'max:50', 'unique:users,nickname'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'email' => [
+                'required',
+                'string',
+                Rule::email()->rfcCompliant(strict: true)->validateMxRecord()->preventSpoofing(),
+                'max:255',
+                'unique:users,email',
+            ],
             'phone' => [
                 Rule::requiredIf($shouldPhoneVerify),
                 'nullable',
@@ -49,6 +55,7 @@ class StoreSignUpRequest extends FormRequest
         // Use generic messages to reduce account enumeration signals.
         $genericDuplicate = 'რეგისტრაცია ვერ მოხერხდა. თუ უკვე გაქვთ ანგარიში, შედით სისტემაში ან სცადეთ ხელახლა.';
         return [
+            'email.email' => 'გთხოვთ მიუთითოთ სწორი ელ-ფოსტა სრულ დომენთან ერთად, მაგალითად: name@example.com.',
             'email.unique' => $genericDuplicate,
             'phone.unique' => $genericDuplicate,
             'nickname.unique' => $genericDuplicate,
