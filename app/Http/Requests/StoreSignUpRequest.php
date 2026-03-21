@@ -58,7 +58,7 @@ class StoreSignUpRequest extends FormRequest
             'email.email' => 'გთხოვთ მიუთითოთ სწორი ელ-ფოსტა სრულ დომენთან ერთად, მაგალითად: name@example.com.',
             'email.unique' => $genericDuplicate,
             'phone.unique' => $genericDuplicate,
-            'nickname.unique' => $genericDuplicate,
+            'nickname.unique' => 'ეს ზედმეტსახელი უკვე გამოყენებულია.',
         ];
     }
 
