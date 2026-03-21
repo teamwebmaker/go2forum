@@ -107,13 +107,9 @@ class BannerForm
                         )
                     ),
                 TextInput::make('overlay_class')
-                    ->label(BannerResource::labelFor('overlay_class'))
-                    ->required()
-                    ->default('bg-cyan-950/70'),
+                    ->label(BannerResource::labelFor('overlay_class')),
                 TextInput::make('container_class')
-                    ->label(BannerResource::labelFor('container_class'))
-                    ->required()
-                    ->default('mb-2'),
+                    ->label(BannerResource::labelFor('container_class')),
                 Toggle::make('visibility')
                     ->label(BannerResource::labelFor('visibility'))
                     ->default(true)

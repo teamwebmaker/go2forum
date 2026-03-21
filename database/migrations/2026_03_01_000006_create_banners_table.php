@@ -18,8 +18,8 @@ return new class extends Migration {
             $table->text('subtitle')->nullable();
             $table->string('image')->nullable();
             $table->string('position')->default('50% 40%');
-            $table->string('overlay_class')->default('bg-cyan-950/70');
-            $table->string('container_class')->default('mb-2');
+            $table->string('overlay_class')->nullable();
+            $table->string('container_class')->nullable();
             $table->boolean('visibility')->default(true)->index();
             $table->timestamps();
         });

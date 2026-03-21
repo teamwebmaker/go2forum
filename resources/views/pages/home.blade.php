@@ -3,7 +3,7 @@
 @section('title', 'ფორუმი')
 
 @section('content')
-   <div class="relative flex w-full flex-col gap-8 overflow-visible">
+   <div class="relative flex w-full flex-col gap-4 sm:gap-8 overflow-visible">
       <x-hero.banner :banner="$banner" />
 
       <div class="-mx-1 flex w-full flex-col gap-8 pt-4 sm:mx-0">

@@ -7,24 +7,21 @@
    $image = $banner?->resolved_image_url;
    $position = $banner?->position ?? '50% 40%';
    $overlayClass = $banner?->overlay_class ?? 'bg-cyan-950/70';
-   $containerClass = $banner?->container_class ?? 'mb-2';
+   $containerClass = $banner?->container_class ?? '';
 @endphp
+<div class="relative w-full overflow-hidden rounded-2xl {{ $containerClass }}">
+    @if (filled($image))
+        <div class="absolute inset-0">
+            <div class="absolute inset-0 bg-cover brightness-110"
+                 style="background-image:url('{{ $image }}'); background-position: {{ $position }};"></div>
+            <div class="absolute inset-0 {{ $overlayClass }}"></div>
+        </div>
+    @endif
 
-<div {{ $attributes->merge(['class' => trim('relative z-1 flex w-full flex-col gap-2 text-center ' . $containerClass)]) }}>
-   @if(filled($image))
-      <div aria-hidden="true"
-         class="pointer-events-none absolute -top-16 left-1/2 h-40 w-screen -translate-x-1/2 overflow-hidden sm:h-36 sm:-top-14">
-         <div class="absolute inset-0 bg-cover bg-center brightness-110"
-            style="background-image: url('{{ $image }}'); background-position: {{ $position }};">
-         </div>
-         <div class="absolute inset-0 {{ $overlayClass }}"></div>
-      </div>
-   @endif
-
-   <div class="relative z-10 flex w-full flex-col gap-2 text-center">
-      <h1 class="text-3xl font-semibold tracking-tight text-white">{{ $title }}</h1>
-      @if(filled($subtitle))
-         <p class="text-sm text-gray-50">{{ $subtitle }}</p>
-      @endif
-   </div>
+    <div class="relative z-10 mx-auto flex min-h-35 w-full max-w-4xl flex-col justify-center px-4 py-5 text-center sm:min-h-42.5 sm:px-6 sm:py-8">
+        <h1 class="text-2xl font-semibold leading-tight wrap-break-words text-white sm:text-3xl">{{ $title }}</h1>
+        @if (filled($subtitle))
+            <p class="mt-2 text-sm leading-relaxed wrap-break-words text-gray-50">{{ $subtitle }}</p>
+        @endif
+    </div>
 </div>
