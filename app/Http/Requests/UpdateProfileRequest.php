@@ -41,7 +41,7 @@ class UpdateProfileRequest extends FormRequest
             'email' => [
                 'required',
                 'string',
-                'email',
+                Rule::email()->rfcCompliant(strict: true)->validateMxRecord()->preventSpoofing(),
                 'max:255',
                 Rule::unique('users', 'email')->ignore($userId),
             ],
@@ -86,6 +86,7 @@ class UpdateProfileRequest extends FormRequest
     {
 
         return [
+            'email.email' => 'გთხოვთ მიუთითოთ სწორი ელ-ფოსტა სრულ დომენთან ერთად, მაგალითად: name@example.com.',
             'email.unique' => 'განახლება ვერ მოხერხდა. გთხოვთ, სცადეთ სხვა ელ.ფოსტა.',
             'phone.unique' => 'განახლება ვერ მოხერხდა. გთხოვთ, სცადეთ სხვა ტელეფონი.',
             'nickname.unique' => 'განახლება ვერ მოხერხდა. გთხოვთ, სცადეთ სხვა ზედმეტსახელი.',
