@@ -16,7 +16,7 @@
           წესები & პირობები
         </a>
 
-        <button type="button" data-modal-open="support-contact-modal"
+        <button type="button" data-support-contact-open
           class="cursor-pointer transition-colors hover:text-slate-900 hover:underline">
           კონტაქტი
         </button>

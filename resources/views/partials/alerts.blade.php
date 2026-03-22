@@ -26,7 +26,7 @@
                წესებსა და პირობებს
             </a>
             ან
-            <a href="{{ config('services.support.gmail_compose_url') }}" target="_blank" rel="noopener noreferrer"
+            <a href="{{ config('services.support.gmail_compose_url') }}" data-support-contact-open
                class="underline font-medium">
                დაგვიკავშირდით.
             </a>

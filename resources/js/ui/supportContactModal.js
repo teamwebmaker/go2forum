@@ -43,6 +43,15 @@ function updateCopyButtonState(button, label) {
 
 export function initSupportContactModal() {
     document.addEventListener("click", async (event) => {
+        const openButton = event.target.closest("[data-support-contact-open]");
+
+        if (openButton) {
+            event.preventDefault();
+            window.UIModal?.open("support-contact-modal");
+
+            return;
+        }
+
         const copyButton = event.target.closest("[data-support-copy-email]");
 
         if (copyButton) {
