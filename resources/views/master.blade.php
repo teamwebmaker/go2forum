@@ -24,6 +24,7 @@
   </main>
 
   @include('partials.footer')
+  @include('partials.modals')
 
   @stack('scripts')
   @livewireScripts
