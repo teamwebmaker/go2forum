@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Messages\Tables;
 use App\Filament\Resources\Messages\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use App\Services\MessageDeletionService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
@@ -145,6 +146,21 @@ class MessagesTable
                         })
                         ->all())
                     ->searchable()
+                    ->preload(),
+                SelectFilter::make('sender_id')
+                    ->label(MessageResource::labelFor('sender_id'))
+                    ->relationship('sender', 'name')
+                    ->getOptionLabelFromRecordUsing(function (User $record): string {
+                        $fullName = trim((string) $record->full_name);
+                        $nickname = trim((string) ($record->nickname ?? ''));
+
+                        if ($nickname !== '') {
+                            return $fullName !== '' ? "{$fullName} (@{$nickname})" : "@{$nickname}";
+                        }
+
+                        return $fullName !== '' ? $fullName : (string) ($record->email ?? "#{$record->id}");
+                    })
+                    ->searchable(['name', 'surname', 'nickname', 'email'])
                     ->preload(),
                 TernaryFilter::make('is_reply')
                     ->label(__('models.messages.filters.reply_to_message'))
