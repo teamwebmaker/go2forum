@@ -21,7 +21,6 @@ class MessageResource extends Resource
     protected static ?string $model = Message::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleOvalLeftEllipsis;
-
     protected static ?string $recordTitleAttribute = 'id';
 
     protected static ?string $navigationParentItem = 'საუბრები';

@@ -22,7 +22,8 @@ use Illuminate\Database\Eloquent\Builder;
 class AdsResource extends Resource
 {
     protected static ?string $model = Ads::class;
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
+    protected static string|\UnitEnum|null $navigationGroup = 'კონტენტი';
 
     protected static ?string $recordTitleAttribute = 'name';
 

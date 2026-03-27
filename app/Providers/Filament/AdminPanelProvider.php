@@ -2,13 +2,27 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\Ads\AdsResource;
+use App\Filament\Resources\Banners\BannerResource;
+use App\Filament\Resources\Categories\CategoryResource;
+use App\Filament\Resources\Conversations\ConversationResource;
+use App\Filament\Resources\Messages\MessageResource;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Resources\PublicDocuments\PublicDocumentResource;
+use App\Filament\Resources\PublicDocumentUserViews\PublicDocumentUserViewResource;
+use App\Filament\Resources\Settings\SettingsResource;
+use App\Filament\Resources\SiteAlerts\SiteAlertResource;
+use App\Filament\Resources\Topics\TopicResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Filament\Widgets\OverviewStatsWidget;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationBuilder;
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -40,6 +54,48 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
+            ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
+                $dashboardItem = self::navigationItemFor(Dashboard::class);
+                $usersItem = self::navigationItemFor(UserResource::class);
+                $topicsItem = self::navigationItemFor(TopicResource::class);
+                $conversationsItem = self::navigationItemFor(ConversationResource::class)
+                    ->childItems([
+                        self::navigationItemFor(MessageResource::class),
+                    ]);
+
+                $categoriesItem = self::navigationItemFor(CategoryResource::class)
+                    ->childItems([
+                        self::navigationItemFor(AdsResource::class),
+                    ]);
+                $documentsItem = self::navigationItemFor(PublicDocumentResource::class)
+                    ->childItems([
+                        self::navigationItemFor(PublicDocumentUserViewResource::class),
+                    ]);
+                $bannersItem = self::navigationItemFor(BannerResource::class);
+                $siteAlertsItem = self::navigationItemFor(SiteAlertResource::class);
+                $settingsItem = self::navigationItemFor(SettingsResource::class);
+
+                return $builder->groups([
+                    NavigationGroup::make()
+                        ->items([
+                            $dashboardItem,
+                            $usersItem,
+                            $topicsItem,
+                            $conversationsItem,
+                        ]),
+                    NavigationGroup::make()
+                        ->items([
+                            $categoriesItem,
+                            $documentsItem,
+                            $bannersItem,
+                            $siteAlertsItem,
+                        ]),
+                    NavigationGroup::make()
+                        ->items([
+                            $settingsItem,
+                        ]),
+                ]);
+            })
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 OverviewStatsWidget::class,
@@ -63,5 +119,13 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /**
+     * @param  class-string  $class
+     */
+    protected static function navigationItemFor(string $class): NavigationItem
+    {
+        return $class::getNavigationItems()[0];
     }
 }

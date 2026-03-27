@@ -16,6 +16,7 @@ class PublicDocumentUserViewResource extends Resource
     protected static ?string $model = PublicDocumentUserView::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
+    protected static string|\UnitEnum|null $navigationGroup = 'კონტენტი';
     protected static ?string $recordTitleAttribute = 'id';
     protected static bool $isGloballySearchable = false;
     protected static ?int $navigationSort = 7;

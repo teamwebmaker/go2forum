@@ -18,6 +18,7 @@ class SiteAlertResource extends Resource
 {
     protected static ?string $model = SiteAlert::class;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-exclamation-triangle';
+    protected static string|\UnitEnum|null $navigationGroup = 'კონტენტი';
     protected static ?string $recordTitleAttribute = 'id';
     protected static bool $isGloballySearchable = false;
     protected static ?int $navigationSort = 8;

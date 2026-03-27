@@ -19,7 +19,6 @@ class ConversationResource extends Resource
     protected static ?string $model = Conversation::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleLeftRight;
-
     protected static ?string $recordTitleAttribute = 'id';
     protected static bool $isGloballySearchable = false;
     protected static ?int $navigationSort = 4;

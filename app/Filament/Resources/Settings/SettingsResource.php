@@ -21,11 +21,10 @@ class SettingsResource extends Resource
 {
     protected static ?string $model = Settings::class;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
-
     protected static ?string $recordTitleAttribute = 'name';
     // Single settings row; keep it out of global search to avoid bad queries.
     protected static bool $isGloballySearchable = false;
-    protected static ?int $navigationSort = 777; // just to make it always at the end
+    protected static ?int $navigationSort = 9999; // keep Settings as the last navigation item
 
 
     public static function labelFor(string $field): string

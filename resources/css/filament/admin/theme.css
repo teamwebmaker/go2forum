@@ -1,4 +1,4 @@
-@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import "../../../../vendor/filament/filament/resources/css/theme.css";
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
@@ -21,4 +21,68 @@
 
 .message-attachments-repeater .fi-fo-repeater-item-header-collapsible-actions {
     display: none;
+}
+
+/* Reduce spacing between the 3 NavigationGroup blocks. */
+.fi-sidebar .fi-sidebar-nav-groups {
+    gap: 0rem;
+}
+
+/* Add a separator below "მიმოხილვა" (Dashboard). */
+.fi-sidebar .fi-sidebar-item-btn[href$="/admin"] {
+    /* margin-bottom: 0.5rem; */
+    padding-bottom: 0.75rem;
+    border-bottom: none;
+    background-image: linear-gradient(
+        to left,
+        color-mix(in srgb, var(--gray-400) 80%, white 20%),
+        color-mix(in srgb, var(--gray-400) 80%, white 20%)
+    );
+    background-repeat: no-repeat;
+    background-size: calc(100% - 0.7rem) 1px;
+    background-position: center bottom;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Content section separators without grouped header. */
+.fi-sidebar .fi-sidebar-item-btn[href$="/admin/categories"] {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: none;
+    background-image: linear-gradient(
+        to left,
+        color-mix(in srgb, var(--gray-400) 80%, white 20%),
+        color-mix(in srgb, var(--gray-400) 80%, white 20%)
+    );
+    background-repeat: no-repeat;
+    background-size: calc(100% - 0.7rem) 1px;
+    background-position: center top;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.fi-sidebar .fi-sidebar-item-btn[href$="/admin/site-alerts"] {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: none;
+    background-image: linear-gradient(
+        to left,
+        color-mix(in srgb, var(--gray-400) 80%, white 20%),
+        color-mix(in srgb, var(--gray-400) 80%, white 20%)
+    );
+    background-repeat: no-repeat;
+    background-size: calc(100% - 0.7rem) 1px;
+    background-position: center bottom;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Keep separators visible in collapsed icon-only sidebar mode. */
+.fi-sidebar:not(.fi-sidebar-open) .fi-sidebar-item-btn[href$="/admin"],
+.fi-sidebar:not(.fi-sidebar-open)
+    .fi-sidebar-item-btn[href$="/admin/categories"],
+.fi-sidebar:not(.fi-sidebar-open)
+    .fi-sidebar-item-btn[href$="/admin/site-alerts"] {
+    background-size: 1.75rem 1px;
 }

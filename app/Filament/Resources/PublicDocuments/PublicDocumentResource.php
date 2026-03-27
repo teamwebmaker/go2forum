@@ -25,6 +25,7 @@ class PublicDocumentResource extends Resource
     protected static ?string $model = PublicDocument::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
+    protected static string|\UnitEnum|null $navigationGroup = 'კონტენტი';
 
     protected static ?string $recordTitleAttribute = 'name';
     protected static bool $isGloballySearchable = false;
