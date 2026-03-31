@@ -369,7 +369,9 @@ class TopicChat extends Component
 
         $this->resetErrorBag(['editContent', 'chat']);
 
-        $message = Message::query()->find($this->editingMessageId);
+        $message = Message::query()
+            ->notTrashed()
+            ->find($this->editingMessageId);
         if (!$message) {
             $this->cancelEditMessage();
             return;
@@ -486,7 +488,9 @@ class TopicChat extends Component
         $this->resetErrorBag('chat');
 
         // Use withTrashed in case it was already deleted and we still need to reflect state.
-        $message = Message::withTrashed()->find($messageId);
+        $message = Message::withTrashed()
+            ->notTrashed()
+            ->find($messageId);
         if (!$message) {
             return;
         }

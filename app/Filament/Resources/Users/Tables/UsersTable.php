@@ -4,10 +4,13 @@ namespace App\Filament\Resources\Users\Tables;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
-use App\Services\AccountDeletionService;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -16,6 +19,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +33,7 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordClasses(fn(User $record): ?string => $record->trashed() ? 'resource-row-trashed' : null)
             // Remove current user
             ->modifyQueryUsing(function ($query) {
                 $userId = Auth::id();
@@ -85,13 +90,31 @@ class UsersTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('deleted_at')
+                    ->label(UserResource::labelFor('deleted_at'))
+                    ->dateTime()
+                    ->badge()
+                    ->color(fn($state): string => filled($state) ? 'warning' : 'gray')
+                    ->placeholder('-')
+                    ->sortable()
+                    ->toggleable(),
             ])
             ->filters([
-                //
+                TrashedFilter::make()
+                    ->label(__('models.messages.filters.in_trash'))
+                    ->placeholder(__('models.messages.filters.not_in_trash_only'))
+                    ->trueLabel(__('models.messages.filters.all'))
+                    ->falseLabel(__('models.messages.filters.in_trash_only')),
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->hidden(fn(User $record): bool => $record->trashed()),
+                DeleteAction::make()
+                    ->modalHeading(__('models.users.actions.delete.heading'))
+                    ->hidden(fn(User $record): bool => $record->trashed()),
+                RestoreAction::make()
+                    ->visible(fn(User $record): bool => $record->trashed()),
             ])
             ->toolbarActions([
                 Action::make('exportUsers')
@@ -169,25 +192,52 @@ class UsersTable
                             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         ]);
                     }),
-                DeleteBulkAction::make()
-                    ->chunkSelectedRecords(100)
-                    ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records, AccountDeletionService $accountDeletionService): void {
-                        $isFirstException = true;
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->chunkSelectedRecords(100)
+                        ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records): void {
+                            $isFirstException = true;
 
-                        $records->each(function (User $record) use ($action, $accountDeletionService, &$isFirstException): void {
-                            try {
-                                $accountDeletionService->deleteByAdmin($record);
-                            } catch (\Throwable $exception) {
-                                $action->reportBulkProcessingFailure();
+                            $records->each(function (User $record) use ($action, &$isFirstException): void {
+                                try {
+                                    if (!$record->trashed()) {
+                                        $record->delete();
+                                    }
+                                } catch (\Throwable $exception) {
+                                    $action->reportBulkProcessingFailure();
 
-                                if ($isFirstException) {
-                                    report($exception);
-                                    $isFirstException = false;
+                                    if ($isFirstException) {
+                                        report($exception);
+                                        $isFirstException = false;
+                                    }
                                 }
-                            }
-                        });
-                    })
-                    ->modalHeading(__('models.users.actions.delete.headingBulk')),
+                            });
+                        })
+                        ->modalHeading(__('models.users.actions.delete.headingBulk')),
+                    BulkAction::make('restoreSelected')
+                        ->label(__('models.trash.actions.restore_selected'))
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('gray')
+                        ->requiresConfirmation()
+                        ->action(function (BulkAction $action, EloquentCollection|Collection|LazyCollection $records): void {
+                            $isFirstException = true;
+
+                            $records->each(function (User $record) use ($action, &$isFirstException): void {
+                                try {
+                                    if ($record->trashed()) {
+                                        $record->restore();
+                                    }
+                                } catch (\Throwable $exception) {
+                                    $action->reportBulkProcessingFailure();
+
+                                    if ($isFirstException) {
+                                        report($exception);
+                                        $isFirstException = false;
+                                    }
+                                }
+                            });
+                        }),
+                ]),
             ]);
     }
 

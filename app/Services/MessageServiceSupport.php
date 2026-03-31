@@ -163,6 +163,10 @@ class MessageServiceSupport
 
         $message->loadMissing('conversation');
 
+        if ((bool) $message->is_trashed) {
+            throw new AuthorizationException('Likes are not available for this message.');
+        }
+
         $conversation = $message->conversation;
         if (!$conversation) {
             throw new AuthorizationException('Conversation not found for this message.');

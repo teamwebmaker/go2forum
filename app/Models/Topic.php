@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Support\SlugGenerator;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Topic extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -25,6 +26,7 @@ class Topic extends Model
         'pinned' => 'boolean',
         'visibility' => 'boolean',
         'messages_count' => 'integer',
+        'deleted_at' => 'datetime',
     ];
 
     /*
@@ -42,7 +44,7 @@ class Topic extends Model
             }
 
             if (!$topic->exists || $topic->isDirty('title')) {
-                $topic->slug = SlugGenerator::unique(static::class, $topic->title, 'slug');
+                $topic->slug = SlugGenerator::unique($topic, $topic->title, 'slug');
             }
         });
 
@@ -60,6 +62,10 @@ class Topic extends Model
         });
 
         static::deleted(function (Topic $topic) {
+            static::syncCategoryCount($topic->category_id);
+        });
+
+        static::restored(function (Topic $topic) {
             static::syncCategoryCount($topic->category_id);
         });
     }

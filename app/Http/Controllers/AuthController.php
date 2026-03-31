@@ -10,7 +10,9 @@ use App\Models\User;
 use App\Services\PhoneVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -70,14 +72,45 @@ class AuthController extends Controller
     {
         $attrs = $request->validated();
 
-        $user = User::create([
-            'name' => $attrs['name'],
-            'surname' => $attrs['surname'],
-            'nickname' => $attrs['nickname'],
-            'email' => $attrs['email'],
-            'phone' => $attrs['phone'],
-            'password' => Hash::make($attrs['password']),
-        ]);
+        $user = DB::transaction(function () use ($attrs): User {
+            $existingUser = User::query()
+                ->withTrashed()
+                ->where('email', $attrs['email'])
+                ->lockForUpdate()
+                ->first();
+
+            // Restore existing user
+            if ($existingUser && $existingUser->trashed()) {
+                if ($existingUser->role !== 'user') {
+                    throw ValidationException::withMessages([
+                        'email' => [$this->signupUnavailableMessage()],
+                    ]);
+                }
+
+                $existingUser->restore();
+                $existingUser->forceFill([
+                    'name' => $attrs['name'],
+                    'surname' => $attrs['surname'],
+                    'nickname' => $attrs['nickname'],
+                    'phone' => $attrs['phone'],
+                    'password' => Hash::make($attrs['password']),
+                    // Re-verification required after reactivation.
+                    'email_verified_at' => null,
+                    'phone_verified_at' => null,
+                ])->save();
+
+                return $existingUser->fresh();
+            }
+
+            return User::create([
+                'name' => $attrs['name'],
+                'surname' => $attrs['surname'],
+                'nickname' => $attrs['nickname'],
+                'email' => $attrs['email'],
+                'phone' => $attrs['phone'],
+                'password' => Hash::make($attrs['password']),
+            ]);
+        });
 
         Auth::login($user);
         $request->session()->regenerate();
@@ -116,6 +149,11 @@ class AuthController extends Controller
         }
 
         return redirect('/')->with($messages);
+    }
+
+    protected function signupUnavailableMessage(): string
+    {
+        return 'რეგისტრაცია ვერ მოხერხდა. თუ უკვე გაქვთ ანგარიში, შედით სისტემაში ან სცადეთ ხელახლა.';
     }
 
     public function logout(Request $request)

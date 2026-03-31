@@ -6,6 +6,7 @@ use App\Filament\Resources\Ads\AdsResource;
 use App\Filament\Resources\Banners\BannerResource;
 use App\Filament\Resources\Categories\CategoryResource;
 use App\Filament\Resources\Conversations\ConversationResource;
+use App\Filament\Pages\Trash;
 use App\Filament\Resources\Messages\MessageResource;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Resources\PublicDocuments\PublicDocumentResource;
@@ -53,9 +54,11 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
+                Trash::class,
             ])
             ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
                 $dashboardItem = self::navigationItemFor(Dashboard::class);
+                $trashItem = self::navigationItemFor(Trash::class);
                 $usersItem = self::navigationItemFor(UserResource::class);
                 $topicsItem = self::navigationItemFor(TopicResource::class);
                 $conversationsItem = self::navigationItemFor(ConversationResource::class)
@@ -92,6 +95,7 @@ class AdminPanelProvider extends PanelProvider
                         ]),
                     NavigationGroup::make()
                         ->items([
+                            $trashItem,
                             $settingsItem,
                         ]),
                 ]);
@@ -99,7 +103,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 OverviewStatsWidget::class,
-            ])->userMenuItems([
+            ])
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
+            ->userMenuItems([
                     Action::make('home')
                         ->label('მთავარი')
                         ->url(fn(): string => route('page.home'))

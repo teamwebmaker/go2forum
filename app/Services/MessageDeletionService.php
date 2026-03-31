@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Message;
-use App\Models\Topic;
 use Illuminate\Support\Facades\DB;
 
 class MessageDeletionService
@@ -32,10 +31,7 @@ class MessageDeletionService
                 return;
             }
 
-            $wasSoftDeleted = $lockedMessage->trashed();
-            $topicId = $lockedMessage->conversation?->isTopic()
-                ? (int) ($lockedMessage->conversation->topic_id ?? 0)
-                : 0;
+            $conversationId = (int) $lockedMessage->conversation_id;
 
             $lockedMessage->attachments()->each(function ($attachment): void {
                 $attachment->delete();
@@ -43,11 +39,8 @@ class MessageDeletionService
 
             $lockedMessage->forceDelete();
 
-            if (!$wasSoftDeleted && $topicId > 0) {
-                Topic::query()
-                    ->whereKey($topicId)
-                    ->where('messages_count', '>', 0)
-                    ->decrement('messages_count');
+            if ($conversationId > 0) {
+                Message::syncConversationDerivedState($conversationId);
             }
         });
     }

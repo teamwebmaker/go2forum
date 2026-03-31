@@ -22,6 +22,7 @@
                 : null;
             $fullName = trim(($user?->name ?? '') . ' ' . ($user?->surname ?? ''));
             $nickname = trim((string) ($user?->nickname ?? ''));
+            $hasAuthorIdentity = $nickname !== '' || $fullName !== '';
             $statusLabel = $user?->is_expert
                 ? 'ექსპერტი'
                 : ($user?->is_top_commentator ? 'ტოპ კომენტატორი' : null);
@@ -58,26 +59,30 @@
                             {{ $topic->title }}
                         </p>
 
-                        <div class="mt-1 flex min-w-0 items-start gap-1">
-                            @if ($showUserBadge && $badgeIcon)
-                                <x-ui.avatar-badge iconName="{{ $badgeIcon }}" iconClass="{{ $badgeColor }}"
-                                    iconSizeClass="size-2" wrapperClass="mt-0.5 shrink-0" />
-                            @endif
-
-                            <div class="relative min-w-0 group">
-                                <p class="truncate text-xs font-medium text-slate-700">
-                                    {{ $nickname !== '' ? $nickname : '—' }}
-                                </p>
-                                <p class="truncate text-[11px] text-slate-500">{{ $fullName !== '' ? $fullName : '—' }}</p>
-
-                                @if ($statusLabel)
-                                    <span
-                                        class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-max max-w-44 -translate-x-1/2 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-md opacity-0 transition group-hover:visible group-hover:opacity-100">
-                                        {{ $statusLabel }}
-                                    </span>
+                        @if ($hasAuthorIdentity)
+                            <div class="mt-1 flex min-w-0 items-start gap-1">
+                                @if ($showUserBadge && $badgeIcon)
+                                    <x-ui.avatar-badge iconName="{{ $badgeIcon }}" iconClass="{{ $badgeColor }}"
+                                        iconSizeClass="size-2" wrapperClass="mt-0.5 shrink-0" />
                                 @endif
+
+                                <div class="relative min-w-0 group">
+                                    @if ($nickname !== '')
+                                        <p class="truncate text-xs font-medium text-slate-700">{{ $nickname }}</p>
+                                    @endif
+                                    @if ($fullName !== '')
+                                        <p class="truncate text-[11px] text-slate-500">{{ $fullName }}</p>
+                                    @endif
+
+                                    @if ($statusLabel)
+                                        <span
+                                            class="invisible absolute bottom-full left-1/2 z-10 mb-2 w-max max-w-44 -translate-x-1/2 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-md opacity-0 transition group-hover:visible group-hover:opacity-100">
+                                            {{ $statusLabel }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
+                        @endif
                     </div>
 
                     @if ($isDisabled)

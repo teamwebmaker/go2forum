@@ -72,6 +72,7 @@ class MessageService
             if ($idempotencyKey) {
                 $existing = Message::query()
                     ->withTrashed()
+                    ->notTrashed()
                     ->where('conversation_id', $lockedConversation->id)
                     ->where('sender_id', $senderId)
                     ->where('client_token', $idempotencyKey)
@@ -107,6 +108,7 @@ class MessageService
 
                 $existing = Message::query()
                     ->withTrashed()
+                    ->notTrashed()
                     ->where('conversation_id', $lockedConversation->id)
                     ->where('sender_id', $senderId)
                     ->where('client_token', $idempotencyKey)
@@ -221,6 +223,7 @@ class MessageService
 
         $query = Message::query()
             ->withTrashed()
+            ->notTrashed()
             ->where('conversation_id', $conversation->id);
 
         // Cursor pagination: older than (created_at, id) tuple.
@@ -242,7 +245,7 @@ class MessageService
                 'sender:id,name,surname,nickname,image,is_expert,is_top_commentator',
                 'attachments',
                 'conversation:id,kind',
-                'replyTo:id,conversation_id,sender_id,content,deleted_at',
+                'replyTo:id,conversation_id,sender_id,content,deleted_at,is_trashed',
                 'replyTo.sender:id,name,surname,nickname,image,is_expert,is_top_commentator',
                 'replyTo.attachments:id,message_id',
             ])
@@ -300,6 +303,12 @@ class MessageService
         if (!$message->isEditableBy($currentUserId)) {
             throw ValidationException::withMessages([
                 'content' => ['მესიჯის ჩასწორება შესაძლებელია მხოლოდ 24 საათის განმავლობაში.'],
+            ]);
+        }
+
+        if ((bool) $message->is_trashed) {
+            throw ValidationException::withMessages([
+                'content' => ['მესიჯი Trash-შია და ჩასწორება ვერ მოხერხდა.'],
             ]);
         }
 
@@ -377,6 +386,10 @@ class MessageService
     {
         $message->loadMissing('conversation');
 
+        if ((bool) $message->is_trashed) {
+            throw new AuthorizationException('You are not allowed to delete this message.');
+        }
+
         if (!$isAdmin) {
             if ($message->sender_id !== $currentUserId) {
                 throw new AuthorizationException('You can only delete your own messages.');
@@ -387,13 +400,10 @@ class MessageService
 
         DB::transaction(function () use ($message) {
             $message->loadMissing(['conversation', 'attachments']);
-            $alreadyDeleted = $message->trashed();
 
             $message->delete();
 
-            if (!$alreadyDeleted && $message->conversation?->isTopic() && $message->conversation->topic_id) {
-                Topic::whereKey($message->conversation->topic_id)->decrement('messages_count');
-            }
+            Message::syncConversationDerivedState((int) $message->conversation_id);
 
             if (config('chat.delete_attachments_on_message_delete', false)) {
                 foreach ($message->attachments as $attachment) {
@@ -438,7 +448,8 @@ class MessageService
         if (
             !$replyTarget ||
             (int) $replyTarget->conversation_id !== (int) $conversation->id ||
-            $replyTarget->trashed()
+            $replyTarget->trashed() ||
+            (bool) $replyTarget->is_trashed
         ) {
             throw ValidationException::withMessages([
                 'reply_to_message_id' => ['არჩეული მესიჯი პასუხისთვის ვერ მოიძებნა.'],

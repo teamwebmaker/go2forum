@@ -23,7 +23,7 @@ class OverviewStatsWidget extends StatsOverviewWidget
         $totalCategories = $this->countFor(Category::query());
         $totalPublicDocuments = $this->countFor(PublicDocument::query());
         $totalTopics = $this->countFor(Topic::query());
-        $totalMessages = $this->countFor(Message::query());
+        $totalMessages = $this->countFor(Message::query()->notTrashed());
         $totalAds = $this->countFor(Ads::query());
 
         return [

@@ -28,6 +28,10 @@
     $badgeColor = $sender['badge_color'] ?? '';
     $createdAt = (string) ($message['created_at_label'] ?? '');
     $replyTo = is_array($message['reply_to'] ?? null) ? $message['reply_to'] : null;
+    $replyToTrashed = (bool) ($replyTo['is_trashed'] ?? false);
+    if ($replyToTrashed) {
+        $replyTo = null;
+    }
     $replyToDeleted = (bool) ($replyTo['is_deleted'] ?? false);
     $replySender = is_array($replyTo['sender'] ?? null) ? $replyTo['sender'] : [];
     $replySenderFullName = trim((string) ($replySender['full_name'] ?? $replySender['name'] ?? ''));

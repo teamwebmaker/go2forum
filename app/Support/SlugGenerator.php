@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class SlugGenerator
@@ -17,17 +18,28 @@ class SlugGenerator
     public static function unique(Model|string $model, string $value, string $column = 'slug'): string
     {
         $baseSlug = Str::slug($value);
+        if ($baseSlug === '') {
+            $baseSlug = 'item';
+        }
+
         $slug = $baseSlug;
         $counter = 2;
 
-        $query = is_string($model) ? $model::query() : $model->newQuery();
+        $instance = is_string($model) ? new $model() : $model;
+        $query = $instance->newQuery();
 
-        // Ignore the current record when updating
-        if ($model instanceof Model && $model->getKey()) {
-            $query->whereKeyNot($model->getKey());
+        // Include soft deleted records when the model uses SoftDeletes,
+        // because unique DB indexes still include trashed rows.
+        if (in_array(SoftDeletes::class, class_uses_recursive($instance), true)) {
+            $query->withTrashed();
         }
 
-        while ($query->where($column, $slug)->exists()) {
+        // Ignore the current record when updating
+        if ($instance->getKey()) {
+            $query->whereKeyNot($instance->getKey());
+        }
+
+        while ((clone $query)->where($column, $slug)->exists()) {
             $slug = "{$baseSlug}-{$counter}";
             $counter++;
         }

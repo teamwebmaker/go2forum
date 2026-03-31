@@ -5,15 +5,18 @@ namespace App\Filament\Resources\Topics\Tables;
 use App\Filament\Resources\Topics\TopicResource;
 use App\Models\Conversation;
 use App\Models\Topic;
-use App\Services\TopicDeletionService;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -25,6 +28,7 @@ class TopicsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordClasses(fn(Topic $record): ?string => $record->trashed() ? 'resource-row-trashed' : null)
             ->columns([
                 TextColumn::make('user.full_name')
                     ->label(TopicResource::labelFor('user_id'))
@@ -50,11 +54,6 @@ class TopicsTable
                     ->formatStateUsing(fn(string $state) => __('models.topics.statuses.' . $state))
                     ->badge()
                     ->color(fn($record) => $record->status_color),
-                TextColumn::make('slug')
-                    ->label(TopicResource::labelFor('slug'))
-                    ->limit(35)
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
                 TextColumn::make('messages_count')
                     ->label(TopicResource::labelFor('messages_count'))
                     ->numeric()
@@ -86,8 +85,25 @@ class TopicsTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('deleted_at')
+                    ->label(TopicResource::labelFor('deleted_at'))
+                    ->dateTime()
+                    ->badge()
+                    ->color(fn($state): string => filled($state) ? 'warning' : 'gray')
+                    ->placeholder('-')
+                    ->sortable()
+                    ->toggleable(),
             ])
             ->filters([
+                SelectFilter::make('status')
+                    ->label(TopicResource::labelFor('status'))
+                    ->options([
+                        'active' => __('models.topics.statuses.active'),
+                        'closed' => __('models.topics.statuses.closed'),
+                        'disabled' => __('models.topics.statuses.disabled'),
+                    ])
+                    ->searchable()
+                    ->preload(),
                 TernaryFilter::make('has_category')
                     ->label(TopicResource::labelFor('category_id'))
                     ->trueLabel(__('models.topics.filters.with_category'))
@@ -101,43 +117,38 @@ class TopicsTable
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
-                SelectFilter::make('status')
-                    ->label(TopicResource::labelFor('status'))
-                    ->options([
-                        'active' => __('models.topics.statuses.active'),
-                        'closed' => __('models.topics.statuses.closed'),
-                        'disabled' => __('models.topics.statuses.disabled'),
-                    ])
-                    ->searchable()
-                    ->preload(),
+
+                TrashedFilter::make()
+                    ->label(__('models.messages.filters.in_trash'))
+                    ->placeholder(__('models.messages.filters.not_in_trash_only'))
+                    ->trueLabel(__('models.messages.filters.all'))
+                    ->falseLabel(__('models.messages.filters.in_trash_only')),
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->hidden(fn(Topic $record): bool => $record->trashed()),
+                DeleteAction::make('trashTopic')
+                    ->label(__('models.topics.actions.delete_only.label'))
+                    ->modalHeading(__('models.topics.actions.delete_only.heading'))
+                    ->modalDescription(__('models.topics.actions.delete_only.description'))
+                    ->hidden(fn(Topic $record): bool => $record->trashed()),
+                RestoreAction::make()
+                    ->visible(fn(Topic $record): bool => $record->trashed()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->label(__('models.topics.actions.delete_only.label'))
-                        ->modalHeading(__('models.topics.actions.delete_only.headingBulk'))
-                        ->modalDescription(__('models.topics.actions.delete_only.description')),
-                    DeleteBulkAction::make('deleteWithThreadData')
-                        ->label(__('models.topics.actions.delete_with_thread.label'))
                         ->chunkSelectedRecords(100)
-                        ->using(function (
-                            DeleteBulkAction $action,
-                            EloquentCollection|Collection|LazyCollection $records,
-                            TopicDeletionService $topicDeletionService
-                        ): void {
+                        ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records): void {
                             $isFirstException = true;
 
-                            $records->each(function (Topic $record) use (
-                                $action,
-                                $topicDeletionService,
-                                &$isFirstException
-                            ): void {
+                            $records->each(function (Topic $record) use ($action, &$isFirstException): void {
                                 try {
-                                    $topicDeletionService->deleteWithThreadData($record);
+                                    if (!$record->trashed()) {
+                                        $record->delete();
+                                    }
                                 } catch (\Throwable $exception) {
                                     $action->reportBulkProcessingFailure();
 
@@ -148,8 +159,31 @@ class TopicsTable
                                 }
                             });
                         })
-                        ->modalHeading(__('models.topics.actions.delete_with_thread.headingBulk'))
-                        ->modalDescription(__('models.topics.actions.delete_with_thread.description')),
+                        ->modalHeading(__('models.topics.actions.delete_only.headingBulk'))
+                        ->modalDescription(__('models.topics.actions.delete_only.description')),
+                    BulkAction::make('restoreSelected')
+                        ->label(__('models.trash.actions.restore_selected'))
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('gray')
+                        ->requiresConfirmation()
+                        ->action(function (BulkAction $action, EloquentCollection|Collection|LazyCollection $records): void {
+                            $isFirstException = true;
+
+                            $records->each(function (Topic $record) use ($action, &$isFirstException): void {
+                                try {
+                                    if ($record->trashed()) {
+                                        $record->restore();
+                                    }
+                                } catch (\Throwable $exception) {
+                                    $action->reportBulkProcessingFailure();
+
+                                    if ($isFirstException) {
+                                        report($exception);
+                                        $isFirstException = false;
+                                    }
+                                }
+                            });
+                        }),
                 ]),
             ]);
     }

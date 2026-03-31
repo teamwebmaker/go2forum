@@ -27,6 +27,7 @@ class MessagePayloadTransformer
         $senderFullName = $sender?->full_name ?? $sender?->name;
         $canEdit = $message->isEditableBy($currentUserId);
         $replyTo = $message->replyTo;
+        $replyIsTrashed = (bool) ($replyTo?->is_trashed ?? false);
         $replySender = $replyTo?->sender;
         $replySenderFullName = $replySender?->full_name ?? $replySender?->name;
         $replyAttachmentCount = $replyTo ? (int) $replyTo->attachments->count() : 0;
@@ -42,6 +43,7 @@ class MessagePayloadTransformer
                 140
             )
             : null;
+        $shouldHideReplyContext = $replyIsTrashed;
 
         return [
             'id' => $message->id,
@@ -57,9 +59,10 @@ class MessagePayloadTransformer
                 'status_label' => $this->statusLabelForUser($sender),
             ],
             'author_label' => $sender?->nickname ?: ($senderFullName ?? (($currentUserId && (int) ($sender?->id ?? 0) === $currentUserId) ? 'მე' : 'User')),
-            'reply_to' => $replyTo ? [
+            'reply_to' => $replyTo && !$shouldHideReplyContext ? [
                 'id' => $replyTo->id,
                 'is_deleted' => $replyIsDeleted,
+                'is_trashed' => $replyIsTrashed,
                 'content' => $replyContent,
                 'content_preview' => $replyPreview,
                 'sender' => [

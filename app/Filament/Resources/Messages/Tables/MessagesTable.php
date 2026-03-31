@@ -6,7 +6,8 @@ use App\Filament\Resources\Messages\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
-use App\Services\MessageDeletionService;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -28,7 +29,9 @@ class MessagesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->recordClasses(fn(Message $record): ?string => $record->trashed() ? 'message-row-deleted' : null)
+            ->recordClasses(fn(Message $record): ?string => $record->trashed()
+                ? 'message-row-deleted'
+                : ($record->is_trashed ? 'message-row-trashed' : null))
             ->columns([
                 TextColumn::make('id')
                     ->label(MessageResource::labelFor('id'))
@@ -61,16 +64,6 @@ class MessagesTable
                     ->label(MessageResource::labelFor('content'))
                     ->limit(90)
                     ->searchable(),
-                TextColumn::make('edited_at')
-                    ->label(MessageResource::labelFor('edited_at'))
-                    ->dateTime()
-                    ->placeholder('-')
-                    ->sortable(),
-                TextColumn::make('client_token')
-                    ->label(MessageResource::labelFor('client_token'))
-                    ->limit(24)
-                    ->placeholder('-')
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('original_content')
                     ->label(MessageResource::labelFor('original_content'))
                     ->limit(80)
@@ -81,6 +74,11 @@ class MessagesTable
                     ->limit(80)
                     ->placeholder('-')
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('edited_at')
+                    ->label(MessageResource::labelFor('edited_at'))
+                    ->dateTime()
+                    ->placeholder('-')
+                    ->sortable(),
                 TextColumn::make('attachments_count')
                     ->label(MessageResource::labelFor('attachments_count'))
                     ->numeric()
@@ -98,14 +96,14 @@ class MessagesTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->label(MessageResource::labelFor('deleted_at'))
-                    ->dateTime()
-                    ->badge()
-                    ->color(fn($state): string => filled($state) ? 'danger' : 'gray')
-                    ->placeholder('-')
-                    ->sortable()
-                    ->toggleable(),
+                // TextColumn::make('deleted_at')
+                //     ->label(MessageResource::labelFor('deleted_at'))
+                //     ->dateTime()
+                //     ->badge()
+                //     ->color(fn($state): string => filled($state) ? 'danger' : 'gray')
+                //     ->placeholder('-')
+                //     ->sortable()
+                //     ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('conversation_kind')
@@ -178,17 +176,16 @@ class MessagesTable
                         true: fn($query) => $query->whereNotNull('edited_at'),
                         false: fn($query) => $query->whereNull('edited_at'),
                     ),
-                // Temporary disabled   
-                // TernaryFilter::make('is_deleted')
-                //     ->label(MessageResource::labelFor('deleted_at'))
-                //     ->placeholder(__('models.messages.filters.all'))
-                //     ->trueLabel(__('models.messages.filters.deleted_only'))
-                //     ->falseLabel(__('models.messages.filters.not_deleted_only'))
-                //     ->queries(
-                //         true: fn($query) => $query->onlyTrashed(),
-                //         false: fn($query) => $query->withoutTrashed(),
-                //         blank: fn($query) => $query->withTrashed(),
-                //     ),
+                TernaryFilter::make('is_trashed')
+                    ->label(__('models.messages.filters.in_trash'))
+                    ->placeholder(__('models.messages.filters.all'))
+                    ->trueLabel(__('models.messages.filters.in_trash_only'))
+                    ->falseLabel(__('models.messages.filters.not_in_trash_only'))
+                    ->default(false)
+                    ->queries(
+                        true: fn($query) => $query->where('is_trashed', true),
+                        false: fn($query) => $query->where('is_trashed', false),
+                    ),
             ])
             ->recordActions([
                 ViewAction::make()
@@ -196,15 +193,27 @@ class MessagesTable
                     ->iconPosition(IconPosition::Before),
                 EditAction::make()
                     ->icon(Heroicon::OutlinedPencilSquare)
-                    ->iconPosition(IconPosition::Before),
+                    ->iconPosition(IconPosition::Before)
+                    ->hidden(fn(Message $record): bool => (bool) $record->is_trashed),
                 DeleteAction::make()
                     ->icon(Heroicon::OutlinedTrash)
                     ->iconPosition(IconPosition::Before)
-                    ->hidden(false)
+                    ->hidden(fn(Message $record): bool => (bool) $record->is_trashed)
                     ->modalHeading(__('models.messages.actions.delete.heading'))
-                    ->modalDescription(__('models.messages.actions.delete.description'))
-                    ->using(function (Message $record, MessageDeletionService $messageDeletionService): bool {
-                        $messageDeletionService->deleteByAdmin($record);
+                    ->modalDescription(__('models.messages.actions.trash.description'))
+                    ->using(function (Message $record): bool {
+                        $record->moveToTrash();
+
+                        return true;
+                    }),
+                Action::make('restoreFromTrash')
+                    ->label(__('models.trash.actions.restore'))
+                    ->icon(Heroicon::OutlinedArrowPath)
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->visible(fn(Message $record): bool => (bool) $record->is_trashed)
+                    ->action(function (Message $record): bool {
+                        $record->restoreFromTrash();
 
                         return true;
                     }),
@@ -214,12 +223,12 @@ class MessagesTable
                     DeleteBulkAction::make()
                         ->label(__('models.messages.actions.delete.label'))
                         ->chunkSelectedRecords(100)
-                        ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records, MessageDeletionService $messageDeletionService): void {
+                        ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records): void {
                             $isFirstException = true;
 
-                            $records->each(function (Message $record) use ($action, $messageDeletionService, &$isFirstException): void {
+                            $records->each(function (Message $record) use ($action, &$isFirstException): void {
                                 try {
-                                    $messageDeletionService->deleteByAdmin($record);
+                                    $record->moveToTrash();
                                 } catch (\Throwable $exception) {
                                     $action->reportBulkProcessingFailure();
 
@@ -231,7 +240,28 @@ class MessagesTable
                             });
                         })
                         ->modalHeading(__('models.messages.actions.delete.headingBulk'))
-                        ->modalDescription(__('models.messages.actions.delete.description')),
+                        ->modalDescription(__('models.messages.actions.trash.description')),
+                    BulkAction::make('restoreSelected')
+                        ->label(__('models.trash.actions.restore_selected'))
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('gray')
+                        ->requiresConfirmation()
+                        ->action(function (BulkAction $action, EloquentCollection|Collection|LazyCollection $records): void {
+                            $isFirstException = true;
+
+                            $records->each(function (Message $record) use ($action, &$isFirstException): void {
+                                try {
+                                    $record->restoreFromTrash();
+                                } catch (\Throwable $exception) {
+                                    $action->reportBulkProcessingFailure();
+
+                                    if ($isFirstException) {
+                                        report($exception);
+                                        $isFirstException = false;
+                                    }
+                                }
+                            });
+                        }),
                 ]),
             ]);
     }

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\Topic;
 use App\Models\User;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +15,12 @@ use Illuminate\Support\Collection;
 
 class AccountDeletionService
 {
+    public function __construct(
+        protected TopicDeletionService $topicDeletionService,
+        protected MessageDeletionService $messageDeletionService,
+    ) {
+    }
+
     // Delete own account
     public function delete(User $user): void
     {
@@ -27,6 +35,13 @@ class AccountDeletionService
         $this->deleteInternal($user, false);
     }
 
+    // Delete account by admin and also purge all public history authored by this user.
+    public function deleteByAdminWithPublicData(User $user): void
+    {
+        $this->purgePublicDataByUser($user);
+        $this->deleteInternal($user, false);
+    }
+
     protected function deleteInternal(User $user, bool $terminateCurrentSession): void
     {
         $userId = (int) $user->getAuthIdentifier();
@@ -38,6 +53,7 @@ class AccountDeletionService
             // Row lock prevents concurrent child inserts that reference this user
             // (private conversations/messages/participants) while deletion is in progress.
             $lockedUser = User::query()
+                ->withTrashed()
                 ->whereKey($userId)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -50,8 +66,8 @@ class AccountDeletionService
             $this->deletePasswordResetTokens($lockedUser->email);
             $this->deleteDatabaseSessions($userId, $currentSessionId);
 
-            // Delete user (User Modal deleting hook removes avatar image to)
-            $lockedUser->delete();
+            // Permanently remove user during account deletion flows.
+            $lockedUser->forceDelete();
 
             return $attachmentTargets;
         });
@@ -64,6 +80,48 @@ class AccountDeletionService
             Session::invalidate();
             Session::regenerateToken();
         }
+    }
+
+    protected function purgePublicDataByUser(User $user): void
+    {
+        $userId = (int) $user->getKey();
+
+        if ($userId <= 0) {
+            return;
+        }
+
+        $topicIds = Topic::query()
+            ->withTrashed()
+            ->where('user_id', $userId)
+            ->orderBy('id')
+            ->pluck('id')
+            ->map(fn($id): int => (int) $id)
+            ->all();
+
+        foreach ($topicIds as $topicId) {
+            $topic = Topic::query()
+                ->withTrashed()
+                ->find($topicId);
+
+            if (!$topic) {
+                continue;
+            }
+
+            $this->topicDeletionService->deleteWithThreadData($topic);
+        }
+
+        Message::query()
+            ->withTrashed()
+            ->where('sender_id', $userId)
+            ->whereHas('conversation', function ($query): void {
+                $query->where('kind', Conversation::KIND_TOPIC);
+            })
+            ->orderBy('id')
+            ->chunkById(200, function (Collection $messages): void {
+                foreach ($messages as $message) {
+                    $this->messageDeletionService->deleteByAdmin($message);
+                }
+            }, 'id');
     }
 
     /**

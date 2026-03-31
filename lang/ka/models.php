@@ -39,6 +39,7 @@ return [
             'visibility' => 'ხილვადობა',
             'created_at' => 'შეიქმნა',
             'updated_at' => 'ბოლოს განახლდა',
+            'deleted_at' => 'წაიშალა',
         ],
         'titles' => [
             'edit' => 'კატეგორიის რედაქტირება',
@@ -67,6 +68,7 @@ return [
             'visibility' => 'ხილვადობა',
             'created_at' => 'შეიქმნა',
             'updated_at' => 'ბოლოს განახლდა',
+            'deleted_at' => 'წაიშალა',
         ],
         'statuses' => [
             'active' => 'აქტიური',
@@ -177,6 +179,8 @@ return [
             'original_content' => 'საწყისი ტექსტი',
             'edited_content' => 'ჩასწორებული ტექსტი',
             'edited_at' => 'ჩასწორების დრო',
+            'is_trashed' => 'სანაგვეში',
+            'trashed_at' => 'სანაგვეში გადატანის დრო',
             'client_token' => 'კლიენტის ტოკენი',
             'attachments' => 'დანართები',
             'file' => 'ფაილი',
@@ -207,6 +211,9 @@ return [
                 'headingBulk' => 'შეტყობინებების წაშლა',
                 'description' => 'წაიშლება შეტყობინება, მისი დანართები, ლაიქები და მიწოდების ჩანაწერები.',
             ],
+            'trash' => [
+                'description' => 'შეტყობინება გადავა სანაგვეში. საჭიროების შემთხვევაში აღდგენა შესაძლებელია.',
+            ],
             'delete_attachment' => [
                 'heading' => 'დანართის წაშლა',
                 'description' => 'დარწმუნებული ხართ, რომ გსურთ დანართის წაშლა? ფაილი შეუქცევადად წაიშლება.',
@@ -226,6 +233,9 @@ return [
             'without_reply' => 'პასუხის გარეშე',
             'edited_only' => 'მხოლოდ ჩასწორებული',
             'not_edited_only' => 'მხოლოდ ჩასწორების გარეშე',
+            'in_trash' => 'სანაგვე',
+            'in_trash_only' => 'მხოლოდ სანაგვეში',
+            'not_in_trash_only' => 'მხოლოდ სანაგვის გარეშე',
         ],
         'types' => [
             'image' => 'სურათი',
@@ -411,6 +421,7 @@ return [
             'password' => 'პაროლი',
             'created_at' => 'შეიქმნა',
             'updated_at' => 'ბოლოს განახლდა',
+            'deleted_at' => 'წაიშალა',
         ],
         'titles' => [
             'create' => 'მომხმარებლის შექმნა',
@@ -420,7 +431,7 @@ return [
             'delete' => [
                 'heading' => 'მომხმარებლის წაშლა',
                 'headingBulk' => 'მომხმარებლების წაშლა',
-                'description' => '',
+                'description' => 'მომხმარებელი გადავა სანაგვეში და საჭიროების შემთხვევაში აღდგენა იქნება შესაძლებელი.',
                 'actionLabel' => ''
             ],
             'export' => [
@@ -440,5 +451,53 @@ return [
                 'actionLabel' => '',
             ],
         ],
+    ],
+    'trash' => [
+        'navigation' => 'სანაგვე',
+        'titles' => [
+            'global' => 'სანაგვე',
+            'users' => 'წაშლილი მომხმარებლები',
+            'topics' => 'წაშლილი თემები',
+            'messages' => 'სანაგვეში გადატანილი შეტყობინებები',
+        ],
+        'tabs' => [
+            'users' => 'მომხმარებლები',
+            'topics' => 'თემები',
+            'messages' => 'შეტყობინებები',
+        ],
+        'actions' => [
+            'label' => 'მოქმედება',
+            'bulk_actions' => 'ქმედებები',
+            'advanced' => 'დამატებითი',
+            'basic' => 'სტანდარტული',
+            'view' => 'ნახვა',
+            'close' => 'დახურვა',
+            'restore' => 'აღდგენა',
+            'restore_selected' => 'მონიშნულების აღდგენა',
+            'force_delete' => 'საბოლოოდ წაშლა',
+            'force_delete_selected' => 'მონიშნულების საბოლოოდ წაშლა',
+            'force_delete_keep_public' => 'საბოლოოდ წაშლა (საჯაროს შენარჩუნებით)',
+            'force_delete_with_public' => 'საბოლოოდ წაშლა (საჯაროს ჩათვლით)',
+            'force_delete_selected_keep_public' => 'მონიშნულის წაშლა (საჯაროს შენარჩუნებით)',
+            'force_delete_selected_with_public' => 'მონიშნულის წაშლა (საჯაროს ჩათვლით)',
+            'force_delete_topic_only' => 'საბოლოოდ წაშლა (მხოლოდ თემა)',
+            'force_delete_topic_with_thread' => 'საბოლოოდ წაშლა (თემა + საუბრები)',
+            'force_delete_selected_topics_only' => 'მონიშნული თემები (მხოლოდ თემა)',
+            'force_delete_selected_topics_with_thread' => 'მონიშნული თემები (თემა + საუბრები)',
+            'view_deleted_users' => 'წაშლილი მომხმარებლები',
+            'view_deleted_topics' => 'წაშლილი თემები',
+            'view_deleted_messages' => 'შეტყობინებების სანაგვე',
+            'back_to_users' => 'მომხმარებლებზე დაბრუნება',
+            'back_to_topics' => 'თემებზე დაბრუნება',
+            'back_to_messages' => 'შეტყობინებებზე დაბრუნება',
+        ],
+        'confirmations' => [
+            'force_delete' => 'დარწმუნებული ხართ, რომ გსურთ საბოლოოდ წაშლა?',
+        ],
+        'notifications' => [
+            'restored' => 'ჩანაწერი წარმატებით აღდგა.',
+            'force_deleted' => 'ჩანაწერი საბოლოოდ წაიშალა.',
+        ],
+        'empty' => 'ჩანაწერები ვერ მოიძებნა.',
     ],
 ];

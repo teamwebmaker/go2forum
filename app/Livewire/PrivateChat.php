@@ -406,7 +406,9 @@ class PrivateChat extends Component
 
         $this->resetErrorBag('chat');
 
-        $message = Message::withTrashed()->find($messageId);
+        $message = Message::withTrashed()
+            ->notTrashed()
+            ->find($messageId);
         if (!$message || $message->conversation_id !== $this->selectedConversationId) {
             return;
         }

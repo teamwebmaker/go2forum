@@ -19,6 +19,26 @@
     background-color: rgba(127, 29, 29, 0.4);
 }
 
+.fi-ta-table tbody tr.message-row-trashed td,
+.fi-ta-table tbody tr.resource-row-trashed td {
+    background-color: rgba(254, 252, 232, 0.82);
+}
+
+.fi-ta-table tbody tr.message-row-trashed:hover td,
+.fi-ta-table tbody tr.resource-row-trashed:hover td {
+    background-color: rgba(254, 249, 195, 0.9);
+}
+
+.dark .fi-ta-table tbody tr.message-row-trashed td,
+.dark .fi-ta-table tbody tr.resource-row-trashed td {
+    background-color: rgba(120, 53, 15, 0.3);
+}
+
+.dark .fi-ta-table tbody tr.message-row-trashed:hover td,
+.dark .fi-ta-table tbody tr.resource-row-trashed:hover td {
+    background-color: rgba(120, 53, 15, 0.42);
+}
+
 .message-attachments-repeater .fi-fo-repeater-item-header-collapsible-actions {
     display: none;
 }
@@ -85,4 +105,29 @@
 .fi-sidebar:not(.fi-sidebar-open)
     .fi-sidebar-item-btn[href$="/admin/site-alerts"] {
     background-size: 1.75rem 1px;
+}
+
+/* Prevent horizontal overflow in Filament database notifications on mobile. */
+.fi-no-database .fi-modal-window-ctn > .fi-modal-window,
+.fi-no-database .fi-modal-content {
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.fi-no-database .fi-modal-header > div,
+.fi-no-database .fi-no-notification-read-ctn,
+.fi-no-database .fi-no-notification-unread-ctn,
+.fi-no-database .fi-no-notification,
+.fi-no-database .fi-no-notification-main,
+.fi-no-database .fi-no-notification-text {
+    min-width: 0;
+}
+
+.fi-no-database .fi-no-notification-title,
+.fi-no-database .fi-no-notification-date,
+.fi-no-database .fi-no-notification-body,
+.fi-no-database .fi-no-notification-body p,
+.fi-no-database .fi-ac .fi-btn-label {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }

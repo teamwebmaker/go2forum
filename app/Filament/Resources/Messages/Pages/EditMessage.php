@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Messages\Pages;
 
 use App\Filament\Resources\Messages\MessageResource;
 use App\Models\Message;
-use App\Services\MessageDeletionService;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -29,11 +29,22 @@ class EditMessage extends EditRecord
             DeleteAction::make()
                 ->icon(Heroicon::OutlinedTrash)
                 ->iconPosition(IconPosition::Before)
-                ->hidden(false)
+                ->hidden(fn(Message $record): bool => (bool) $record->is_trashed)
                 ->modalHeading(__('models.messages.actions.delete.heading'))
-                ->modalDescription(__('models.messages.actions.delete.description'))
-                ->using(function (Message $record, MessageDeletionService $messageDeletionService): bool {
-                    $messageDeletionService->deleteByAdmin($record);
+                ->modalDescription(__('models.messages.actions.trash.description'))
+                ->using(function (Message $record): bool {
+                    $record->moveToTrash();
+
+                    return true;
+                }),
+            Action::make('restoreFromTrash')
+                ->label(__('models.trash.actions.restore'))
+                ->icon(Heroicon::OutlinedArrowPath)
+                ->color('gray')
+                ->requiresConfirmation()
+                ->visible(fn(Message $record): bool => (bool) $record->is_trashed)
+                ->action(function (Message $record): bool {
+                    $record->restoreFromTrash();
 
                     return true;
                 }),

@@ -168,6 +168,7 @@ class ConversationDeletionService
             ->where('c.kind', Conversation::KIND_TOPIC)
             ->where('c.topic_id', $topicId)
             ->whereNull('m.deleted_at')
+            ->where('m.is_trashed', false)
             ->count();
 
         Topic::query()

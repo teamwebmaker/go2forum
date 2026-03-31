@@ -12,6 +12,30 @@ use Illuminate\Support\Facades\Storage;
 class TopicDeletionService
 {
     /**
+     * Permanently delete only the topic row and keep conversation/message history.
+     */
+    public function deleteTopicOnly(Topic $topic): void
+    {
+        $topicId = (int) $topic->getKey();
+
+        DB::transaction(function () use ($topicId): void {
+            $lockedTopic = Topic::query()
+                ->withTrashed()
+                ->whereKey($topicId)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$lockedTopic) {
+                return;
+            }
+
+            $this->deleteNotificationsByTopicPayload($topicId);
+
+            $lockedTopic->forceDelete();
+        });
+    }
+
+    /**
      * Delete topic plus its topic conversation thread data.
      *
      * Removes:
@@ -28,6 +52,7 @@ class TopicDeletionService
 
         [$conversationIds, $attachmentDisks] = DB::transaction(function () use ($topicId): array {
             $lockedTopic = Topic::query()
+                ->withTrashed()
                 ->whereKey($topicId)
                 ->lockForUpdate()
                 ->first();
@@ -49,7 +74,7 @@ class TopicDeletionService
             $this->deleteTopicConversations($conversationIds);
             $this->deleteNotificationsByTopicPayload($topicId);
 
-            $lockedTopic->delete();
+            $lockedTopic->forceDelete();
 
             return [$conversationIds, $attachmentDisks];
         });

@@ -2,21 +2,29 @@
 
 namespace App\Models;
 
+use Filament\Notifications\Notification as FilamentNotification;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, MustVerifyEmailTrait;
+    use HasFactory, Notifiable, MustVerifyEmailTrait, SoftDeletes;
 
 
     // Default directory (on "public" disk) where user avatar files are stored.
@@ -121,6 +129,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             // Timestamps
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
+            'deleted_at' => 'datetime',
 
             // Automatically hash on set (Laravel "hashed" cast)
             'password' => 'hashed',
@@ -135,7 +144,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     /**
      * Model event hooks.
      *
-     * On delete: also delete avatar file from storage (public disk)
+     * On force delete: also delete avatar file from storage (public disk)
      */
     protected static function booted(): void
     {
@@ -148,7 +157,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             }
         });
 
-        static::deleting(function (User $user) {
+        static::forceDeleted(function (User $user) {
             // Nothing to cleanup
             if (!$user->image) {
                 return;
@@ -165,6 +174,70 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             // Delete avatar file (ignore if missing)
             Storage::disk('public')->delete($path);
         });
+
+        static::deleted(function (User $user): void {
+            // This hook should only enforce logout semantics for soft-deletes.
+            if ($user->isForceDeleting()) {
+                return;
+            }
+
+            static::invalidateSessionsOnSoftDelete($user);
+        });
+
+        static::restored(function (User $restoredUser): void {
+            $admins = static::query()
+                ->where('role', 'admin')
+                ->whereNull('deleted_at')
+                ->get(['id', 'name', 'surname', 'nickname', 'email', 'role']);
+
+            if ($admins->isEmpty()) {
+                return;
+            }
+
+            Notification::sendNow(
+                $admins,
+                FilamentNotification::make()
+                ->title('მომხმარებელი აღდგენილია')
+                ->body("ანგარიში #{$restoredUser->id} ({$restoredUser->email}) აღდგა.")
+                ->warning()
+                ->toDatabase()
+            );
+        });
+    }
+
+    protected static function invalidateSessionsOnSoftDelete(User $user): void
+    {
+        $userId = (int) $user->getKey();
+        if ($userId <= 0) {
+            return;
+        }
+
+        // Invalidate persistent remember-me cookies for this account.
+        // We update directly to avoid triggering additional model events.
+        static::query()
+            ->withTrashed()
+            ->whereKey($userId)
+            ->update([
+                'remember_token' => Str::random(60),
+            ]);
+
+        // Remove all active sessions for this user when database sessions are used.
+        if (config('session.driver') === 'database') {
+            $table = (string) config('session.table', 'sessions');
+
+            if (Schema::hasTable($table)) {
+                DB::table($table)
+                    ->where('user_id', $userId)
+                    ->delete();
+            }
+        }
+
+        // If the deleted user is the current request actor, also invalidate current session.
+        if ((int) Auth::id() === $userId) {
+            Auth::logout();
+            Session::invalidate();
+            Session::regenerateToken();
+        }
     }
 
     /**
