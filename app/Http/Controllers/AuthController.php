@@ -9,15 +9,18 @@ use App\Http\Requests\StoreSignUpRequest;
 use App\Models\Settings;
 use App\Models\User;
 use App\Services\PhoneVerificationService;
+use App\Services\UserRegistrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected UserRegistrationService $userRegistrationService,
+    ) {
+    }
+
     // ////////////
     // pages
     public function login()
@@ -73,49 +76,13 @@ class AuthController extends Controller
     public function register(StoreSignUpRequest $request)
     {
         $attrs = $request->validated();
-        $reactivatedViaSignup = false;
+        $registration = $this->userRegistrationService->registerOrReactivate(
+            $attrs,
+            $this->signupUnavailableMessage()
+        );
 
-        $user = DB::transaction(function () use ($attrs, &$reactivatedViaSignup): User {
-            $existingUser = User::query()
-                ->withTrashed()
-                ->where('email', $attrs['email'])
-                ->lockForUpdate()
-                ->first();
-
-            // Restore existing user
-            if ($existingUser && $existingUser->trashed()) {
-                if ($existingUser->role !== 'user') {
-                    throw ValidationException::withMessages([
-                        'email' => [$this->signupUnavailableMessage()],
-                    ]);
-                }
-
-                $existingUser->restore();
-                $existingUser->forceFill([
-                    'name' => $attrs['name'],
-                    'surname' => $attrs['surname'],
-                    'nickname' => $attrs['nickname'],
-                    'phone' => $attrs['phone'],
-                    'password' => Hash::make($attrs['password']),
-                    // Re-verification required after reactivation.
-                    'email_verified_at' => null,
-                    'phone_verified_at' => null,
-                ])->save();
-
-                $reactivatedViaSignup = true;
-
-                return $existingUser->fresh();
-            }
-
-            return User::create([
-                'name' => $attrs['name'],
-                'surname' => $attrs['surname'],
-                'nickname' => $attrs['nickname'],
-                'email' => $attrs['email'],
-                'phone' => $attrs['phone'],
-                'password' => Hash::make($attrs['password']),
-            ]);
-        });
+        $user = $registration['user'];
+        $reactivatedViaSignup = $registration['reactivated'];
 
         if ($reactivatedViaSignup) {
             $this->notifyAdminsAboutUserSelfReactivation($user);
