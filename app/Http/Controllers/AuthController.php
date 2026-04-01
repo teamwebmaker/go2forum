@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use Filament\Notifications\Notification as FilamentNotification;
 use App\Http\Requests\StoreLogInRequest;
 use App\Http\Requests\StoreSignUpRequest;
 use App\Models\Settings;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -71,8 +73,9 @@ class AuthController extends Controller
     public function register(StoreSignUpRequest $request)
     {
         $attrs = $request->validated();
+        $reactivatedViaSignup = false;
 
-        $user = DB::transaction(function () use ($attrs): User {
+        $user = DB::transaction(function () use ($attrs, &$reactivatedViaSignup): User {
             $existingUser = User::query()
                 ->withTrashed()
                 ->where('email', $attrs['email'])
@@ -99,6 +102,8 @@ class AuthController extends Controller
                     'phone_verified_at' => null,
                 ])->save();
 
+                $reactivatedViaSignup = true;
+
                 return $existingUser->fresh();
             }
 
@@ -111,6 +116,10 @@ class AuthController extends Controller
                 'password' => Hash::make($attrs['password']),
             ]);
         });
+
+        if ($reactivatedViaSignup) {
+            $this->notifyAdminsAboutUserSelfReactivation($user);
+        }
 
         Auth::login($user);
         $request->session()->regenerate();
@@ -154,6 +163,31 @@ class AuthController extends Controller
     protected function signupUnavailableMessage(): string
     {
         return 'რეგისტრაცია ვერ მოხერხდა. თუ უკვე გაქვთ ანგარიში, შედით სისტემაში ან სცადეთ ხელახლა.';
+    }
+
+    protected function notifyAdminsAboutUserSelfReactivation(User $user): void
+    {
+        try {
+            $admins = User::query()
+                ->where('role', 'admin')
+                ->whereNull('deleted_at')
+                ->get(['id', 'name', 'surname', 'nickname', 'email', 'role']);
+
+            if ($admins->isEmpty()) {
+                return;
+            }
+
+            Notification::sendNow(
+                $admins,
+                FilamentNotification::make()
+                    ->title('მომხმარებელი აღდგენილია')
+                    ->body("ანგარიში #{$user->id} ({$user->email}) მომხმარებელმა თავად აღადგინა რეგისტრაციით.")
+                    ->warning()
+                    ->toDatabase()
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     public function logout(Request $request)

@@ -20,7 +20,7 @@ class Trash extends Page
 {
     use WithPagination;
 
-    protected const PER_PAGE = 5;
+    protected const PER_PAGE = 15;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBoxXMark;
     protected static ?int $navigationSort = 9;

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Filament\Notifications\Notification as FilamentNotification;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
@@ -14,7 +13,6 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -184,25 +182,6 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             static::invalidateSessionsOnSoftDelete($user);
         });
 
-        static::restored(function (User $restoredUser): void {
-            $admins = static::query()
-                ->where('role', 'admin')
-                ->whereNull('deleted_at')
-                ->get(['id', 'name', 'surname', 'nickname', 'email', 'role']);
-
-            if ($admins->isEmpty()) {
-                return;
-            }
-
-            Notification::sendNow(
-                $admins,
-                FilamentNotification::make()
-                ->title('მომხმარებელი აღდგენილია')
-                ->body("ანგარიში #{$restoredUser->id} ({$restoredUser->email}) აღდგა.")
-                ->warning()
-                ->toDatabase()
-            );
-        });
     }
 
     protected static function invalidateSessionsOnSoftDelete(User $user): void
