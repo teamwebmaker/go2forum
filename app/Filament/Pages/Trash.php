@@ -20,6 +20,8 @@ class Trash extends Page
 {
     use WithPagination;
 
+    protected const PER_PAGE = 5;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBoxXMark;
     protected static ?int $navigationSort = 9;
 
@@ -27,6 +29,15 @@ class Trash extends Page
 
     #[Url(as: 'tab')]
     public string $activeTab = 'users';
+
+    #[Url(as: 'users_q')]
+    public string $usersSearch = '';
+
+    #[Url(as: 'topics_q')]
+    public string $topicsSearch = '';
+
+    #[Url(as: 'messages_q')]
+    public string $messagesSearch = '';
 
     public bool $selectAllUsers = false;
     public bool $selectAllTopics = false;
@@ -63,29 +74,48 @@ class Trash extends Page
         $this->clearSelections();
     }
 
+    public function mount(): void
+    {
+        if (!in_array($this->activeTab, ['users', 'topics', 'messages'], true)) {
+            $this->activeTab = 'users';
+        }
+    }
+
     public function getDeletedUsersProperty()
     {
-        return User::onlyTrashed()
+        $query = User::onlyTrashed();
+
+        $this->applyDeletedUsersSearch($query);
+
+        return $query
             ->orderByDesc('deleted_at')
-            ->paginate(15, ['*'], 'usersPage');
+            ->paginate(self::PER_PAGE, ['*'], 'usersPage');
     }
 
     public function getDeletedTopicsProperty()
     {
-        return Topic::onlyTrashed()
-            ->with(['category:id,name', 'user:id,name,surname,nickname'])
+        $query = Topic::onlyTrashed()
+            ->with(['category:id,name', 'user:id,name,surname,nickname']);
+
+        $this->applyDeletedTopicsSearch($query);
+
+        return $query
             ->orderByDesc('deleted_at')
-            ->paginate(15, ['*'], 'topicsPage');
+            ->paginate(self::PER_PAGE, ['*'], 'topicsPage');
     }
 
     public function getDeletedMessagesProperty()
     {
-        return Message::query()
+        $query = Message::query()
             ->withTrashed()
             ->onlyInTrash()
-            ->with(['sender:id,name,surname,nickname'])
+            ->with(['sender:id,name,surname,nickname']);
+
+        $this->applyDeletedMessagesSearch($query);
+
+        return $query
             ->orderByDesc('trashed_at')
-            ->paginate(15, ['*'], 'messagesPage');
+            ->paginate(self::PER_PAGE, ['*'], 'messagesPage');
     }
 
     public function restoreUser(int $userId): void
@@ -272,6 +302,24 @@ class Trash extends Page
     public function updatedSelectedMessages(): void
     {
         $this->selectAllMessages = $this->hasFullSelection($this->selectedMessages, $this->currentPageMessageIds());
+    }
+
+    public function updatedUsersSearch(): void
+    {
+        $this->resetPage('usersPage');
+        $this->clearUserSelection();
+    }
+
+    public function updatedTopicsSearch(): void
+    {
+        $this->resetPage('topicsPage');
+        $this->clearTopicSelection();
+    }
+
+    public function updatedMessagesSearch(): void
+    {
+        $this->resetPage('messagesPage');
+        $this->clearMessageSelection();
     }
 
     public function restoreSelectedUsers(): void
@@ -631,6 +679,99 @@ class Trash extends Page
             ['label' => __('models.messages.fields.created_at'), 'value' => $this->formatDateTime($message->created_at)],
             ['label' => __('models.messages.fields.updated_at'), 'value' => $this->formatDateTime($message->updated_at)],
         ];
+    }
+
+    protected function applyDeletedUsersSearch($query): void
+    {
+        $search = trim($this->usersSearch);
+
+        if ($search === '') {
+            return;
+        }
+
+        if (($id = $this->extractSearchId($search)) !== null) {
+            $query->whereKey($id);
+
+            return;
+        }
+
+        $query->where(function ($inner) use ($search): void {
+            $inner
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('surname', 'like', "%{$search}%")
+                ->orWhere('nickname', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
+        });
+    }
+
+    protected function applyDeletedTopicsSearch($query): void
+    {
+        $search = trim($this->topicsSearch);
+
+        if ($search === '') {
+            return;
+        }
+
+        if (($id = $this->extractSearchId($search)) !== null) {
+            $query->whereKey($id);
+
+            return;
+        }
+
+        $query->where(function ($inner) use ($search): void {
+            $inner
+                ->where('title', 'like', "%{$search}%")
+                ->orWhereHas('category', function ($categoryQuery) use ($search): void {
+                    $categoryQuery->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('user', function ($userQuery) use ($search): void {
+                    $userQuery
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('surname', 'like', "%{$search}%")
+                        ->orWhere('nickname', 'like', "%{$search}%");
+                });
+        });
+    }
+
+    protected function applyDeletedMessagesSearch($query): void
+    {
+        $search = trim($this->messagesSearch);
+
+        if ($search === '') {
+            return;
+        }
+
+        if (($id = $this->extractSearchId($search)) !== null) {
+            $query->whereKey($id);
+
+            return;
+        }
+
+        $query->where(function ($inner) use ($search): void {
+            $inner
+                ->where('content', 'like', "%{$search}%")
+                ->orWhere('original_content', 'like', "%{$search}%")
+                ->orWhere('edited_content', 'like', "%{$search}%")
+                ->orWhere('conversation_id', $search)
+                ->orWhere('reply_to_message_id', $search)
+                ->orWhereHas('sender', function ($senderQuery) use ($search): void {
+                    $senderQuery
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('surname', 'like', "%{$search}%")
+                        ->orWhere('nickname', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+        });
+    }
+
+    protected function extractSearchId(string $search): ?int
+    {
+        if (preg_match('/^id:(\d+)$/i', $search, $matches) === 1) {
+            return (int) $matches[1];
+        }
+
+        return null;
     }
 
     protected function formatDateTime(mixed $date): string

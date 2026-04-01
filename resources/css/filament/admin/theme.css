@@ -131,3 +131,19 @@
     overflow-wrap: anywhere;
     word-break: break-word;
 }
+
+/* Trash page pagination: keep summary on left and pages/actions on right. */
+.fi-trash-pagination .fi-pagination {
+    width: 100%;
+}
+
+.fi-trash-pagination .fi-pagination-overview {
+    grid-column-start: 1;
+    margin-inline-end: auto;
+}
+
+.fi-trash-pagination .fi-pagination-items,
+.fi-trash-pagination .fi-pagination-next-btn {
+    grid-column-start: 3;
+    margin-inline-start: auto;
+}

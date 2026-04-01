@@ -465,6 +465,12 @@ return [
             'topics' => 'თემები',
             'messages' => 'შეტყობინებები',
         ],
+        'search' => [
+            'label' => 'ძიება',
+            'users_placeholder' => 'ძიება: ID, სახელი, გვარი, ნიკი, ელფოსტა, ტელეფონი',
+            'topics_placeholder' => 'ძიება: ID, სათაური, კატეგორია, ავტორი',
+            'messages_placeholder' => 'ძიება: ID, ტექსტი, საუბრის ID, ავტორი',
+        ],
         'actions' => [
             'label' => 'მოქმედება',
             'bulk_actions' => 'ქმედებები',

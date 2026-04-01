@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Topics\Tables;
 
+use App\Filament\Pages\Trash;
 use App\Filament\Resources\Topics\TopicResource;
 use App\Models\Conversation;
 use App\Models\Topic;
@@ -29,6 +30,12 @@ class TopicsTable
     {
         return $table
             ->recordClasses(fn(Topic $record): ?string => $record->trashed() ? 'resource-row-trashed' : null)
+            ->recordUrl(fn(Topic $record): string => $record->trashed()
+                ? Trash::getUrl([
+                    'tab' => 'topics',
+                    'topics_q' => 'id:' . $record->id,
+                ])
+                : TopicResource::getUrl('edit', ['record' => $record]))
             ->columns([
                 TextColumn::make('user.full_name')
                     ->label(TopicResource::labelFor('user_id'))

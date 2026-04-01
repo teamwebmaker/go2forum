@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Filament\Pages\Trash;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -34,6 +35,12 @@ class UsersTable
     {
         return $table
             ->recordClasses(fn(User $record): ?string => $record->trashed() ? 'resource-row-trashed' : null)
+            ->recordUrl(fn(User $record): string => $record->trashed()
+                ? Trash::getUrl([
+                    'tab' => 'users',
+                    'users_q' => 'id:' . $record->id,
+                ])
+                : UserResource::getUrl('edit', ['record' => $record]))
             // Remove current user
             ->modifyQueryUsing(function ($query) {
                 $userId = Auth::id();

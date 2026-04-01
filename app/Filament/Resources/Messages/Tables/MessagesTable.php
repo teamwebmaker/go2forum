@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Messages\Tables;
 
+use App\Filament\Pages\Trash;
 use App\Filament\Resources\Messages\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -32,6 +33,12 @@ class MessagesTable
             ->recordClasses(fn(Message $record): ?string => $record->trashed()
                 ? 'message-row-deleted'
                 : ($record->is_trashed ? 'message-row-trashed' : null))
+            ->recordUrl(fn(Message $record): string => $record->is_trashed
+                ? Trash::getUrl([
+                    'tab' => 'messages',
+                    'messages_q' => 'id:' . $record->id,
+                ])
+                : MessageResource::getUrl('edit', ['record' => $record]))
             ->columns([
                 TextColumn::make('id')
                     ->label(MessageResource::labelFor('id'))
