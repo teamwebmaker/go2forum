@@ -104,8 +104,6 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 OverviewStatsWidget::class,
             ])
-            ->databaseNotifications()
-            ->databaseNotificationsPolling('30s')
             ->userMenuItems([
                     Action::make('home')
                         ->label('მთავარი')

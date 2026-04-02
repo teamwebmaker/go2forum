@@ -107,31 +107,6 @@
     background-size: 1.75rem 1px;
 }
 
-/* Prevent horizontal overflow in Filament database notifications on mobile. */
-.fi-no-database .fi-modal-window-ctn > .fi-modal-window,
-.fi-no-database .fi-modal-content {
-    min-width: 0;
-    overflow-x: hidden;
-}
-
-.fi-no-database .fi-modal-header > div,
-.fi-no-database .fi-no-notification-read-ctn,
-.fi-no-database .fi-no-notification-unread-ctn,
-.fi-no-database .fi-no-notification,
-.fi-no-database .fi-no-notification-main,
-.fi-no-database .fi-no-notification-text {
-    min-width: 0;
-}
-
-.fi-no-database .fi-no-notification-title,
-.fi-no-database .fi-no-notification-date,
-.fi-no-database .fi-no-notification-body,
-.fi-no-database .fi-no-notification-body p,
-.fi-no-database .fi-ac .fi-btn-label {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
 /* Trash page pagination: keep summary on left and pages/actions on right. */
 .fi-trash-pagination .fi-pagination {
     width: 100%;

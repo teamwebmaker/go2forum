@@ -35,7 +35,7 @@ class StoreSignUpRequest extends FormRequest
                 'string',
                 Rule::email()->rfcCompliant(strict: true)->validateMxRecord()->preventSpoofing(),
                 'max:255',
-                Rule::unique('users', 'email')->whereNull('deleted_at'),
+                Rule::unique('users', 'email'),
             ],
             'phone' => [
                 Rule::requiredIf($shouldPhoneVerify),
