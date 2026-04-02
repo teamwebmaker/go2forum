@@ -343,6 +343,9 @@ class TopicChat extends Component
             return;
         }
 
+        if ($this->composerOpen === false) {
+            $this->composerOpen = true; // Open composer when replying
+        }
         $this->replyToMessageId = $messageId;
         $this->replyToContext = $context;
     }
