@@ -8,7 +8,6 @@ use App\Models\Message;
 use App\Services\ConversationDeletionService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Support\Enums\IconPosition;
@@ -93,16 +92,6 @@ class ConversationsTable
                 ViewAction::make()
                     ->icon(Heroicon::OutlinedEye)
                     ->iconPosition(IconPosition::Before),
-                DeleteAction::make()
-                    ->icon(Heroicon::OutlinedTrash)
-                    ->iconPosition(IconPosition::Before)
-                    ->modalHeading(__('models.conversations.actions.delete.heading'))
-                    ->modalDescription(__('models.conversations.actions.delete.description'))
-                    ->using(function (Conversation $record, ConversationDeletionService $conversationDeletionService): bool {
-                        $conversationDeletionService->deleteByAdmin($record);
-
-                        return true;
-                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

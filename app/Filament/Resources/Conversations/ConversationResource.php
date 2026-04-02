@@ -57,7 +57,8 @@ class ConversationResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with([
-                'topic:id,title',
+                'topic:id,title,category_id',
+                'topic.category:id,name',
                 // 'directUser1:id,name,surname',
                 // 'directUser2:id,name,surname',
                 'participants:conversation_id,user_id,joined_at',

@@ -31,6 +31,9 @@ class ConversationInfolist
                 TextEntry::make('topic.title')
                     ->label(ConversationResource::labelFor('topic_id'))
                     ->placeholder('-'),
+                TextEntry::make('topic.category.name')
+                    ->label(__('models.topics.fields.category_id'))
+                    ->placeholder('-'),
                 TextEntry::make('participants_count')
                     ->label(ConversationResource::labelFor('participants_count'))
                     ->numeric()

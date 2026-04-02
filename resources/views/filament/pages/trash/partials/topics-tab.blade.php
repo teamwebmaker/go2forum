@@ -41,7 +41,7 @@
             class="flex w-full items-center px-3 py-2 text-left text-sm text-danger-600 hover:bg-danger-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-danger-400 dark:hover:bg-danger-500/10"
             wire:click="forceDeleteSelectedTopicsWithThread"
             x-on:click="close()"
-            wire:confirm="{{ __('models.trash.confirmations.force_delete') }}"
+            wire:confirm="{{ __('models.trash.confirmations.force_delete_topic_with_thread') }}"
             @disabled(count($selectedTopics) === 0)
         >
             {{ __('models.trash.actions.force_delete_selected_topics_with_thread') }}
@@ -136,7 +136,7 @@
                                 class="flex w-full items-center px-3 py-2 text-left text-sm text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-500/10"
                                 x-on:click="close()"
                                 wire:click="forceDeleteTopicWithThread({{ $topic->id }})"
-                                wire:confirm="{{ __('models.trash.confirmations.force_delete') }}"
+                                wire:confirm="{{ __('models.trash.confirmations.force_delete_topic_with_thread') }}"
                             >
                                 {{ __('models.trash.actions.force_delete_topic_with_thread') }}
                             </button>
