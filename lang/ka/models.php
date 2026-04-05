@@ -416,6 +416,7 @@ return [
             'is_expert' => 'ექსპერტი',
             'is_top_commentator' => 'ტოპ კომენტატორი',
             'is_blocked' => 'დაბლოკილი',
+            'create_in_trash' => 'შექმნისთანავე სანაგვეში გადატანა',
             'email_verified_at' => 'ელ.ფოსტა დამოწმდა',
             'phone_verified_at' => 'ტელეფონი დამოწმდა',
             'password' => 'პაროლი',

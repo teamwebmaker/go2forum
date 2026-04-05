@@ -141,6 +141,11 @@ class UserForm
                         ->label(UserResource::labelFor('is_blocked'))
                         ->required(),
                 ]),
+                Toggle::make('create_in_trash')
+                    ->label(UserResource::labelFor('create_in_trash'))
+                    ->default(false)
+                    ->visible(fn(string $operation): bool => $operation === 'create')
+                    ->dehydrated(fn(string $operation): bool => $operation === 'create'),
             ]);
     }
 }
