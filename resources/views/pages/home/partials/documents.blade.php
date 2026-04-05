@@ -46,12 +46,11 @@
                 @if ($isFile)
                     @if ($canView)
                         <button type="button" data-modal-open="document-viewer" data-document-url="{{ $openUrl }}"
-                            data-document-title="{{ $document->name }}"
-                            @if ($downloadUrl) data-document-download-url="{{ $downloadUrl }}" @endif
-                            @if ($externalLink) data-document-link-url="{{ $externalLink }}" @endif
-                            @if (!$canDownload) data-document-hide-native-download="1" @endif
-                            class="{{ $baseClasses }}">
-                            <p class="self-center text-base font-semibold text-slate-900 line-clamp-2">
+                            data-document-title="{{ $document->name }}" @if ($downloadUrl)
+                            data-document-download-url="{{ $downloadUrl }}" @endif @if ($externalLink)
+                            data-document-link-url="{{ $externalLink }}" @endif @if (!$canDownload)
+                            data-document-hide-native-download="1" @endif class="{{ $baseClasses }}">
+                            <p class="self-center text-center text-base font-semibold text-slate-900">
                                 {{ $document->name }}
                             </p>
 
@@ -60,10 +59,9 @@
                             </div>
                         </button>
                     @else
-                        <button type="button" data-modal-open="document-auth-required"
-                            @if ($trackViewUrl) data-document-track-url="{{ $trackViewUrl }}" @endif
-                            class="{{ $baseClasses }}">
-                            <p class="self-center text-base font-semibold text-slate-900 line-clamp-2">
+                        <button type="button" data-modal-open="document-auth-required" @if ($trackViewUrl)
+                        data-document-track-url="{{ $trackViewUrl }}" @endif class="{{ $baseClasses }}">
+                            <p class="self-center text-center text-base font-semibold text-slate-900">
                                 {{ $document->name }}
                             </p>
 
@@ -75,7 +73,7 @@
                 @else
                     @if ($canView)
                         <a href="{{ $openUrl }}" target="_blank" rel="noopener noreferrer" class="{{ $baseClasses }}">
-                            <p class="self-center text-base font-semibold text-slate-900 line-clamp-2">
+                            <p class="self-center text-center text-base font-semibold text-slate-900">
                                 {{ $document->name }}
                             </p>
 
@@ -84,10 +82,9 @@
                             </div>
                         </a>
                     @else
-                        <button type="button" data-modal-open="document-auth-required"
-                            @if ($trackViewUrl) data-document-track-url="{{ $trackViewUrl }}" @endif
-                            class="{{ $baseClasses }}">
-                            <p class="self-center text-base font-semibold text-slate-900 line-clamp-2">
+                        <button type="button" data-modal-open="document-auth-required" @if ($trackViewUrl)
+                        data-document-track-url="{{ $trackViewUrl }}" @endif class="{{ $baseClasses }}">
+                            <p class="self-center text-center text-base font-semibold text-slate-900">
                                 {{ $document->name }}
                             </p>
 
