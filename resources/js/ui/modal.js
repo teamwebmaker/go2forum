@@ -4,6 +4,16 @@ import { getById, getOne } from "../helpers";
   const DURATION = 200;
   let urlModalId = null;
   const getModal = (id) => getById(document, id);
+  const dispatchModalEvent = (modal, name) => {
+    if (!modal) return;
+
+    modal.dispatchEvent(
+      new CustomEvent(name, {
+        bubbles: true,
+        detail: { id: modal.id },
+      }),
+    );
+  };
 
   function openModal(modal) {
     if (!modal) return;
@@ -17,6 +27,8 @@ import { getById, getOne } from "../helpers";
       getOne(modal, '.ui-modal-backdrop')?.classList.remove('opacity-0');
       getOne(modal, '.ui-modal-panel')?.classList.remove('opacity-0', 'scale-95', 'translate-y-2');
     });
+
+    dispatchModalEvent(modal, 'ui-modal:opened');
 
     // document.documentElement.classList.add('overflow-hidden');
   }
@@ -32,9 +44,7 @@ import { getById, getOne } from "../helpers";
     window.setTimeout(() => {
       modal.classList.add('hidden');
       modal.setAttribute('aria-hidden', 'true');
-
-      const anyOpen = getOne(document, '.ui-modal[data-modal]:not(.hidden)');
-      // if (!anyOpen) document.documentElement.classList.remove('overflow-hidden');
+      dispatchModalEvent(modal, 'ui-modal:closed');
     }, DURATION);
 
     if (modal.id && modal.id === urlModalId) {

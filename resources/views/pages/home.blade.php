@@ -30,13 +30,12 @@
 
       {{-- Document preview modal (reuses global modal component) --}}
       <x-ui.modal id="document-viewer" title="დოკუმენტი:" size="6xl">
-         <div class="space-y-3">
-            <div class="flex items-start justify-between gap-3">
+         <div class="space-y-4" data-document-viewer>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                <div class="min-w-0">
                   <p class="text-md font-semibold text-slate-900" data-modal-heading>---</p>
-                  <p class="text-xs text-slate-500">ფაილი იხსნება ქვემოთ მოცემულ ფანჯარაში.</p>
                </div>
-               <div class="flex shrink-0 items-center gap-2">
+               <div class="flex shrink-0 flex-wrap items-center gap-2">
                   <a href="#" target="_blank" rel="noopener noreferrer" data-document-link
                      class="hidden rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
                      ბმულის გახსნა
@@ -48,10 +47,23 @@
                </div>
             </div>
 
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-inner">
+               <div class="relative">
+                  <div class="m-4 hidden rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+                     data-document-error>
+                     დოკუმენტის ჩატვირთვა ვერ მოხერხდა. სცადეთ ხელახლა ან გახსენით ბმულით.
+                  </div>
 
-            <div class="overflow-hidden rounded-lg ring-1 ring-slate-200">
-               <iframe src="" title="Document preview" data-document-frame allow="fullscreen"
-                  class="h-[70vh] w-full bg-slate-50" loading="lazy"></iframe>
+                  <div class="max-h-[70vh] overflow-y-auto overscroll-contain p-1 sm:p-4" data-document-scroll-region>
+                     <div class="flex min-h-72 items-center justify-center rounded-2xl bg-white/70 p-4"
+                        data-document-loading>
+                        <div class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-slate-600">
+                        </div>
+                     </div>
+
+                     <div class="hidden space-y-4" data-document-pages aria-live="polite"></div>
+                  </div>
+               </div>
             </div>
          </div>
       </x-ui.modal>

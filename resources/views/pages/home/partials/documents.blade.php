@@ -48,8 +48,8 @@
                         <button type="button" data-modal-open="document-viewer" data-document-url="{{ $openUrl }}"
                             data-document-title="{{ $document->name }}" @if ($downloadUrl)
                             data-document-download-url="{{ $downloadUrl }}" @endif @if ($externalLink)
-                            data-document-link-url="{{ $externalLink }}" @endif @if (!$canDownload)
-                            data-document-hide-native-download="1" @endif class="{{ $baseClasses }}">
+                            data-document-link-url="{{ $externalLink }}" @endif @if ($document->requires_auth_to_view)
+                            data-document-requires-auth="1" @endif class="{{ $baseClasses }}">
                             <p class="self-center text-center text-base font-semibold text-slate-900">
                                 {{ $document->name }}
                             </p>
