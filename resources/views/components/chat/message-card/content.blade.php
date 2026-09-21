@@ -41,6 +41,6 @@
             </div>
         </div>
     @else
-        {{ $message['content'] ?? '' }}
+        <div class="whitespace-pre-wrap">{{ $message['content'] ?? '' }}</div>
     @endif
 </div>
