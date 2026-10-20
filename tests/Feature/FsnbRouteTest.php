@@ -7,11 +7,35 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 uses(RefreshDatabase::class);
 
 test('guests cannot access fsnb files', function () {
+    $this->get('/fsnb')
+        ->assertUnauthorized();
+
+    $this->get('/fsnb/data/t.js')
+        ->assertUnauthorized();
+
     $this->get('/public/fsnb')
         ->assertUnauthorized();
 
     $this->get('/public/fsnb/data/t.js')
         ->assertUnauthorized();
+});
+
+test('shared hosting paths can serve fsnb files', function () {
+    $user = User::factory()->create(['surname' => 'Tester']);
+
+    $this->actingAs($user)
+        ->get('/fsnb')
+        ->assertRedirect('/public/fsnb/index.html');
+
+    $this->actingAs($user)
+        ->get('/fsnb/index.html')
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+
+    $this->actingAs($user)
+        ->get('/fsnb/data/t.js')
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/javascript; charset=UTF-8');
 });
 
 test('authenticated users are redirected to the fsnb index file', function () {
