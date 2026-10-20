@@ -1,0 +1,1 @@
+FSNB.detail("t47",{"kind":"ГЭСН","code":"52","title":"","file":"","items":[],"ed":null,"src":null,"ch":[{"n":"703","d":"2022-08-26","sort":"2022-08-26","dop":null,"file":"1-Prilozhenie-k-prikazu-_GESN_-GESNm_-GESNr_-FSEM_-FSSTS_-_Dop-_2-FSNB_2022_.pdf","items":[["s","3.1. В сборнике 52 «Фундаменты»:"]]}]});

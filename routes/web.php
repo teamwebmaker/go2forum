@@ -1,15 +1,16 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\PasswordResetController;
-use App\Http\Controllers\PageController;
-use App\Http\Controllers\PublicDocumentController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TopicController;
-use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\Api\MessageAttachmentController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FsnbController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicDocumentController;
+use App\Http\Controllers\TopicController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 // Pages
@@ -48,6 +49,13 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
+    Route::redirect('/public/fsnb', '/public/fsnb/index.html')
+        ->name('fsnb');
+
+    Route::get('/public/fsnb/{path}', FsnbController::class)
+        ->where('path', '.*')
+        ->name('fsnb.file');
+
     // Profile
     Route::get('/profile', [ProfileController::class, 'profile'])
         ->name('page.profile');
@@ -79,7 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
 
-    // Email 
+    // Email
     Route::post('/email/verification-notification', [VerificationController::class, 'resend'])
         ->middleware('throttle:email-resend')
         ->name('verification.send');
@@ -87,8 +95,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/email/verify', [VerificationController::class, 'notice'])
         ->name('verification.notice');
 
-
-    // Phone 
+    // Phone
     Route::post('/phone/verification-notification', [VerificationController::class, 'sendPhoneCode'])
         ->middleware('throttle:otp-send')
         ->name('verification.phone.send');

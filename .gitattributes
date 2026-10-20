@@ -6,6 +6,9 @@
 *.md diff=markdown
 *.php diff=php
 
+/resources/fsnb/** -text
+/resources/fsnb/data/** -diff
+
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore

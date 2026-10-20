@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ФСНБ-2022 ნავიგატორი</title>
+<meta name="description" content="ФСНБ-2022: ГЭСН, ГЭСНм, ГЭСНр, ГЭСНп, ГЭСНмр — ნორმების ძებნა კოდით და დასახელებით, რესურსები, კოეფიციენტები, ტექნიკური ნაწილი">
+<style>
+:root{
+  --canvas:#edf0f4; --surface:#fff; --ink:#17233b; --soft:#56627a; --rule:#d2d8e1;
+  --accent:#1f5fbf; --accent-soft:#e3ecfa; --mark:#ffe27a; --mark-ink:#17233b; --head:#f4f6f9;
+}
+@media (prefers-color-scheme:dark){:root{
+  --canvas:#131924; --surface:#1a2230; --ink:#e3e8f0; --soft:#9aa6ba; --rule:#2f3a4c;
+  --accent:#86b4ff; --accent-soft:#24344f; --mark:#6b5600; --mark-ink:#fff6cf; --head:#212b3b;
+}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--canvas);color:var(--ink);font:14px/1.45 "Segoe UI","Noto Sans","Noto Sans Georgian",system-ui,-apple-system,Roboto,Arial,sans-serif}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+#app{display:grid;grid-template-columns:350px 1fr;height:100vh}
+#side{background:var(--surface);border-right:1px solid var(--rule);display:flex;flex-direction:column;min-height:0}
+.brand{padding:14px 16px 12px;border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:10px}
+.brand a{font-size:19px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.brand span{color:var(--soft);font-size:12px}
+#tree{overflow:auto;padding:6px 6px 24px;flex:1;min-height:0}
+.ti .row{display:flex;align-items:flex-start;border-radius:5px}
+.ti .row:hover{background:var(--head)}
+.ti .row.on{background:var(--accent-soft)}
+.ti .caret{flex:none;width:22px;height:26px;border:0;background:none;cursor:pointer;color:var(--soft);padding:0;font-size:10px}
+.ti .caret.leaf{visibility:hidden}
+.ti .caret.open{transform:rotate(90deg)}
+.ti a{flex:1;min-width:0;padding:4px 6px 4px 0;color:var(--ink);line-height:1.3}
+.ti a:hover{text-decoration:none}
+.ti a b{font-weight:600;font-variant-numeric:tabular-nums}
+.ti .n{flex:none;color:var(--soft);font-size:11px;padding:6px 6px 0 4px;font-variant-numeric:tabular-nums}
+.ti .kids{margin-left:13px;border-left:1px solid var(--rule);padding-left:3px}
+.ti.base>.row a{font-weight:700;font-size:15px}
+#right{display:flex;flex-direction:column;min-width:0;min-height:0}
+#bar{display:flex;gap:8px;align-items:center;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--rule)}
+#bar input,#bar select{background:var(--canvas);border:1px solid var(--rule);border-radius:6px;padding:8px 10px}
+#q{flex:1;min-width:0;font-size:15px}
+#fl{width:92px}
+#bar label{color:var(--soft);white-space:nowrap}
+#menu{display:none;border:1px solid var(--rule);background:var(--canvas);border-radius:6px;padding:7px 11px;cursor:pointer}
+#main{overflow:auto;flex:1;padding:18px 24px 60px;min-height:0;outline:0}
+.crumbs{color:var(--soft);font-size:12.5px;margin-bottom:8px;display:flex;flex-wrap:wrap;gap:3px 6px}
+.crumbs .sep{opacity:.6}
+.back{border:1px solid var(--rule);background:var(--surface);border-radius:5px;padding:2px 9px;cursor:pointer;margin-right:6px}
+h1{font-size:22px;line-height:1.25;margin:0 0 4px;font-weight:650;letter-spacing:-.01em;max-width:60em}
+h1 .code{display:block;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:0;margin-bottom:2px;font-variant-numeric:tabular-nums}
+h2{font-size:15px;margin:26px 0 8px;font-weight:650}
+.meta{color:var(--soft);margin:0 0 14px}
+.list{background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow:hidden;max-width:1100px}
+.list a{display:flex;gap:12px;padding:8px 14px;border-top:1px solid var(--rule);color:var(--ink);align-items:baseline}
+.list a:first-child{border-top:0}
+.list a:hover{background:var(--head);text-decoration:none}
+.list .k{flex:none;min-width:92px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.list .v{flex:1;min-width:0}
+.list .c{flex:none;color:var(--soft);font-size:12px;font-variant-numeric:tabular-nums}
+.wrap{background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow:auto;max-width:100%}
+.wrap.tall{max-height:74vh}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th,td{padding:6px 10px;border-top:1px solid var(--rule);text-align:left;vertical-align:top}
+thead th{position:sticky;top:0;background:var(--head);border-top:0;border-bottom:1px solid var(--rule);font-weight:600;font-size:12.5px;z-index:2;white-space:nowrap}
+tbody tr:first-child>*{border-top:0}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.codecell{white-space:nowrap;font-variant-numeric:tabular-nums}
+.norms tbody tr{cursor:pointer}
+.norms tbody tr:hover{background:var(--head)}
+.copy{border:1px solid transparent;background:none;border-radius:4px;padding:1px 5px;margin:-2px 0 -2px -6px;cursor:copy;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.copy:hover{border-color:var(--rule);background:var(--surface)}
+.hl,tr.hl>td{background:var(--mark)!important;color:var(--mark-ink)}
+tr.hl .copy{color:var(--mark-ink)}
+.sub{color:var(--soft);font-size:12px;margin-top:1px}
+mark{background:var(--mark);color:var(--mark-ink);border-radius:2px;padding:0 1px}
+.tools{display:flex;gap:6px;align-items:center;margin:26px 0 8px}
+.tools h2{margin:0 auto 0 0}
+.seg{border:1px solid var(--rule);background:var(--surface);padding:5px 12px;cursor:pointer;border-radius:6px}
+.seg[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){.seg[aria-pressed=true]{color:#0c1320}}
+.matrix th.w{min-width:64px;text-align:right;cursor:pointer}
+.matrix td.q{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.matrix .res{position:sticky;left:0;background:var(--surface);min-width:330px;max-width:460px;z-index:1;border-right:1px solid var(--rule)}
+.matrix thead .res{z-index:3;background:var(--head)}
+.matrix .rc{display:block;font-size:11.5px;color:var(--soft);font-variant-numeric:tabular-nums}
+.matrix tr.grp td{background:var(--head);font-weight:600;font-size:12.5px;position:sticky;left:0}
+.matrix a.rc{display:block;font-size:11.5px;font-variant-numeric:tabular-nums}
+.coefs td.cc{white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums}
+.coefs td.scope{min-width:150px;font-size:12.5px}
+.coefs details summary{cursor:pointer;color:var(--accent);white-space:nowrap}
+.coefs details ul{margin:6px 0 0;padding-left:18px;max-height:260px;overflow:auto;min-width:260px}
+.mach td.num,.coefs td.num{white-space:nowrap}
+.mach td:nth-child(2){min-width:340px}
+.coefs td:nth-child(2){min-width:320px}
+.coefs details ul{max-width:420px}
+.techlink{margin:-4px 0 14px}
+.techlink a.seg{display:inline-block;color:var(--accent);text-decoration:none}
+.tech{max-width:1100px}
+.tech p{margin:0 0 9px;line-height:1.55;max-width:80em}
+.tech h2{margin:30px 0 12px}
+.tech h3{font-size:14.5px;margin:22px 0 8px}
+.tech .wrap.tt{margin:6px 0 16px}
+.tech .tt th,.tech .tt td{border:1px solid var(--rule);font-size:12.5px;padding:5px 8px;white-space:normal;position:static}
+.tech .tt th{background:var(--head);font-weight:600}
+.chsum{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;margin:0 0 14px}
+.chsum ul{margin:6px 0 0;padding-left:18px}
+.chsum li{margin:2px 0}
+.lnk{border:0;background:none;padding:0;color:var(--accent);cursor:pointer;text-align:left}
+.lnk:hover{text-decoration:underline}
+.badge{border:1px solid var(--mark);background:var(--mark);color:var(--mark-ink);border-radius:10px;font-size:11px;padding:0 7px;cursor:pointer;vertical-align:1px}
+.chhead{border-top:2px solid var(--rule);padding-top:18px}
+.chtitle{scroll-margin-top:10px}
+.matrix td.q:empty::after{content:"—";color:var(--rule)}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;margin:0 0 14px;max-width:1100px;overflow:hidden}
+.card.hl{background:var(--surface)!important;color:var(--ink);box-shadow:0 0 0 3px var(--mark)}
+.card header{padding:12px 14px 4px}
+.card h3{margin:0;font-size:15px;font-weight:600}
+.card h3 b{color:var(--accent);margin-right:8px;font-variant-numeric:tabular-nums}
+.card .body{padding:0 14px 10px}
+.card .wrap{border-width:1px 0 0;border-radius:0}
+ul.comp{margin:4px 0 0;padding-left:20px;max-width:75em}
+.note{color:var(--soft);font-size:12.5px;margin:10px 0 0}
+.tech p.ed{margin:-4px 0 10px;font-style:italic}
+.empty{background:var(--surface);border:1px dashed var(--rule);border-radius:8px;padding:22px;color:var(--soft);max-width:720px}
+.more{margin-top:12px}
+.load{max-width:520px;margin:12vh auto 0;text-align:center;color:var(--soft)}
+.load .track{height:6px;background:var(--rule);border-radius:3px;overflow:hidden;margin:14px 0 8px}
+.load .fill{height:100%;width:0;background:var(--accent);transition:width .2s}
+.load .seg{margin-top:14px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:7px 14px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .15s}
+#toast.on{opacity:1}
+@media (max-width:860px){
+  #app{grid-template-columns:1fr}
+  #side{position:fixed;inset:0 18% 0 0;z-index:10;transform:translateX(-102%);transition:transform .18s;box-shadow:0 0 40px rgba(0,0,0,.3)}
+  #side.open{transform:none}
+  #menu{display:block}
+  #bar{padding:8px 10px;flex-wrap:wrap}
+  #q{flex:1 1 100%;order:5}
+  .norms{min-width:600px}
+  #main{padding:14px 12px 50px}
+  .matrix .res{min-width:200px;max-width:240px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="side">
+    <div class="brand"><a href="#">ФСНБ-2022</a><span id="stat"></span></div>
+    <nav id="tree" aria-label="სარჩევი"></nav>
+  </aside>
+  <div id="right">
+    <header id="bar">
+      <button id="menu" type="button">სარჩევი</button>
+      <input id="q" type="search" autocomplete="off" spellcheck="false"
+             placeholder="ძებნა კოდით ან დასახელებით — მაგ. 06-01-001 ან бетон фундамент"
+             aria-label="ძებნა კოდით ან დასახელებით">
+      <select id="fb" aria-label="ბაზა"></select>
+      <label>ЗТ ≤ <input id="fl" type="number" min="0" step="0.1" placeholder="чел.-ч"
+             title="მუშების შრომის დანახარჯის ზედა ზღვარი ნორმის საზომ ერთეულზე"></label>
+    </header>
+    <main id="main" tabindex="-1"></main>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+<script>
+var FSNB = {bases: [], details: {}, tch: {}, v: '', files: null};
+FSNB.base = function (b) { this.bases.push(b); };
+FSNB.detail = function (key, d) { this.details[key] = d; };
+</script>
+<script>FSNB.v = "?v=20261011164320"; FSNB.files = [["i0.js",4565501],["i1.js",2545148],["i2.js",572642],["i3.js",462376],["i4.js",64053],["m.js",414329],["c.js",1242751],["t.js",2697]];</script>
+<script>
+FSNB.start = function () {
+'use strict';
+var $ = function (s) { return document.querySelector(s); };
+var main = $('#main'), tree = $('#tree'), qIn = $('#q'), fb = $('#fb'), fl = $('#fl'), side = $('#side');
+var bases = FSNB.bases, works = [], tables = [];
+var machs = [], machIdx = {}, coefs = [], coefBy = {}, nodeIdx = {}, workIdx = {};
+var seqNo = 0, searching = false, view = 'matrix';
+try { view = localStorage.getItem('fsnb.view') || 'matrix'; } catch (e) {}
+
+function h(tag, props) {
+  var e = document.createElement(tag), k, v, i, c;
+  if (props) for (k in props) {
+    v = props[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (i = 2; i < arguments.length; i++) {
+    c = arguments[i];
+    if (c == null || c === false) continue;
+    if (Array.isArray(c)) c.forEach(function (x) { if (x != null && x !== false) e.append(x); });
+    else e.append(c);
+  }
+  return e;
+}
+function norm(s) { return s.toLowerCase().replace(/ё/g, 'е'); }
+function fullName(node, w) { return ((node.g && node.g[w[1]] || '') + ' ' + w[2]).trim(); }
+function isTable(node) { return !!node.w; }
+function label(node) {
+  if (node.isBase) return node.title;
+  if (isTable(node) || node.t === 'Сборник' || node.b.kind) return node.n;
+  return (node.t + ' ' + node.c).trim() + (node.n ? '. ' + node.n : '');
+}
+function key(node) {
+  if (node.isBase) return '';
+  if (isTable(node)) return node.c;
+  if (node.t === 'Сборник' || node.b.kind) return node.c;
+  return '';
+}
+function num(x) { return x == null ? '' : String(Math.round(x * 1e4) / 1e4); }
+var NOUN = {mach: ' მანქანა', coef: ' კოეფიციენტი'};
+function plural(n, kind) { return n.toLocaleString('ru-RU') + (NOUN[kind] || ' ნორმა'); }
+
+// ---------- подготовка индекса ----------
+function prep(node, parent, base, path, sb) {
+  node.p = parent; node.b = base; node.path = path; node.sb = sb; node.cnt = 0;
+  if (node.w) {
+    node.cnt = node.w.length;
+    tables.push(node);
+    node.w.forEach(function (w) {
+      var name = fullName(node, w);
+      works.push({n: node, w: w, name: name, hay: norm(w[0] + ' ' + name)});
+      workIdx[base.title + '|' + w[0]] = node;
+    });
+  }
+  if (!base.kind && (node.w || node.t === 'Сборник')) nodeIdx[base.title + '|' + node.c] = node;
+  if (node.m) {
+    node.cnt = node.m.length;
+    node.m.forEach(function (r) {
+      machIdx[r[0]] = {n: node, r: r};
+      machs.push({n: node, r: r, hay: norm(r[0] + ' ' + r[1])});
+    });
+  }
+  if (node.k) {
+    node.cnt = node.k.length;
+    node.k.forEach(function (k) { k.node = node; k.i = coefs.length; k.hay = norm(k.c + ' ' + k.n); coefs.push(k); });
+  }
+  if (node.ch) node.ch.forEach(function (c, i) {
+    prep(c, node, base, path.concat(i), sb || c);
+    node.cnt += c.cnt;
+  });
+}
+bases.forEach(function (b, i) {
+  b.isBase = true; b.bi = i;
+  prep(b, null, b, [i], null);
+  fb.append(h('option', {value: i, text: b.title}));
+});
+fb.prepend(h('option', {value: '', text: 'ყველა ბაზა', selected: true}));
+// привязки коэффициентов: «база|шифр таблицы/сборника» и «база|шифр нормы»
+function addCoef(key, k) { (coefBy[key] || (coefBy[key] = [])).push(k); }
+coefs.forEach(function (k) {
+  (k.s || []).forEach(function (code) { addCoef((k.b || '*') + '|' + code, k); });
+  (k.k || []).forEach(function (raw) {
+    var i = raw.indexOf(' ');
+    addCoef(i > 0 ? raw.slice(0, i) + '|' + raw.slice(i + 1) : (k.b || '*') + '|' + raw, k);
+  });
+});
+$('#stat').textContent = works.length ? works.length.toLocaleString('ru-RU') + ' ნორმა' : '';
+
+function hashFor(node, w) { return '#p=' + node.path.join('.') + (w ? '&w=' + encodeURIComponent(w) : ''); }
+function nodeAt(path) {
+  var n = bases[path[0]], i;
+  for (i = 1; n && i < path.length; i++) n = n.ch && n.ch[path[i]];
+  return n || null;
+}
+function go(node, w) {
+  var hh = hashFor(node, w);
+  if (location.hash === hh) route(); else location.hash = hh;
+}
+
+// ---------- оглавление ----------
+function treeItem(node) {
+  var has = !!(node.ch && node.ch.length);
+  var caret = h('button', {class: 'caret' + (has ? '' : ' leaf'), type: 'button', 'aria-label': 'გაშლა', text: '▶',
+    onclick: function () { toggle(node); }});
+  var k = key(node);
+  var a = h('a', {href: hashFor(node), title: label(node)}, k ? h('b', {text: k + ' '}) : null, label(node));
+  var row = h('div', {class: 'row'}, caret, a, h('span', {class: 'n', text: node.cnt.toLocaleString('ru-RU')}));
+  var kids = h('div', {class: 'kids', hidden: true});
+  node._row = row; node._caret = caret; node._kids = kids; node._open = false; node._built = false;
+  return h('div', {class: 'ti' + (node.isBase ? ' base' : '')}, row, kids);
+}
+function expand(node) {
+  if (!node.ch || !node.ch.length || !node._kids) return;
+  if (!node._built) { node.ch.forEach(function (c) { node._kids.append(treeItem(c)); }); node._built = true; }
+  node._kids.hidden = false; node._open = true; node._caret.classList.add('open');
+}
+function toggle(node) {
+  if (node._open) { node._kids.hidden = true; node._open = false; node._caret.classList.remove('open'); }
+  else expand(node);
+}
+var activeRow = null;
+function syncTree(node) {
+  var chain = [], n;
+  for (n = node; n; n = n.p) chain.unshift(n);
+  chain.forEach(function (x, i) { if (i < chain.length - 1 || x.isBase) expand(x); });
+  if (activeRow) activeRow.classList.remove('on');
+  activeRow = node._row || null;
+  if (activeRow) { activeRow.classList.add('on'); activeRow.scrollIntoView({block: 'nearest'}); }
+}
+bases.forEach(function (b) { tree.append(treeItem(b)); });
+if (bases.length === 1) expand(bases[0]);
+
+// ---------- детали сборника ----------
+var waiting = {};
+function loadDetail(sb) {
+  var k = sb.f;
+  if (FSNB.details[k]) return Promise.resolve(FSNB.details[k]);
+  if (!waiting[k]) waiting[k] = new Promise(function (res, rej) {
+    var s = document.createElement('script');
+    s.src = 'data/' + k + '.js' + FSNB.v;
+    s.onload = function () { FSNB.details[k] ? res(FSNB.details[k]) : rej(new Error('empty')); };
+    s.onerror = function () { delete waiting[k]; rej(new Error('load')); };
+    document.head.append(s);
+  });
+  return waiting[k];
+}
+
+// ---------- общие куски ----------
+function crumbs(node) {
+  var box = h('div', {class: 'crumbs'}), chain = [], n;
+  if (qIn.value.trim() || fl.value) box.append(h('button', {class: 'back', type: 'button', text: '← ძებნის შედეგები', onclick: doSearch}));
+  for (n = node.p; n; n = n.p) chain.unshift(n);
+  box.append(h('a', {href: '#', text: 'ФСНБ-2022'}));
+  chain.forEach(function (x) {
+    box.append(h('span', {class: 'sep', text: '›'}), h('a', {href: hashFor(x), text: (key(x) ? key(x) + ' ' : '') + label(x)}));
+  });
+  return box;
+}
+function toast(msg) {
+  var t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast.t); toast.t = setTimeout(function () { t.classList.remove('on'); }, 1300);
+}
+function copy(text) {
+  function done() { toast('დაკოპირდა: ' + text); }
+  function legacy() {
+    var ta = h('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.append(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    ta.remove();
+  }
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, legacy);
+  else legacy();
+}
+function copyBtn(code) {
+  return h('button', {class: 'copy', type: 'button', title: 'კოდის კოპირება', text: code,
+    onclick: function (e) { e.stopPropagation(); copy(code); }});
+}
+function childList(node) {
+  return h('div', {class: 'list'}, node.ch.map(function (c) {
+    var k = key(c) || (c.t + ' ' + c.c).trim();
+    return h('a', {href: hashFor(c)}, h('span', {class: 'k', text: k}),
+      h('span', {class: 'v', text: c.n || ''}),
+      h('span', {class: 'c', text: plural(c.cnt, c.b.kind)}));
+  }));
+}
+
+// ---------- главная ----------
+function renderHome() {
+  main.replaceChildren();
+  if (!bases.length) {
+    main.append(h('div', {class: 'empty', text: 'მონაცემები ვერ ჩაიტვირთა. გაუშვი fsnb_navigator.py იმ საქაღალდეზე, სადაც ГЭСН*.xml ფაილებია, და გახსენი ახლად შექმნილი index.html.'}));
+    return;
+  }
+  main.append(h('h1', null, 'ФСНБ-2022'),
+    h('p', {class: 'meta', text: 'აირჩიე კრებული სარჩევიდან ან ჩაწერე კოდი / სიტყვა ძებნის ველში. სწრაფი გადასვლა ძებნაზე — ღილაკი «/».'}));
+  bases.forEach(function (b) {
+    main.append(h('h2', null, h('a', {href: hashFor(b), text: b.title}), ' ', h('span', {class: 'sub', text: plural(b.cnt, b.kind)})));
+    if (b.ch && b.ch.length) main.append(childList(b));
+  });
+  if (activeRow) { activeRow.classList.remove('on'); activeRow = null; }
+}
+
+// ---------- раздел / таблица ----------
+function renderNode(node, wcode) {
+  var seq = ++seqNo, base = node.b;
+  main.replaceChildren(crumbs(node));
+  var head = isTable(node) ? (node.t || 'Таблица') + ' ' + base.title + ' ' + node.c
+    : node.isBase ? '' : base.kind ? ((node.t ? node.t + ' ' : '') + node.c)
+    : node.t === 'Сборник' ? base.title + '. Сборник ' + node.c : (node.t + ' ' + node.c).trim();
+  main.append(h('h1', null, head ? h('span', {class: 'code', text: head}) : null, node.isBase ? node.title : (node.n || head)));
+  main.append(h('p', {class: 'meta', text: plural(node.cnt, base.kind)}));
+  var sbn = node.t === 'Сборник' && !base.kind ? node : node.sb;
+  if (sbn && !base.kind && FSNB.tch[base.title + '|' + sbn.c]) {
+    main.append(h('p', {class: 'techlink'}, h('a', {class: 'seg', href: hashFor(sbn) + '&t=1',
+      text: 'Техническая часть сборника ' + sbn.c})));
+  }
+  if (node.ch && node.ch.length) main.append(childList(node));
+  if (node.m) main.append(machTable(node));
+  if (node.k) main.append(coefTable(node.k, false));
+  if (!isTable(node)) {
+    var hit = wcode && Array.prototype.find.call(main.querySelectorAll('[data-w]'), function (e) { return e.dataset.w === wcode; });
+    if (hit) { hit.classList.add('hl'); setTimeout(function () { hit.scrollIntoView({block: 'center'}); }, 0); }
+    return;
+  }
+
+  var sel = wcode || null, box = h('div');
+  var tbody = h('tbody', null, node.w.map(function (w) {
+    return h('tr', {'data-w': w[0], onclick: function () { select(w[0], true); }},
+      h('td', {class: 'codecell'}, copyBtn(w[0])),
+      h('td', {text: fullName(node, w)}),
+      h('td', {text: w[3]}),
+      h('td', {class: 'num', text: num(w[4])}));
+  }));
+  main.append(h('div', {class: 'wrap'}, h('table', {class: 'norms'},
+    h('thead', null, h('tr', null, h('th', {text: 'Шифр'}), h('th', {text: 'Наименование'}),
+      h('th', {text: 'Измеритель'}), h('th', {class: 'num', text: 'ЗТ рабочих, чел.-ч'}))), tbody)));
+
+  var bM = h('button', {class: 'seg', type: 'button', text: 'ერთ ცხრილად', onclick: function () { setView('matrix'); }});
+  var bC = h('button', {class: 'seg', type: 'button', text: 'ნორმა-ნორმა', onclick: function () { setView('cards'); }});
+  main.append(h('div', {class: 'tools'}, h('h2', {text: 'Ресурсы'}), bM, bC), box);
+  box.append(h('p', {class: 'meta', text: 'იტვირთება…'}));
+  var cf = coefsFor(node);
+  if (cf.length) main.append(h('h2', {text: 'Поправочные коэффициенты (' + cf.length + ')'}), coefTable(cf, true));
+
+  var detail = null;
+  function setView(v) {
+    view = v; try { localStorage.setItem('fsnb.view', v); } catch (e) {}
+    draw();
+  }
+  function draw() {
+    bM.setAttribute('aria-pressed', view === 'matrix'); bC.setAttribute('aria-pressed', view !== 'matrix');
+    if (!detail) return;
+    box.replaceChildren(view === 'matrix' ? matrix(node, detail, select) : cards(node, detail));
+    mark(false);
+  }
+  function mark(scroll) {
+    var target = null;
+    main.querySelectorAll('[data-w]').forEach(function (e) {
+      var on = e.dataset.w === sel;
+      e.classList.toggle('hl', on);
+      if (on && box.contains(e) && !target) target = e;
+    });
+    if (scroll && target) target.scrollIntoView({block: 'nearest', inline: 'center'});
+  }
+  function select(code, scroll) {
+    sel = sel === code && scroll ? null : code;
+    history.replaceState(null, '', hashFor(node, sel));
+    mark(scroll);
+  }
+  draw();
+  loadDetail(node.sb).then(function (d) {
+    if (seq !== seqNo) return;
+    detail = d; draw();
+    if (sel) {
+      var r = tbody.querySelector('tr.hl');
+      if (r) r.scrollIntoView({block: 'nearest'});
+    }
+  }, function () {
+    if (seq !== seqNo) return;
+    box.replaceChildren(h('div', {class: 'empty', text: 'რესურსების ფაილი ვერ გაიხსნა: data/' + node.sb.f + '.js. შეამოწმე, რომ data საქაღალდე index.html-ის გვერდით დევს.'}));
+  });
+}
+
+function rowsOf(d, code) {
+  var wd = d.w[code] || {};
+  return (wd.r || []).map(function (r) {
+    var known = d.res[r[0]] || ['', ''];
+    var name = r.length > 2 ? r[2] : known[0], kind = r[4] || '';
+    // 1-100-35 -> «Средний разряд работы 3,5», если в самой базе разряд в наименовании не указан
+    var m = !kind && /^1-100-(\d)(\d)$/.exec(r[0]);
+    if (m && !/разряд/i.test(name)) name = (name ? name + '. ' : '') + 'Средний разряд работы ' + m[1] + ',' + m[2];
+    return {code: r[0], qty: r[1], name: name, unit: r.length > 2 ? r[3] : known[1], kind: kind};
+  });
+}
+var GROUPS = ['Затраты труда', 'Машины и механизмы', 'Материалы', 'Прочее'];
+function groupOf(r) {
+  if (r.kind === 's') return 3;
+  if (r.kind === 'a') return 2;
+  var c = r.code;
+  if (/^\d(-|$)/.test(c)) return 0;               // 1, 2, 1-100-29, 2-100-02 ... — затраты труда
+  if (c.slice(0, 3) === '91.') return 1;
+  return 2;
+}
+function isMach(r) { return r.code === '2' || /машинист/i.test(r.name) ? 1 : 0; }
+function shortCode(node, code) {
+  return node.c && code.indexOf(node.c + '-') === 0 ? code.slice(node.c.length) : code;
+}
+function sameGroups(node, d, pick) {
+  var order = [], map = {};
+  node.w.forEach(function (w) {
+    var v = pick(d.w[w[0]] || {});
+    if (!v) return;
+    if (!map[v.k]) { map[v.k] = {v: v, codes: []}; order.push(v.k); }
+    map[v.k].codes.push(shortCode(node, w[0]));
+  });
+  return order.map(function (k) { return map[k]; });
+}
+function extras(node, d) {
+  var out = [], total = node.w.length;
+  var comp = sameGroups(node, d, function (wd) { return wd.c && wd.c.length ? {k: wd.c.join('\n'), list: wd.c} : null; });
+  if (comp.length) {
+    out.push(h('h2', {text: 'Состав работ'}));
+    comp.forEach(function (g) {
+      if (comp.length > 1 || g.codes.length !== total) out.push(h('p', {class: 'note', text: 'Нормы ' + g.codes.join(', ')}));
+      out.push(h('ul', {class: 'comp'}, g.v.list.map(function (t) { return h('li', {text: t}); })));
+    });
+  }
+  var nr = sameGroups(node, d, function (wd) { return wd.nr || wd.sp ? {k: wd.nr + '|' + wd.sp, nr: wd.nr, sp: wd.sp} : null; });
+  nr.forEach(function (g) {
+    out.push(h('p', {class: 'note', text: 'Обоснование: Нр ' + g.v.nr + ', Сп ' + g.v.sp +
+      (nr.length > 1 || g.codes.length !== total ? '  (нормы ' + g.codes.join(', ') + ')' : '')}));
+  });
+  return out;
+}
+function matrix(node, d, select) {
+  var order = [], map = {};
+  node.w.forEach(function (w) {
+    rowsOf(d, w[0]).forEach(function (r) {
+      var k = r.code + '|' + r.name + '|' + r.unit;
+      var m = map[k];
+      if (!m) { m = map[k] = {r: r, q: {}, g: groupOf(r)}; order.push(k); }
+      m.q[w[0]] = m.q[w[0]] ? m.q[w[0]] + ' + ' + r.qty : r.qty;
+    });
+  });
+  var head = h('tr', null, h('th', {class: 'res', text: 'Ресурс'}), h('th', {text: 'Ед. изм.'}),
+    node.w.map(function (w) {
+      return h('th', {class: 'w', 'data-w': w[0], title: w[0] + '  ' + fullName(node, w) + '\nИзмеритель: ' + w[3],
+        text: shortCode(node, w[0]), onclick: function () { select(w[0], false); }});
+    }));
+  var body = h('tbody');
+  GROUPS.forEach(function (title, gi) {
+    var ks = order.filter(function (k) { return map[k].g === gi; });
+    if (!ks.length) return;
+    if (gi === 0) ks.sort(function (a, b) {          // сначала все строки рабочих, машинисты — последними
+      return isMach(map[a].r) - isMach(map[b].r);
+    });
+    body.append(h('tr', {class: 'grp'}, h('td', {colspan: node.w.length + 2, text: title})));
+    ks.forEach(function (k) {
+      var m = map[k];
+      body.append(h('tr', null,
+        h('td', {class: 'res'}, codeRef(m.r.code, 'rc'), m.r.name),
+        h('td', {text: m.r.unit}),
+        node.w.map(function (w) { return h('td', {class: 'q', 'data-w': w[0], text: m.q[w[0]] || ''}); })));
+    });
+  });
+  var frag = document.createDocumentFragment();
+  if (!order.length) frag.append(h('div', {class: 'empty', text: 'ამ ცხრილის ნორმებს რესურსები XML-ში არ აქვს.'}));
+  else frag.append(h('div', {class: 'wrap tall'}, h('table', {class: 'matrix'}, h('thead', null, head), body)));
+  extras(node, d).forEach(function (e) { frag.append(e); });
+  return frag;
+}
+function cards(node, d) {
+  var frag = document.createDocumentFragment();
+  node.w.forEach(function (w) {
+    var wd = d.w[w[0]] || {}, rows = rowsOf(d, w[0]);
+    frag.append(h('section', {class: 'card', 'data-w': w[0]},
+      h('header', null, h('h3', null, h('b', {text: w[0]}), fullName(node, w))),
+      h('div', {class: 'body'},
+        h('p', {class: 'note', text: 'Измеритель: ' + (w[3] || '—')}),
+        wd.c && wd.c.length ? h('ul', {class: 'comp'}, wd.c.map(function (t) { return h('li', {text: t}); })) : null,
+        wd.nr || wd.sp ? h('p', {class: 'note', text: 'Обоснование: Нр ' + wd.nr + ', Сп ' + wd.sp}) : null),
+      rows.length ? h('div', {class: 'wrap'}, h('table', null,
+        h('thead', null, h('tr', null, h('th', {text: 'Шифр ресурса'}), h('th', {text: 'Наименование'}),
+          h('th', {class: 'num', text: 'Кол-во'}), h('th', {text: 'Ед. изм.'}))),
+        h('tbody', null, rows.map(function (r) {
+          return h('tr', null, h('td', {class: 'codecell'}, codeRef(r.code, '')), h('td', {text: r.name}),
+            h('td', {class: 'num', text: r.qty}), h('td', {text: r.unit}));
+        })))) : null));
+  });
+  return frag;
+}
+
+// ---------- машины и коэффициенты ----------
+function codeRef(code, cls) {
+  var mi = machIdx[code];
+  return mi ? h('a', {class: cls, href: hashFor(mi.n, code), title: 'ФСБЦ Маш: ' + mi.r[1]}, code)
+    : h('span', {class: cls, text: code});
+}
+var MH = ['Код', 'Наименование', 'Ед. изм.', 'Экспл. без ЗПМ, руб.', 'ЗПМ, руб.', 'Затраты труда маш., чел.-ч',
+  'Разряд', 'Эл-во, кВт-ч', 'Стоимость эл-ва, руб.', 'Перебаз.'];
+function machTable(node) {
+  return h('div', {class: 'wrap'}, h('table', {class: 'mach'},
+    h('thead', null, h('tr', null, MH.map(function (t, i) { return h('th', {class: i >= 3 && i <= 8 ? 'num' : null, text: t}); }))),
+    h('tbody', null, node.m.map(function (r) {
+      return h('tr', {'data-w': r[0]},
+        h('td', {class: 'codecell'}, copyBtn(r[0])),
+        h('td', null, r[1], r[10] ? h('div', {class: 'sub', text: 'Машинист: ' + r[10]}) : null),
+        h('td', {text: r[2]}),
+        [3, 4, 5, 6, 7, 8].map(function (i) { return h('td', {class: 'num', text: r[i] || '—'}); }),
+        h('td', {text: r[9]}));
+    }))));
+}
+var CL = ['ОЗП', 'ЭМ', 'ЗПМ', 'МАТ'];
+var CT = ['LaborCosts — затраты труда рабочих', 'Machine — эксплуатация машин',
+  'MachinistLaborCosts — затраты труда машинистов', 'Material — материалы'];
+function coefsFor(node) {
+  var B = node.b.title, map = new Map(), parts = node.c.split('-'), i;
+  function entry(k) { var e = map.get(k); if (!e) { e = {k: k, whole: '', ws: []}; map.set(k, e); } return e; }
+  for (i = 1; i <= parts.length; i++) {
+    var p = parts.slice(0, i).join('-');
+    [B, '*'].forEach(function (b) {
+      (coefBy[b + '|' + p] || []).forEach(function (k) {
+        var e = entry(k);
+        if (!e.whole || p === node.c) e.whole = p === node.c ? 'вся таблица' : (i === 1 ? 'весь сборник ' + p : 'все таблицы ' + p);
+      });
+    });
+  }
+  node.w.forEach(function (w) {
+    (coefBy[B + '|' + w[0]] || []).forEach(function (k) { entry(k).ws.push(shortCode(node, w[0])); });
+  });
+  return Array.from(map.values()).sort(function (a, b) { return a.k.i - b.k.i; });
+}
+function bindings(k) {
+  var ns = (k.s || []).length, nk = (k.k || []).length;
+  if (!ns && !nk) return '—';
+  var ul = h('ul');
+  var d = h('details', {ontoggle: function () {
+    if (!d.open || ul.childNodes.length) return;
+    (k.s || []).forEach(function (code) {
+      var n = nodeIdx[(k.b || '') + '|' + code], t = (k.b ? k.b + ' ' : '') + code;
+      ul.append(h('li', null, n ? h('a', {href: hashFor(n), text: t + ' ' + n.n}) : t));
+    });
+    (k.k || []).forEach(function (raw) {
+      var i = raw.indexOf(' '), n = i > 0 ? workIdx[raw.slice(0, i) + '|' + raw.slice(i + 1)] : null;
+      ul.append(h('li', null, n ? h('a', {href: hashFor(n, raw.slice(i + 1)), text: raw}) : raw));
+    });
+  }}, h('summary', {text: [ns ? 'таблиц и сборников: ' + ns : '', nk ? 'норм: ' + nk : ''].filter(Boolean).join(', ')}), ul);
+  return d;
+}
+function coefTable(list, inTable) {
+  return h('div', {class: 'wrap'}, h('table', {class: 'coefs'},
+    h('thead', null, h('tr', null, h('th', {text: 'Код'}), h('th', {text: 'Наименование'}),
+      CL.map(function (l, i) { return h('th', {class: 'num', text: l, title: CT[i]}); }),
+      h('th', {text: inTable ? 'Применение' : 'Привязка'}))),
+    h('tbody', null, list.map(function (e) {
+      var k = inTable ? e.k : e;
+      return h('tr', inTable ? null : {'data-w': k.c},
+        h('td', {class: 'cc'}, inTable ? h('a', {href: hashFor(k.node, k.c), title: 'открыть в разделе коэффициентов', text: k.c}) : copyBtn(k.c)),
+        h('td', null, k.n,
+          k.d ? h('div', {class: 'sub', text: 'Основание: ' + k.d}) : null,
+          (k.r || []).map(function (r) { return h('div', {class: 'sub', text: 'Для ресурсов ' + r[1].join(', ') + ': ' + r[0]}); })),
+        k.v.map(function (v) { return h('td', {class: 'num', text: v || '—'}); }),
+        h('td', {class: 'scope'}, inTable ? (e.whole || 'нормы ' + e.ws.join(', ')) : bindings(k)));
+    }))));
+}
+
+// ---------- техническая часть ----------
+var DESIG = {'ГЭСН': '81-02', 'ГЭСНм': '81-03', 'ГЭСНр': '81-02', 'ГЭСНп': '81-05', 'ГЭСНмр': '81-06'};
+function fmtDate(d) { return d ? d.split('-').reverse().join('.') : ''; }
+function chLabel(c) {
+  return 'Приказ № ' + (c.n ? c.n + '/пр' : '?') + (c.d ? ' от ' + fmtDate(c.d) : (c.sort ? ' (после ' + fmtDate(c.sort) + ')' : '')) +
+    (c.dop ? ', доп. ' + c.dop : '');
+}
+function chRefs(chs) {
+  // какие пункты и приложения исходного текста затронуты каждым приказом
+  var refs = {};
+  chs.forEach(function (c, ci) {
+    c.items.forEach(function (it) {
+      if (typeof it[1] !== 'string') return;
+      var head = it[1].split('«')[0], m, re;
+      if (/пункт|абзац/i.test(head)) {
+        re = /\d+\.\d+\.\d+(?:\.\d+)*/g;
+        while ((m = re.exec(head))) (refs[m[0]] = refs[m[0]] || []).push(ci);
+      }
+      re = /Приложени\S*\s+(\d+\.\d+)(?:\s*[–-]\s*(\d+)\.(\d+))?/g;
+      while ((m = re.exec(head))) {
+        var a = m[1].split('.'), last = m[3] ? +m[3] : +a[1], i;
+        for (i = +a[1]; i <= last; i++) (refs['app:' + a[0] + '.' + i] = refs['app:' + a[0] + '.' + i] || []).push(ci);
+      }
+    });
+  });
+  return refs;
+}
+function techItems(items, refs, chs) {
+  function badges(el, key) {
+    var list = refs && refs[key];
+    if (!list) return el;
+    list.filter(function (v, i, a) { return a.indexOf(v) === i; }).forEach(function (ci) {
+      el.append(' ', h('button', {class: 'badge', type: 'button', title: 'перейти к изменению',
+        text: 'изменён: ' + (chs[ci].n ? chs[ci].n + '/пр' : chLabel(chs[ci])),
+        onclick: function () { var t = document.getElementById('ch-' + ci); if (t) t.scrollIntoView({block: 'start'}); }}));
+    });
+    return el;
+  }
+  return items.map(function (it) {
+    var k = it[0], v = it[1], m;
+    if (k === 's') return null;
+    if (k === 't') {
+      return h('div', {class: 'wrap tt'}, h('table', null, h('tbody', null, v.map(function (r, ri) {
+        return h('tr', null, r.map(function (c) { return h(ri === 0 ? 'th' : 'td', {text: c}); }));
+      }))));
+    }
+    if (k === 'T') {
+      return h('div', {class: 'wrap tt'}, h('table', null, h('tbody', null, v[1].map(function (r, ri) {
+        return h('tr', null, r.map(function (c) {
+          return typeof c === 'string' ? h(ri < v[0] ? 'th' : 'td', {text: c})
+            : h(ri < v[0] ? 'th' : 'td', {text: c[0], colspan: c[1] > 1 ? c[1] : null, rowspan: c[2] > 1 ? c[2] : null});
+        }));
+      }))));
+    }
+    if (k === 'n') return h('p', {class: 'note ed', text: v});
+    if (k === 'h') {
+      m = /^Приложение\s+(\d+\.\d+)/.exec(v);
+      return badges(h(/^(I|II|III|IV|V|VI)\.\s/.test(v) ? 'h2' : 'h3', {text: v}), m ? 'app:' + m[1] : '');
+    }
+    m = /^(\d+(?:\.\d+)+)\.?\s/.exec(v);
+    return badges(h('p', {text: v}), m ? m[1] : '');
+  });
+}
+function renderTech(sb) {
+  var seq = ++seqNo, base = sb.b, key = FSNB.tch[base.title + '|' + sb.c];
+  main.replaceChildren(crumbs(sb));
+  main.lastChild.append(h('span', {class: 'sep', text: '›'}), h('a', {href: hashFor(sb), text: sb.c + ' ' + sb.n}));
+  main.append(h('h1', null, h('span', {class: 'code', text: base.title + ' ' + (DESIG[base.title] || '') + '-' + sb.c + '-2022. Сборник ' + (+sb.c) + '. ' + sb.n}),
+    'Техническая часть'));
+  if (!key) { main.append(h('div', {class: 'empty', text: 'Для этого сборника в папке «техчасть» нет файлов.'})); return; }
+  var box = h('div', {class: 'tech'}, h('p', {class: 'meta', text: 'იტვირთება…'}));
+  main.append(box);
+  loadDetail({f: key}).then(function (d) {
+    if (seq !== seqNo) return;
+    var chs = d.ch || [], refs = chRefs(chs);
+    box.replaceChildren();
+    box.append(h('p', {class: 'meta', text: d.ed
+      ? 'Актуальная редакция от ' + fmtDate(d.ed) + ' — meganorm.ru (файл: ' + d.file + '). Приказы, принятые до этой даты, уже учтены в тексте.'
+      : d.items.length
+      ? 'Исходный текст — приказ № 1046/пр от 30.12.2021 (файл: ' + d.file + ').'
+      : 'Исходного текста этого сборника нет в папке «техчасть» — показаны только изменения.'}));
+    if (d.ed && d.src) box.append(h('p', {class: 'meta'}, h('a', {href: d.src, target: '_blank', rel: 'noopener', text: 'Открыть на meganorm.ru'})));
+    if (chs.length) {
+      box.append(h('div', {class: 'chsum'}, h('b', {text: (d.ed ? 'Изменения после этой редакции (' : 'Изменения (') + chs.length + '):'}),
+        h('ul', null, chs.map(function (c, ci) {
+          var only = !c.items.some(function (it) { return it[0] !== 's'; });
+          return h('li', null, h('button', {class: 'lnk', type: 'button', text: chLabel(c),
+            onclick: function () { var t = document.getElementById('ch-' + ci); if (t) t.scrollIntoView({block: 'start'}); }}),
+            only ? ' — изменены только таблицы норм' : ' — изменения в технической части');
+        }))));
+    } else {
+      box.append(h('p', {class: 'meta', text: d.ed ? 'Более поздних приказов с изменениями этого сборника в папке «техчасть» нет.'
+        : 'Изменений к технической части в папке «техчасть» не найдено.'}));
+    }
+    var heads = d.items.filter(function (it) { return it[0] === 'h'; });
+    if (heads.length > 2) {
+      box.append(h('div', {class: 'chsum'}, h('b', {text: 'Содержание:'}), h('ul', {class: 'toc'}, heads.map(function (it) {
+        return h('li', null, h('button', {class: 'lnk', type: 'button', text: it[1], onclick: function () {
+          var all = box.querySelectorAll('h2,h3');
+          for (var i = 0; i < all.length; i++) if (all[i].firstChild && all[i].firstChild.textContent === it[1]) { all[i].scrollIntoView({block: 'start'}); break; }
+        }}));
+      }))));
+    }
+    techItems(d.items, refs, chs).forEach(function (e) { if (e) box.append(e); });
+    if (chs.length) {
+      box.append(h('h2', {class: 'chhead', text: 'Изменения'}));
+      chs.forEach(function (c, ci) {
+        var only = !c.items.some(function (it) { return it[0] !== 's'; });
+        box.append(h('h3', {id: 'ch-' + ci, class: 'chtitle', text: chLabel(c)}),
+          h('p', {class: 'note', text: 'Файл: ' + c.file}));
+        if (only) box.append(h('p', {text: 'В этом приказе для сборника изменены только таблицы норм (раздел III) — они уже учтены в XML.'}));
+        else techItems(c.items, null, chs).forEach(function (e) { if (e) box.append(e); });
+      });
+    }
+  }, function () {
+    if (seq !== seqNo) return;
+    box.replaceChildren(h('div', {class: 'empty', text: 'Не удалось открыть data/' + key + '.js.'}));
+  });
+}
+
+// ---------- поиск ----------
+function hilite(text, tokens) {
+  var low = norm(text), spans = [], out = [], pos = 0;
+  tokens.forEach(function (t) {
+    var i = low.indexOf(t);
+    while (i >= 0) { spans.push([i, i + t.length]); i = low.indexOf(t, i + t.length); }
+  });
+  if (!spans.length || low.length !== text.length) return [text];
+  spans.sort(function (a, b) { return a[0] - b[0]; });
+  spans.forEach(function (s) {
+    if (s[1] <= pos) return;
+    var a = Math.max(s[0], pos);
+    if (a > pos) out.push(text.slice(pos, a));
+    out.push(h('mark', {text: text.slice(a, s[1])}));
+    pos = s[1];
+  });
+  if (pos < text.length) out.push(text.slice(pos));
+  return out;
+}
+var sortLabor = false;
+function doSearch() {
+  var tokens = norm(qIn.value).split(/\s+/).filter(Boolean);
+  var bsel = fb.value === '' ? null : bases[+fb.value];
+  var kind = bsel ? (bsel.kind || 'norm') : '';
+  var maxL = fl.value === '' ? null : parseFloat(fl.value);
+  if (isNaN(maxL)) maxL = null;
+  if (!tokens.length && maxL == null) { searching = false; route(); return; }
+  searching = true; ++seqNo;
+  function ok(hay) { for (var i = 0; i < tokens.length; i++) if (hay.indexOf(tokens[i]) < 0) return false; return true; }
+
+  var first = [], rest = [];
+  works.forEach(function (x) {
+    if (kind && x.n.b !== bsel) return;
+    if (maxL != null && (x.w[4] == null || x.w[4] > maxL)) return;
+    if (!ok(x.hay)) return;
+    (tokens.length && x.hay.indexOf(tokens[0]) === 0 ? first : rest).push(x);
+  });
+  var found = first.concat(rest);
+  if (sortLabor) found.sort(function (a, b) {
+    return (a.w[4] == null ? Infinity : a.w[4]) - (b.w[4] == null ? Infinity : b.w[4]);
+  });
+  var tabs = [];
+  var mfound = [], cfound = [];
+  if (tokens.length && maxL == null) {
+    if (!kind || kind === 'mach') machs.forEach(function (x) { if (ok(x.hay)) mfound.push(x); });
+    if (!kind || kind === 'coef') coefs.forEach(function (k) { if (ok(k.hay)) cfound.push(k); });
+  }
+  if (tokens.length && maxL == null) tables.some(function (t) {
+    if (kind && t.b !== bsel) return false;
+    if (ok(norm(t.c + ' ' + t.n))) tabs.push(t);
+    return tabs.length >= 40;
+  });
+
+  main.replaceChildren(h('h1', {text: 'ძებნის შედეგები'}),
+    h('p', {class: 'meta', text: [found.length || !(tabs.length + mfound.length + cfound.length) ? plural(found.length) : '',
+      tabs.length ? tabs.length + (tabs.length >= 40 ? '+' : '') + ' ცხრილი' : '',
+      mfound.length ? plural(mfound.length, 'mach') : '',
+      cfound.length ? plural(cfound.length, 'coef') : ''].filter(Boolean).join(', ') +
+      (maxL != null ? ' · ЗТ рабочих ≤ ' + maxL + ' чел.-ч' : '')}));
+  if (!found.length && !tabs.length && !mfound.length && !cfound.length) {
+    main.append(h('div', {class: 'empty', text: 'ვერაფერი მოიძებნა. სცადე სიტყვის ნაწილი (მაგ. «бетон» ნაცვლად «бетонирование»), ნაკლები სიტყვა ან სხვა ბაზა.'}));
+    return;
+  }
+  if (tabs.length) {
+    main.append(h('h2', {text: 'Таблицы'}), h('div', {class: 'list'}, tabs.map(function (t) {
+      return h('a', {href: hashFor(t)}, h('span', {class: 'k', text: t.b.title + ' ' + t.c}),
+        h('span', {class: 'v'}, hilite(t.n, tokens)), h('span', {class: 'c', text: plural(t.cnt)}));
+    })));
+  }
+  if (mfound.length) {
+    main.append(h('h2', {text: 'Машины и механизмы (ФСБЦ Маш)'}), h('div', {class: 'list'}, mfound.slice(0, 60).map(function (x) {
+      return h('a', {href: hashFor(x.n, x.r[0])}, h('span', {class: 'k', text: x.r[0]}),
+        h('span', {class: 'v'}, hilite(x.r[1], tokens)), h('span', {class: 'c', text: x.r[2]}));
+    })));
+    if (mfound.length > 60) main.append(h('p', {class: 'note', text: 'ნაჩვენებია პირველი 60 — დააზუსტე ძებნა.'}));
+  }
+  if (cfound.length) {
+    main.append(h('h2', {text: 'Поправочные коэффициенты'}), h('div', {class: 'list'}, cfound.slice(0, 60).map(function (k) {
+      return h('a', {href: hashFor(k.node, k.c)}, h('span', {class: 'k', text: k.c}),
+        h('span', {class: 'v'}, hilite(k.n, tokens)), h('span', {class: 'c', text: k.node.c}));
+    })));
+    if (cfound.length > 60) main.append(h('p', {class: 'note', text: 'ნაჩვენებია პირველი 60 — დააზუსტე ძებნა.'}));
+  }
+  if (!found.length) return;
+  var body = h('tbody'), shown = 0;
+  var sortBtn = h('button', {class: 'seg', type: 'button', 'aria-pressed': sortLabor,
+    text: 'ЗТ-ის ზრდადობით', onclick: function () { sortLabor = !sortLabor; doSearch(); }});
+  main.append(h('div', {class: 'tools'}, h('h2', {text: 'Нормы'}), sortBtn));
+  main.append(h('div', {class: 'wrap'}, h('table', {class: 'norms'},
+    h('thead', null, h('tr', null, h('th', {text: 'Шифр'}), h('th', {text: 'Наименование'}),
+      h('th', {text: 'Измеритель'}), h('th', {class: 'num', text: 'ЗТ рабочих, чел.-ч'}))), body)));
+  var more = h('button', {class: 'seg more', type: 'button', onclick: add});
+  main.append(more);
+  function add() {
+    found.slice(shown, shown + 300).forEach(function (x) {
+      body.append(h('tr', {onclick: function () { go(x.n, x.w[0]); }},
+        h('td', {class: 'codecell'}, copyBtn(x.w[0]), h('div', {class: 'sub', text: x.n.b.title})),
+        h('td', null, hilite(x.name, tokens),
+          h('div', {class: 'sub', text: (x.n.sb ? 'Сб. ' + x.n.sb.c + ' · ' : '') + 'табл. ' + x.n.c + ' ' + x.n.n})),
+        h('td', {text: x.w[3]}),
+        h('td', {class: 'num', text: num(x.w[4])})));
+    });
+    shown = Math.min(found.length, shown + 300);
+    more.hidden = shown >= found.length;
+    more.textContent = 'კიდევ 300 (ნაჩვენებია ' + shown + ' / ' + found.length + ')';
+  }
+  add();
+  main.scrollTop = 0;
+}
+
+// ---------- маршрут ----------
+function route() {
+  searching = false;
+  var m = /p=([\d.]+)/.exec(location.hash), w = /[&#]w=([^&]+)/.exec(location.hash);
+  var node = m ? nodeAt(m[1].split('.').map(Number)) : null;
+  side.classList.remove('open');
+  if (!node) { ++seqNo; renderHome(); main.scrollTop = 0; return; }
+  if (/[&#]t=1/.test(location.hash)) {
+    var sbn = node.t === 'Сборник' ? node : (node.sb || node);
+    renderTech(sbn);
+    syncTree(sbn);
+    main.scrollTop = 0;
+    return;
+  }
+  renderNode(node, w ? decodeURIComponent(w[1]) : null);
+  syncTree(node);
+  main.scrollTop = 0;
+}
+var timer = null;
+function later() { clearTimeout(timer); timer = setTimeout(doSearch, 160); }
+qIn.addEventListener('input', later);
+fl.addEventListener('input', later);
+fb.addEventListener('change', function () { if (qIn.value.trim() || fl.value) doSearch(); });
+qIn.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { clearTimeout(timer); doSearch(); }
+  if (e.key === 'Escape') { qIn.value = ''; doSearch(); }
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) { e.preventDefault(); qIn.focus(); qIn.select(); }
+});
+$('#menu').addEventListener('click', function () { side.classList.toggle('open'); });
+window.addEventListener('hashchange', route);
+route();
+};
+
+// ---------- запуск: офлайн — сразу; на сайте — после загрузки оглавлений ----------
+(function () {
+  if (!FSNB.files) { FSNB.start(); return; }
+  var main = document.getElementById('main'), q = document.getElementById('q');
+  var total = 0, done = 0, left = FSNB.files.length, failed = false;
+  FSNB.files.forEach(function (f) { total += f[1]; });
+  var fill = document.createElement('div'), track = document.createElement('div');
+  var text = document.createElement('div'), pct = document.createElement('div'), box = document.createElement('div');
+  fill.className = 'fill'; track.className = 'track'; box.className = 'load';
+  text.textContent = 'იტვირთება ნორმების ბაზა…';
+  track.append(fill); box.append(text, track, pct); main.append(box);
+  q.disabled = true;
+  function show() {
+    var p = total ? Math.round(done / total * 100) : 0;
+    fill.style.width = p + '%'; pct.textContent = p + '%';
+  }
+  function fail() {
+    if (failed) return;
+    failed = true;
+    var b = document.createElement('button');
+    b.className = 'seg'; b.type = 'button'; b.textContent = 'თავიდან ცდა';
+    b.onclick = function () { location.reload(); };
+    text.textContent = 'ბაზა ბოლომდე ვერ ჩაიტვირთა. შეამოწმე ინტერნეტი და სცადე თავიდან.';
+    track.remove(); pct.remove(); box.append(b);
+  }
+  show();
+  FSNB.files.forEach(function (f) {
+    var s = document.createElement('script');
+    s.async = false;                       // качаются параллельно, выполняются по порядку
+    s.src = 'data/' + f[0] + FSNB.v;
+    s.onload = function () {
+      done += f[1]; left--; show();
+      if (!left && !failed) { q.disabled = false; FSNB.start(); }
+    };
+    s.onerror = fail;
+    document.head.append(s);
+  });
+})();
+</script>
+<noscript><p style="padding:24px">ნავიგატორის გასახსნელად ბრაუზერში ჩართე JavaScript.</p></noscript>
+</body>
+</html>
