@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Http\Requests\StoreLogInRequest;
 use App\Http\Requests\StoreSignUpRequest;
 use App\Models\Settings;
@@ -15,8 +14,7 @@ class AuthController extends Controller
 {
     public function __construct(
         protected UserRegistrationService $userRegistrationService,
-    ) {
-    }
+    ) {}
 
     // ////////////
     // pages
@@ -28,6 +26,7 @@ class AuthController extends Controller
     public function signup()
     {
         $is_phone_verification_enabled = Settings::shouldPhoneVerify();
+
         return view('auth.register', compact('is_phone_verification_enabled'));
     }
 
@@ -44,14 +43,14 @@ class AuthController extends Controller
             'password' => $attributes['password'],
         ], $remember);
 
-        if (!$authenticated) {
+        if (! $authenticated) {
             $authenticated = Auth::attempt([
                 'nickname' => $identifier,
                 'password' => $attributes['password'],
             ], $remember);
         }
 
-        if (!$authenticated) {
+        if (! $authenticated) {
             return back()->withInput()->with(['error' => 'ავტორიზაციის მონაცემები არასწორია.']);
         }
 
@@ -67,7 +66,9 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
-        return redirect('/')->with('success', 'ავტორიზაცია წარმატებით დასრულდა!');
+
+        return redirect()->intended('/')
+            ->with('success', 'ავტორიზაცია წარმატებით დასრულდა!');
     }
 
     public function register(StoreSignUpRequest $request)
@@ -77,7 +78,6 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
-
 
         $is_email_verification_enabled = Settings::shouldEmailVerify();
         $is_phone_verification_enabled = Settings::shouldPhoneVerify();

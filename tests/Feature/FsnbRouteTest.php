@@ -6,47 +6,43 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 uses(RefreshDatabase::class);
 
-test('guests cannot access fsnb files', function () {
+test('guests are sent to login and their fsnb destination is remembered', function () {
     $this->get('/fsnb')
-        ->assertUnauthorized();
+        ->assertRedirect('/login')
+        ->assertSessionHas('url.intended', url('/fsnb'));
 
     $this->get('/fsnb/data/t.js')
-        ->assertUnauthorized();
+        ->assertRedirect('/login');
 
-    $this->get('/public/fsnb')
-        ->assertUnauthorized();
-
-    $this->get('/public/fsnb/data/t.js')
+    $this->getJson('/fsnb/data/t.js')
         ->assertUnauthorized();
 });
 
-test('shared hosting paths can serve fsnb files', function () {
-    $user = User::factory()->create(['surname' => 'Tester']);
+test('successful login returns the user to fsnb', function () {
+    $user = User::factory()->create([
+        'surname' => 'Tester',
+        'password' => 'password',
+    ]);
 
-    $this->actingAs($user)
-        ->get('/fsnb')
-        ->assertRedirect('/public/fsnb/index.html');
+    $this->withSession(['url.intended' => url('/fsnb')])
+        ->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])
+        ->assertRedirect(url('/fsnb'));
 
-    $this->actingAs($user)
-        ->get('/fsnb/index.html')
-        ->assertOk()
-        ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
-
-    $this->actingAs($user)
-        ->get('/fsnb/data/t.js')
-        ->assertOk()
-        ->assertHeader('Content-Type', 'text/javascript; charset=UTF-8');
+    $this->assertAuthenticatedAs($user);
 });
 
 test('authenticated users are redirected to the fsnb index file', function () {
     $this->actingAs(User::factory()->create(['surname' => 'Tester']))
-        ->get('/public/fsnb')
-        ->assertRedirect('/public/fsnb/index.html');
+        ->get('/fsnb')
+        ->assertRedirect('/fsnb/index.html');
 });
 
 test('authenticated users can access the fsnb index', function () {
     $response = $this->actingAs(User::factory()->create(['surname' => 'Tester']))
-        ->get('/public/fsnb/index.html')
+        ->get('/fsnb/index.html')
         ->assertOk()
         ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
         ->assertHeader('X-Content-Type-Options', 'nosniff');
@@ -59,7 +55,7 @@ test('authenticated users can access the fsnb index', function () {
 
 test('authenticated users can access fsnb data files', function () {
     $response = $this->actingAs(User::factory()->create(['surname' => 'Tester']))
-        ->get('/public/fsnb/data/t.js')
+        ->get('/fsnb/data/t.js')
         ->assertOk()
         ->assertHeader('Content-Type', 'text/javascript; charset=UTF-8');
 
@@ -71,6 +67,6 @@ test('authenticated users can access fsnb data files', function () {
 
 test('missing fsnb files return not found', function () {
     $this->actingAs(User::factory()->create(['surname' => 'Tester']))
-        ->get('/public/fsnb/data/missing.js')
+        ->get('/fsnb/data/missing.js')
         ->assertNotFound();
 });

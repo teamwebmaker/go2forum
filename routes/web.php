@@ -49,21 +49,12 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-    // On shared hosting, /public is detected as the application's base URL,
-    // so a browser request for /public/fsnb reaches Laravel as /fsnb.
-    Route::redirect('/fsnb', '/public/fsnb/index.html')
+    Route::redirect('/fsnb', '/fsnb/index.html')
         ->name('fsnb');
 
     Route::get('/fsnb/{path}', FsnbController::class)
         ->where('path', '.*')
         ->name('fsnb.file');
-
-    // Keep the explicit /public routes available when the document root is
-    // already configured directly to Laravel's public directory.
-    Route::redirect('/public/fsnb', '/public/fsnb/index.html');
-
-    Route::get('/public/fsnb/{path}', FsnbController::class)
-        ->where('path', '.*');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'profile'])
