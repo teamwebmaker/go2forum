@@ -8,6 +8,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -19,9 +20,19 @@ class PublicDocumentForm
             ->components([
                 TextInput::make('name')
                     ->label(PublicDocumentResource::labelFor('name'))
-                    ->required(),
+                    ->required()
+                    ->unique(
+                        table: PublicDocument::class,
+                        column: 'name',
+                        ignorable: fn (?PublicDocument $record) => $record
+                    ),
                 TextInput::make('link')
                     ->label(PublicDocumentResource::labelFor('link'))
+                    ->unique(
+                        table: PublicDocument::class,
+                        column: 'link',
+                        ignorable: fn (?PublicDocument $record) => $record
+                    )
                     ->default(null),
                 FileUpload::make('document')
                     ->label(PublicDocumentResource::labelFor('document'))
@@ -35,18 +46,12 @@ class PublicDocumentForm
                     ->previewable(false)
                     ->panelLayout('integrated')
                     ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file, callable $get): string {
-                        $base = Str::slug(
-                            $get('name') ?: pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)
-                        );
-
-                        $ext = $file->getClientOriginalExtension() ?: 'pdf';
-
-                        return "{$base}.{$ext}";
+                        return self::uniqueUploadedFilename($file, $get('name'));
                     })
                     // Store only the filename (basename) in DB
-                    ->dehydrateStateUsing(fn($state) => $state ? basename($state) : null)
+                    ->dehydrateStateUsing(fn ($state) => $state ? basename($state) : null)
                     // When editing, prepend directory so the file can be located
-                    ->formatStateUsing(fn($state) => $state ? PublicDocumentResource::STORAGE_DIR . "/{$state}" : null)
+                    ->formatStateUsing(fn ($state) => $state ? PublicDocumentResource::STORAGE_DIR."/{$state}" : null)
                     ->nullable(),
                 TextInput::make('order')
                     ->label(PublicDocumentResource::labelFor('order'))
@@ -57,7 +62,7 @@ class PublicDocumentForm
                     ->unique(
                         table: PublicDocument::class,
                         column: 'order',
-                        ignorable: fn(?PublicDocument $record) => $record
+                        ignorable: fn (?PublicDocument $record) => $record
                     ),
                 Toggle::make('visibility')
                     ->label(PublicDocumentResource::labelFor('visibility'))
@@ -67,5 +72,27 @@ class PublicDocumentForm
                     ->default(false)
                     ->required(),
             ]);
+    }
+
+    private static function uniqueUploadedFilename(TemporaryUploadedFile $file, mixed $documentName): string
+    {
+        $base = Str::slug(
+            filled($documentName)
+                ? (string) $documentName
+                : pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)
+        );
+        $base = $base !== '' ? $base : 'document';
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'pdf');
+        $filename = "{$base}.{$extension}";
+        $suffix = 2;
+
+        while (Storage::disk(PublicDocument::STORAGE_DISK)->exists(
+            PublicDocumentResource::STORAGE_DIR."/{$filename}"
+        )) {
+            $filename = "{$base}-{$suffix}.{$extension}";
+            $suffix++;
+        }
+
+        return $filename;
     }
 }

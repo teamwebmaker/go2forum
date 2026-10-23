@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 class PublicDocument extends Model
 {
     public const STORAGE_DIR = 'documents/public_documents';
+
     public const STORAGE_DISK = 'local';
 
     protected $fillable = [
@@ -28,6 +29,25 @@ class PublicDocument extends Model
         'views_count' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::updated(function (PublicDocument $document): void {
+            if (! $document->wasChanged('document')) {
+                return;
+            }
+
+            $previousFilename = $document->getOriginal('document');
+
+            if (! filled($previousFilename) || $previousFilename === $document->document) {
+                return;
+            }
+
+            Storage::disk(self::STORAGE_DISK)->delete(
+                self::STORAGE_DIR.'/'.basename((string) $previousFilename)
+            );
+        });
+    }
+
     public function scopeVisible($query)
     {
         return $query->where('visibility', true);
@@ -45,11 +65,11 @@ class PublicDocument extends Model
 
     public function storagePath(): ?string
     {
-        if (!filled($this->document)) {
+        if (! filled($this->document)) {
             return null;
         }
 
-        return self::STORAGE_DIR . '/' . ltrim((string) $this->document, '/');
+        return self::STORAGE_DIR.'/'.ltrim((string) $this->document, '/');
     }
 
     /**
@@ -63,7 +83,7 @@ class PublicDocument extends Model
     public function resolveStorageLocation(): ?array
     {
         $path = $this->storagePath();
-        if (!$path) {
+        if (! $path) {
             return null;
         }
 
@@ -81,11 +101,11 @@ class PublicDocument extends Model
 
     public function canBeViewedBy(?User $user): bool
     {
-        if (!$this->visibility && !($user?->role === 'admin')) {
+        if (! $this->visibility && ! ($user?->role === 'admin')) {
             return false;
         }
 
-        if (!$this->requires_auth_to_view) {
+        if (! $this->requires_auth_to_view) {
             return true;
         }
 
@@ -94,10 +114,10 @@ class PublicDocument extends Model
 
     public function canBeDownloadedBy(?User $user): bool
     {
-        if (!$this->visibility && !($user?->role === 'admin')) {
+        if (! $this->visibility && ! ($user?->role === 'admin')) {
             return false;
         }
 
-        return !$this->requires_auth_to_view;
+        return ! $this->requires_auth_to_view;
     }
 }
