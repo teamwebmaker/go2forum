@@ -16,6 +16,7 @@ use App\Notifications\TopicReplyNotification;
 use App\Support\ChatAttachmentRules;
 use App\Support\TopicAccessRules;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -30,9 +31,6 @@ class MessageServiceSupport
 
     /**
      * Normalize text content (trim + convert empty string to null).
-     *
-     * @param string|null $content
-     * @return string|null
      */
     public function normalizeContent(?string $content): ?string
     {
@@ -43,23 +41,17 @@ class MessageServiceSupport
 
     /**
      * Keep only valid UploadedFile instances.
-     *
-     * @param array $files
-     * @return array
      */
     public function filterUploadedFiles(array $files): array
     {
         return array_values(
-            array_filter($files, fn($file) => $file instanceof UploadedFile)
+            array_filter($files, fn ($file) => $file instanceof UploadedFile)
         );
     }
 
     /**
      * Ensure the sender is allowed to interact with this conversation.
      *
-     * @param Conversation $conversation
-     * @param int $senderId
-     * @return void
      * @throws AuthorizationException
      */
     public function authorizeConversationAccess(Conversation $conversation, int $senderId): void
@@ -67,7 +59,7 @@ class MessageServiceSupport
         if ($conversation->isTopic()) {
             $topic = $this->ensureTopicConversationVisible($conversation);
             $sender = User::find($senderId);
-            if (!($sender instanceof User) || Gate::forUser($sender)->denies('post', $topic)) {
+            if (! ($sender instanceof User) || Gate::forUser($sender)->denies('post', $topic)) {
                 throw new AuthorizationException('You are not allowed to post in this topic.');
             }
 
@@ -76,7 +68,7 @@ class MessageServiceSupport
 
         if ($conversation->isPrivate()) {
             $sender = User::find($senderId);
-            if (!($sender instanceof User) || !$sender->isVerified()) {
+            if (! ($sender instanceof User) || ! $sender->isVerified()) {
                 throw new AuthorizationException('Private chat is available only for verified users.');
             }
 
@@ -91,24 +83,23 @@ class MessageServiceSupport
     /**
      * Ensure the current user can read messages in the given conversation.
      *
-     * @param Conversation $conversation
-     * @param int|null $viewerId
-     * @return void
      * @throws AuthorizationException
      */
     public function authorizeConversationRead(Conversation $conversation, ?int $viewerId): void
     {
         if ($conversation->isTopic()) {
             $this->ensureTopicConversationVisible($conversation);
+
             return;
         }
 
         if ($conversation->isPrivate()) {
-            if (!$viewerId) {
+            if (! $viewerId) {
                 throw new AuthorizationException('You are not allowed to access this private conversation.');
             }
 
             $this->authorizePrivateConversationParticipant($conversation, $viewerId);
+
             return;
         }
 
@@ -117,15 +108,12 @@ class MessageServiceSupport
 
     /**
      * Register participants for the conversation (including private counterpart).
-     *
-     * @param Conversation $conversation
-     * @param int $senderId
-     * @return void
      */
     public function ensureParticipants(Conversation $conversation, int $senderId): void
     {
         if ($conversation->isPrivate()) {
             $this->syncPrivateParticipants($conversation);
+
             return;
         }
 
@@ -134,10 +122,6 @@ class MessageServiceSupport
 
     /**
      * Ensure the topic subscription exists for the active poster.
-     *
-     * @param int $topicId
-     * @param int $userId
-     * @return void
      */
     public function ensureSubscription(int $topicId, int $userId): void
     {
@@ -147,15 +131,12 @@ class MessageServiceSupport
     /**
      * Guard message reactions (like/unlike) by conversation type and visibility.
      *
-     * @param Message $message
-     * @param int $userId
-     * @return void
      * @throws AuthorizationException
      */
     public function authorizeMessageReaction(Message $message, int $userId): void
     {
         $reactor = User::find($userId);
-        if (!($reactor instanceof User)) {
+        if (! ($reactor instanceof User)) {
             throw new AuthorizationException('You are not allowed to react to this message.');
         }
 
@@ -168,16 +149,17 @@ class MessageServiceSupport
         }
 
         $conversation = $message->conversation;
-        if (!$conversation) {
+        if (! $conversation) {
             throw new AuthorizationException('Conversation not found for this message.');
         }
 
         if ($conversation->isPrivate()) {
             $this->authorizePrivateConversationParticipant($conversation, $userId);
+
             return;
         }
 
-        if (!$conversation->isTopic()) {
+        if (! $conversation->isTopic()) {
             throw new AuthorizationException('Likes are not available for this message.');
         }
 
@@ -187,9 +169,6 @@ class MessageServiceSupport
     /**
      * Ensure the user is one of the direct private conversation members.
      *
-     * @param Conversation $conversation
-     * @param int $userId
-     * @return void
      * @throws AuthorizationException
      */
     protected function authorizePrivateConversationParticipant(Conversation $conversation, int $userId): void
@@ -199,7 +178,7 @@ class MessageServiceSupport
             $conversation->direct_user2_id,
         ], true);
 
-        if (!$isDirectParticipant) {
+        if (! $isDirectParticipant) {
             throw new AuthorizationException('You are not allowed to access this private conversation.');
         }
     }
@@ -207,8 +186,6 @@ class MessageServiceSupport
     /**
      * Validate topic conversation visibility parity with TopicController::show.
      *
-     * @param Conversation $conversation
-     * @return Topic
      * @throws AuthorizationException
      */
     protected function ensureTopicConversationVisible(Conversation $conversation): Topic
@@ -216,7 +193,7 @@ class MessageServiceSupport
         $conversation->loadMissing('topic.category');
 
         $topic = $conversation->topic;
-        if (!$topic || !TopicAccessRules::canView($topic)) {
+        if (! $topic || ! TopicAccessRules::canView($topic)) {
             throw new AuthorizationException('You are not allowed to access this topic.');
         }
 
@@ -226,9 +203,7 @@ class MessageServiceSupport
     /**
      * Load like counts and liked-by-me map for provided messages.
      *
-     * @param mixed $messageIds
-     * @param int|null $currentUserId
-     * @return array
+     * @param  mixed  $messageIds
      */
     public function loadMessageLikes($messageIds, ?int $currentUserId): array
     {
@@ -259,10 +234,6 @@ class MessageServiceSupport
      * Persist uploaded files as message attachments.
      * Images are optimized; documents stored raw.
      *
-     * @param Conversation $conversation
-     * @param Message $message
-     * @param array $files
-     * @return void
      * @throws ValidationException
      */
     public function storeAttachments(Conversation $conversation, Message $message, array $files): void
@@ -272,10 +243,10 @@ class MessageServiceSupport
         }
 
         $diskName = config('chat.attachments_disk');
-        $relativeDir = Conversation::ATTACHMENT_DIR_PREFIX . $conversation->id;
+        $relativeDir = Conversation::ATTACHMENT_DIR_PREFIX.$conversation->id;
 
         foreach ($files as $file) {
-            if (!$file instanceof UploadedFile) {
+            if (! $file instanceof UploadedFile) {
                 continue;
             }
 
@@ -332,11 +303,6 @@ class MessageServiceSupport
     /**
      * Notify all topic subscribers about a new reply.
      * Uses deduplication table to prevent double-sends.
-     *
-     * @param int $senderId
-     * @param int $messageId
-     * @param int $topicId
-     * @return void
      */
     public function notifyTopicSubscribers(int $senderId, int $messageId, int $topicId): void
     {
@@ -354,100 +320,151 @@ class MessageServiceSupport
             $sender = User::find($senderId);
 
             if (
-                !($topic instanceof Topic) ||
-                !($message instanceof Message) ||
-                !($sender instanceof User)
+                ! ($topic instanceof Topic) ||
+                ! ($message instanceof Message) ||
+                ! ($sender instanceof User)
             ) {
                 return;
             }
 
             $context['conversation_id'] = $message->conversation_id;
 
-            $subscriberIds = TopicSubscription::query()
-                ->where('topic_id', $topicId)
-                ->where('user_id', '!=', $senderId)
-                ->pluck('user_id')
-                ->unique()
-                ->values()
-                ->all();
+            $subscriberQuery = $this->topicSubscriberIdsQuery($senderId, $topicId);
+            $chunkSize = min(1000, max(1, (int) config('chat.topic_notification_chunk_size', 500)));
+            $lastUserId = 0;
 
-            if (empty($subscriberIds)) {
-                return;
-            }
+            do {
+                $subscriberIds = DB::query()
+                    ->fromSub(clone $subscriberQuery, 'topic_subscribers')
+                    ->where('user_id', '>', $lastUserId)
+                    ->orderBy('user_id')
+                    ->limit($chunkSize)
+                    ->pluck('user_id')
+                    ->map(static fn ($id) => (int) $id)
+                    ->all();
 
-            $subscriberIds = array_values(array_unique(array_map('intval', $subscriberIds)));
-            $alreadyDeliveredIds = DB::table('topic_notification_deliveries')
-                ->where('message_id', $messageId)
-                ->whereIn('user_id', $subscriberIds)
-                ->pluck('user_id')
-                ->map(static fn($id) => (int) $id)
-                ->all();
-
-            $pendingIds = array_values(array_diff($subscriberIds, $alreadyDeliveredIds));
-            if (empty($pendingIds)) {
-                return;
-            }
-
-            $context['receiver_ids'] = $pendingIds;
-            $recipients = User::whereIn('id', $pendingIds)
-                ->get()
-                ->keyBy('id');
-
-            foreach ($pendingIds as $userId) {
-                $receiver = $recipients->get($userId);
-                if (!($receiver instanceof User)) {
-                    continue;
+                if (empty($subscriberIds)) {
+                    break;
                 }
 
-                $perReceiverContext = array_merge($context, [
-                    'receiver_ids' => [$userId],
-                ]);
-
-                try {
-                    Notification::send(
-                        $receiver,
-                        new TopicReplyNotification($topic, $message, $sender)
-                    );
-                } catch (\Throwable $exception) {
-                    $this->reportNotificationFailure(
-                        'Failed to send topic reply notification.',
-                        $exception,
-                        $perReceiverContext
-                    );
-                    continue;
-                }
-
-                try {
-                    DB::table('topic_notification_deliveries')
-                        ->insertOrIgnore([
-                            'user_id' => $userId,
-                            'message_id' => $messageId,
-                            'created_at' => now(),
-                        ]);
-                } catch (\Throwable $exception) {
-                    $this->reportNotificationFailure(
-                        'Failed to persist topic notification delivery row.',
-                        $exception,
-                        $perReceiverContext
-                    );
-                }
-            }
+                $lastUserId = max($subscriberIds);
+                $this->notifyTopicSubscriberChunk(
+                    $subscriberIds,
+                    $topic,
+                    $message,
+                    $sender,
+                    $context,
+                );
+            } while (count($subscriberIds) === $chunkSize);
         } catch (\Throwable $exception) {
             $this->reportNotificationFailure(
                 'Unexpected failure while preparing topic notifications.',
                 $exception,
                 $context
             );
+
+            throw $exception;
+        }
+    }
+
+    protected function topicSubscriberIdsQuery(int $senderId, int $topicId): EloquentBuilder
+    {
+        $expertTopicSubscribers = DB::table('expert_topic_subscriptions')
+            ->join('users', 'users.id', '=', 'expert_topic_subscriptions.user_id')
+            ->select('expert_topic_subscriptions.user_id')
+            ->where('expert_topic_subscriptions.topic_id', $topicId)
+            ->where('expert_topic_subscriptions.user_id', '!=', $senderId)
+            ->where('users.is_expert', true)
+            ->whereNull('users.deleted_at');
+
+        $allTopicExpertSubscribers = User::query()
+            ->selectRaw('users.id as user_id')
+            ->whereKeyNot($senderId)
+            ->where('is_expert', true)
+            ->where('expert_subscribes_to_all_topics', true);
+
+        return TopicSubscription::query()
+            ->select('user_id')
+            ->where('topic_id', $topicId)
+            ->where('user_id', '!=', $senderId)
+            ->union($expertTopicSubscribers)
+            ->union($allTopicExpertSubscribers);
+    }
+
+    /**
+     * @param  array<int, int>  $subscriberIds
+     * @param  array<string, mixed>  $context
+     */
+    protected function notifyTopicSubscriberChunk(
+        array $subscriberIds,
+        Topic $topic,
+        Message $message,
+        User $sender,
+        array $context,
+    ): void {
+        $alreadyDeliveredIds = DB::table('topic_notification_deliveries')
+            ->where('message_id', $message->id)
+            ->whereIn('user_id', $subscriberIds)
+            ->pluck('user_id')
+            ->map(static fn ($id) => (int) $id)
+            ->all();
+
+        $pendingIds = array_values(array_diff($subscriberIds, $alreadyDeliveredIds));
+        if (empty($pendingIds)) {
+            return;
+        }
+
+        $recipients = User::query()
+            ->whereIn('id', $pendingIds)
+            ->get()
+            ->keyBy('id');
+        $firstFailure = null;
+
+        foreach ($pendingIds as $userId) {
+            $receiver = $recipients->get($userId);
+            if (! ($receiver instanceof User)) {
+                continue;
+            }
+
+            $perReceiverContext = array_merge($context, [
+                'receiver_ids' => [$userId],
+            ]);
+
+            try {
+                DB::transaction(function () use ($userId, $message, $receiver, $topic, $sender): void {
+                    $claimed = DB::table('topic_notification_deliveries')
+                        ->insertOrIgnore([
+                            'user_id' => $userId,
+                            'message_id' => $message->id,
+                            'created_at' => now(),
+                        ]);
+
+                    if ($claimed !== 1) {
+                        return;
+                    }
+
+                    Notification::send(
+                        $receiver,
+                        new TopicReplyNotification($topic, $message, $sender)
+                    );
+                }, 3);
+            } catch (\Throwable $exception) {
+                $this->reportNotificationFailure(
+                    'Failed to send topic reply notification.',
+                    $exception,
+                    $perReceiverContext
+                );
+                $firstFailure ??= $exception;
+            }
+        }
+
+        if ($firstFailure instanceof \Throwable) {
+            throw $firstFailure;
         }
     }
 
     /**
      * Notify the private-message receiver after a successful send.
-     *
-     * @param int $senderId
-     * @param int $messageId
-     * @param int $conversationId
-     * @return void
      */
     public function notifyPrivateReceiver(int $senderId, int $messageId, int $conversationId): void
     {
@@ -465,10 +482,10 @@ class MessageServiceSupport
             $sender = User::find($senderId);
 
             if (
-                !($conversation instanceof Conversation) ||
-                !$conversation->isPrivate() ||
-                !($message instanceof Message) ||
-                !($sender instanceof User)
+                ! ($conversation instanceof Conversation) ||
+                ! $conversation->isPrivate() ||
+                ! ($message instanceof Message) ||
+                ! ($sender instanceof User)
             ) {
                 return;
             }
@@ -477,14 +494,14 @@ class MessageServiceSupport
                 ? $conversation->direct_user2_id
                 : $conversation->direct_user1_id;
 
-            if (!$receiverId) {
+            if (! $receiverId) {
                 return;
             }
 
             $context['receiver_ids'] = [$receiverId];
 
             $receiver = User::find($receiverId);
-            if (!($receiver instanceof User)) {
+            if (! ($receiver instanceof User)) {
                 return;
             }
 
@@ -512,18 +529,15 @@ class MessageServiceSupport
     /**
      * Enforce that private message receiver has a verified email.
      *
-     * @param Conversation $conversation
-     * @param int $senderId
-     * @return void
      * @throws ValidationException
      */
     public function ensurePrivateReceiverCanReceive(Conversation $conversation, int $senderId): void
     {
-        if (!$conversation->isPrivate()) {
+        if (! $conversation->isPrivate()) {
             return;
         }
 
-        if (!Settings::shouldEmailVerify()) {
+        if (! Settings::shouldEmailVerify()) {
             return;
         }
 
@@ -531,7 +545,7 @@ class MessageServiceSupport
             ? $conversation->direct_user2_id
             : $conversation->direct_user1_id;
 
-        if (!$receiverId) {
+        if (! $receiverId) {
             throw ValidationException::withMessages([
                 'content' => ['მიმოწერა ამ დროისთვის ხელმისაწვდომი არ არის.'],
             ]);
@@ -541,7 +555,7 @@ class MessageServiceSupport
             ->select(['id', 'email_verified_at'])
             ->find($receiverId);
 
-        if (!($receiver instanceof User) || is_null($receiver->email_verified_at)) {
+        if (! ($receiver instanceof User) || is_null($receiver->email_verified_at)) {
             throw ValidationException::withMessages([
                 'content' => ['მიმოწერა ამ დროისთვის ხელმისაწვდომი არ არის.'],
             ]);
@@ -575,7 +589,7 @@ class MessageServiceSupport
         $directUser1Id = $conversation->direct_user1_id ? (int) $conversation->direct_user1_id : null;
         $directUser2Id = $conversation->direct_user2_id ? (int) $conversation->direct_user2_id : null;
 
-        if (!$directUser1Id || !$directUser2Id) {
+        if (! $directUser1Id || ! $directUser2Id) {
             return;
         }
 

@@ -13,12 +13,16 @@ class SendTopicReplyNotifications implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 5;
+
+    // Keep this below the database queue's default 90-second retry_after.
+    public int $timeout = 60;
+
     public function __construct(
         protected int $senderId,
         protected int $messageId,
         protected int $topicId,
-    ) {
-    }
+    ) {}
 
     public function handle(MessageServiceSupport $support): void
     {
@@ -28,5 +32,12 @@ class SendTopicReplyNotifications implements ShouldQueue
             $this->topicId
         );
     }
-}
 
+    /**
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [10, 30, 60, 120];
+    }
+}

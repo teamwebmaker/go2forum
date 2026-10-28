@@ -10,3 +10,7 @@ Artisan::command('inspire', function () {
 
 // If you want an otp audit trail (who/when verified), enable cleanup and retention.
 // Schedule::command('otp:cleanup')->daily();
+
+Schedule::command('experts:reconcile-topic-subscriptions')
+    ->dailyAt('03:30')
+    ->withoutOverlapping();

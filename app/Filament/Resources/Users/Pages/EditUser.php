@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
+use App\Services\ExpertTopicSubscriptionService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
@@ -15,28 +16,30 @@ class EditUser extends EditRecord
     protected static string $resource = UserResource::class;
 
     protected ?string $plainPassword = null;
+
     protected bool $passwordChanged = false;
 
     public function getHeading(): string
     {
         return __('models.users.titles.edit');
     }
+
     protected function getHeaderActions(): array
     {
         return [
             ViewAction::make(),
             DeleteAction::make()
-                ->hidden(fn(User $record): bool => $record->trashed())
+                ->hidden(fn (User $record): bool => $record->trashed())
                 ->modalHeading(__('models.users.actions.delete.heading'))
                 ->modalDescription(__('models.users.actions.delete.description')),
             RestoreAction::make()
-                ->visible(fn(User $record): bool => $record->trashed()),
+                ->visible(fn (User $record): bool => $record->trashed()),
         ];
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             // $this->plainPassword = $data['password'];
             $this->passwordChanged = true;
         } else {
@@ -51,25 +54,25 @@ class EditUser extends EditRecord
      */
     protected function afterSave(): void
     {
-        if (!$this->passwordChanged) {
-            return;
+        app(ExpertTopicSubscriptionService::class)->normalize($this->record);
+
+        if ($this->passwordChanged) {
+            // Invalidate all sessions for this user
+            DB::table('sessions')->where('user_id', $this->record->getKey())->delete();
+
+            // Clear remember token to force re-login for remember-me cookies
+            $this->record->forceFill(['remember_token' => null])->saveQuietly();
+
+            // If the admin edited their own account, also end current session
+            // if (Auth::id() === $this->record->getKey() && $this->plainPassword) {
+            //     Auth::logoutOtherDevices($this->plainPassword);
+            //     Auth::logout();
+            //     request()->session()->invalidate();
+            //     request()->session()->regenerateToken();
+            // }
+            // $this->plainPassword = null;
+
+            $this->passwordChanged = false;
         }
-
-        // Invalidate all sessions for this user
-        DB::table('sessions')->where('user_id', $this->record->getKey())->delete();
-
-        // Clear remember token to force re-login for remember-me cookies
-        $this->record->forceFill(['remember_token' => null])->saveQuietly();
-
-        // If the admin edited their own account, also end current session
-        // if (Auth::id() === $this->record->getKey() && $this->plainPassword) {
-        //     Auth::logoutOtherDevices($this->plainPassword);
-        //     Auth::logout();
-        //     request()->session()->invalidate();
-        //     request()->session()->regenerateToken();
-        // }
-        // $this->plainPassword = null;
-
-        $this->passwordChanged = false;
     }
 }

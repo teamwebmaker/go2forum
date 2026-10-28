@@ -4,11 +4,13 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Pages\Trash;
 use App\Filament\Resources\Users\UserResource;
+use App\Services\ExpertTopicSubscriptionService;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
+
     protected bool $createInTrashOnCreate = false;
 
     public function getHeading(): string
@@ -26,6 +28,8 @@ class CreateUser extends CreateRecord
 
     protected function afterCreate(): void
     {
+        app(ExpertTopicSubscriptionService::class)->normalize($this->record);
+
         if ($this->createInTrashOnCreate) {
             $this->record->delete();
         }
@@ -36,7 +40,7 @@ class CreateUser extends CreateRecord
         if ($this->createInTrashOnCreate && filled($this->record?->getKey())) {
             return Trash::getUrl([
                 'tab' => 'users',
-                'users_q' => 'id:' . $this->record->getKey(),
+                'users_q' => 'id:'.$this->record->getKey(),
             ]);
         }
 

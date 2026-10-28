@@ -49,9 +49,9 @@ return [
                 'heading' => 'კატეგორიის წაშლა',
                 'headingBulk' => 'კატეგორიების წაშლა',
                 'description' => '',
-                'actionLabel' => ''
-            ]
-        ]
+                'actionLabel' => '',
+            ],
+        ],
     ],
     'topics' => [
         'singular' => 'თემა',
@@ -84,7 +84,7 @@ return [
                 'heading' => 'თემის წაშლა',
                 'headingBulk' => 'თემების წაშლა',
                 'description' => '',
-                'actionLabel' => ''
+                'actionLabel' => '',
             ],
             'delete_only' => [
                 'label' => 'მხოლოდ თემის წაშლა',
@@ -261,14 +261,14 @@ return [
                 'heading' => 'რეკლამის წაშლა',
                 'headingBulk' => 'რეკლამების წაშლა',
                 'description' => '',
-                'actionLabel' => ''
+                'actionLabel' => '',
             ],
             'view' => [
                 'heading' => 'რეკლამის ნახვა',
                 'description' => '',
                 'actionLabel' => '',
             ],
-        ]
+        ],
     ],
     'banners' => [
         'singular' => 'ბანერი',
@@ -293,14 +293,14 @@ return [
                 'heading' => 'ბანერის წაშლა',
                 'headingBulk' => 'ბანერების წაშლა',
                 'description' => '',
-                'actionLabel' => ''
+                'actionLabel' => '',
             ],
             'view' => [
                 'heading' => 'ბანერის ნახვა',
                 'description' => '',
                 'actionLabel' => '',
             ],
-        ]
+        ],
     ],
     'public_documents' => [
         'singular' => 'დოკუმენტი',
@@ -324,9 +324,9 @@ return [
                 'heading' => 'დოკუმენტის წაშლა',
                 'headingBulk' => 'დოკუმენტების წაშლა',
                 'description' => '',
-                'actionLabel' => ''
-            ]
-        ]
+                'actionLabel' => '',
+            ],
+        ],
     ],
     'public_document_user_views' => [
         'singular' => 'დოკუმენტის ნახვა',
@@ -414,6 +414,10 @@ return [
             'role' => 'როლი',
             'image' => 'სურათი',
             'is_expert' => 'ექსპერტი',
+            'expert_subscribes_to_all_topics' => 'ყველა თემის გამოწერა',
+            'expert_subscribes_to_all_topics_help' => 'ექსპერტი ავტომატურად მიიღებს შეტყობინებებს ყველა არსებულ და მომავალ თემაზე.',
+            'expert_topics' => 'ექსპერტისთვის გამოწერილი თემები',
+            'expert_topics_help' => 'მოძებნეთ და აირჩიეთ კონკრეტული თემები. ეს გამოწერები ექსპერტის ბეჯის მოხსნისას გაუქმდება.',
             'is_top_commentator' => 'ტოპ კომენტატორი',
             'is_blocked' => 'დაბლოკილი',
             'create_in_trash' => 'შექმნისთანავე სანაგვეში გადატანა',
@@ -433,7 +437,7 @@ return [
                 'heading' => 'მომხმარებლის წაშლა',
                 'headingBulk' => 'მომხმარებლების წაშლა',
                 'description' => 'მომხმარებელი გადავა სანაგვეში და საჭიროების შემთხვევაში აღდგენა იქნება შესაძლებელი.',
-                'actionLabel' => ''
+                'actionLabel' => '',
             ],
             'export' => [
                 'label' => 'მომხმარებლების ექსპორტი',
