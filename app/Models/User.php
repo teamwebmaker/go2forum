@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Services\ExpertTopicSubscriptionService;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -19,11 +20,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-class User extends Authenticatable implements MustVerifyEmail, FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, MustVerifyEmailTrait, SoftDeletes;
-
+    use HasFactory, MustVerifyEmailTrait, Notifiable, SoftDeletes;
 
     // Default directory (on "public" disk) where user avatar files are stored.
     public const AVATAR_DIR = 'avatars/';
@@ -38,6 +38,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         'phone_verified_at',
         'image',
         'is_expert',
+        'expert_subscribes_to_all_topics',
         'is_top_commentator',
         'is_blocked',
         'password',
@@ -47,6 +48,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
      * Accessor: Get the user's initials.
      *
      * Builds initials from the first character of `name` and `surname`,
+     *
      * @return string e.g. "JD" or "?"
      */
     public function getInitialsAttribute(): string
@@ -78,7 +80,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     public function getAvatarUrlAttribute(): ?string
     {
         // No avatar stored
-        if (!$this->image) {
+        if (! $this->image) {
             return null;
         }
 
@@ -89,8 +91,8 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         $path = ltrim($this->image, '/');
 
         // If only a filename is stored (no folder separators), assume default avatar folder
-        if (!str_contains($path, '/')) {
-            $path = trim(self::AVATAR_DIR, '/') . '/' . $path;
+        if (! str_contains($path, '/')) {
+            $path = trim(self::AVATAR_DIR, '/').'/'.$path;
         }
 
         // Return a public URL to the stored file
@@ -134,6 +136,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 
             // Flags
             'is_expert' => 'boolean',
+            'expert_subscribes_to_all_topics' => 'boolean',
             'is_top_commentator' => 'boolean',
             'is_blocked' => 'boolean',
         ];
@@ -155,9 +158,17 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             }
         });
 
+        static::updated(function (User $user): void {
+            if (! $user->wasChanged(['is_expert', 'expert_subscribes_to_all_topics'])) {
+                return;
+            }
+
+            app(ExpertTopicSubscriptionService::class)->normalize($user);
+        });
+
         static::forceDeleted(function (User $user) {
             // Nothing to cleanup
-            if (!$user->image) {
+            if (! $user->image) {
                 return;
             }
 
@@ -165,8 +176,8 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             $path = ltrim($user->image, '/');
 
             // If only filename stored, prepend default avatar directory
-            if (!str_contains($path, '/')) {
-                $path = trim(self::AVATAR_DIR, '/') . '/' . $path;
+            if (! str_contains($path, '/')) {
+                $path = trim(self::AVATAR_DIR, '/').'/'.$path;
             }
 
             // Delete avatar file (ignore if missing)
@@ -182,6 +193,36 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             static::invalidateSessionsOnSoftDelete($user);
         });
 
+    }
+
+    public function topicSubscriptions()
+    {
+        return $this->hasMany(TopicSubscription::class);
+    }
+
+    public function expertTopics()
+    {
+        return $this->belongsToMany(Topic::class, 'expert_topic_subscriptions')
+            ->withTimestamps();
+    }
+
+    public function hasExpertSubscriptionToTopic(int $topicId): bool
+    {
+        if (! $this->is_expert) {
+            return false;
+        }
+
+        if ($this->expert_subscribes_to_all_topics) {
+            return true;
+        }
+
+        return $this->expertTopics()->whereKey($topicId)->exists();
+    }
+
+    public function isSubscribedToTopic(int $topicId): bool
+    {
+        return $this->hasExpertSubscriptionToTopic($topicId)
+            || $this->topicSubscriptions()->where('topic_id', $topicId)->exists();
     }
 
     protected static function invalidateSessionsOnSoftDelete(User $user): void
@@ -221,7 +262,6 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 
     /**
      * Check if the user is considered "verified" based on app settings.
-     *
      */
     public function isVerified()
     {
@@ -230,7 +270,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 
         // Require both email and phone verification
         if ($emailEnabled && $phoneEnabled) {
-            return $this->hasVerifiedEmail() && !is_null($this->phone_verified_at);
+            return $this->hasVerifiedEmail() && ! is_null($this->phone_verified_at);
         }
 
         // Require only email verification
@@ -240,7 +280,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 
         // Require only phone verification
         if ($phoneEnabled) {
-            return !is_null($this->phone_verified_at);
+            return ! is_null($this->phone_verified_at);
         }
 
         // No verification required by settings
@@ -270,7 +310,6 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         // Only allow admins to access the admin panel
         return (bool) ($this->role === 'admin' ?? false);
     }
-
 
     //
 

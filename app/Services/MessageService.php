@@ -20,21 +20,15 @@ use Illuminate\Validation\ValidationException;
 class MessageService
 {
     protected ?MessageServiceSupport $support = null;
+
     protected ?MessagePayloadTransformer $payloadTransformer = null;
 
     /**
      * Create and persist a new message with optional attachments.
      *
-     * @param Conversation $conversation
-     * @param User $sender
-     * @param string|null $content
-     * @param array $files
-     * @return Message
      * @throws AuthorizationException
      * @throws ValidationException
      */
-
-
     public function sendMessage(
         Conversation $conversation,
         User $sender,
@@ -53,7 +47,7 @@ class MessageService
             : null;
         $idempotencyKey = $this->normalizeIdempotencyKey($idempotencyKey);
 
-        if (!$content && empty($files)) {
+        if (! $content && empty($files)) {
             throw ValidationException::withMessages([
                 'content' => ['შეტყობინება ან მინიმუმ ერთი დანართი სავალდებულოა.'],
             ]);
@@ -102,7 +96,7 @@ class MessageService
                     'content' => $content,
                 ]);
             } catch (QueryException $exception) {
-                if (!$idempotencyKey || !$this->isUniqueConstraintViolation($exception)) {
+                if (! $idempotencyKey || ! $this->isUniqueConstraintViolation($exception)) {
                     throw $exception;
                 }
 
@@ -154,7 +148,7 @@ class MessageService
                             $senderId,
                             $messageId,
                             (int) $topicId
-                        )->afterResponse();
+                        );
                     } catch (\Throwable $exception) {
                         logger()->error('Failed to execute topic notification callback.', [
                             'message_id' => $messageId,
@@ -203,13 +197,6 @@ class MessageService
 
     /**
      * List messages using cursor pagination and enrich payload metadata.
-     *
-     * @param Conversation $conversation
-     * @param Carbon|null $cursorCreatedAt
-     * @param int|null $cursorId
-     * @param int $limit
-     * @param int|null $currentUserId
-     * @return array
      */
     public function listMessages(
         Conversation $conversation,
@@ -290,17 +277,17 @@ class MessageService
         }
 
         $conversation = $message->conversation;
-        if (!$conversation) {
+        if (! $conversation) {
             throw new AuthorizationException('Conversation not found for this message.');
         }
 
-        if ($topicOnly && !$conversation->isTopic()) {
+        if ($topicOnly && ! $conversation->isTopic()) {
             throw new AuthorizationException('Editing is available only for topic messages.');
         }
 
         $support->authorizeConversationRead($conversation, $currentUserId);
 
-        if (!$message->isEditableBy($currentUserId)) {
+        if (! $message->isEditableBy($currentUserId)) {
             throw ValidationException::withMessages([
                 'content' => ['მესიჯის ჩასწორება შესაძლებელია მხოლოდ 24 საათის განმავლობაში.'],
             ]);
@@ -313,7 +300,7 @@ class MessageService
         }
 
         $normalized = $support->normalizeContent($newContent);
-        if (!$normalized) {
+        if (! $normalized) {
             throw ValidationException::withMessages([
                 'content' => ['შესანახად მიუთითეთ ტექსტი.'],
             ]);
@@ -337,10 +324,6 @@ class MessageService
 
     /**
      * Like a message and return the updated like count.
-     *
-     * @param Message $message
-     * @param int $userId
-     * @return int
      */
     public function likeMessage(Message $message, int $userId): int
     {
@@ -357,10 +340,6 @@ class MessageService
 
     /**
      * Unlike a message and return the updated like count.
-     *
-     * @param Message $message
-     * @param int $userId
-     * @return int
      */
     public function unlikeMessage(Message $message, int $userId): int
     {
@@ -376,10 +355,6 @@ class MessageService
     /**
      * Soft delete a message and optionally remove its attachments.
      *
-     * @param Message $message
-     * @param int $currentUserId
-     * @param bool $isAdmin
-     * @return void
      * @throws AuthorizationException
      */
     public function deleteMessage(Message $message, int $currentUserId, bool $isAdmin = false): void
@@ -390,7 +365,7 @@ class MessageService
             throw new AuthorizationException('You are not allowed to delete this message.');
         }
 
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             if ($message->sender_id !== $currentUserId) {
                 throw new AuthorizationException('You can only delete your own messages.');
             }
@@ -417,13 +392,11 @@ class MessageService
 
     /**
      * Resolve the helper instance used by this service.
-     *
-     * @return MessageServiceSupport
      */
     protected function support(): MessageServiceSupport
     {
-        if (!$this->support) {
-            $this->support = new MessageServiceSupport();
+        if (! $this->support) {
+            $this->support = new MessageServiceSupport;
         }
 
         return $this->support;
@@ -431,7 +404,7 @@ class MessageService
 
     protected function payloadTransformer(): MessagePayloadTransformer
     {
-        if (!$this->payloadTransformer) {
+        if (! $this->payloadTransformer) {
             $this->payloadTransformer = app(MessagePayloadTransformer::class);
         }
 
@@ -446,7 +419,7 @@ class MessageService
             ->first();
 
         if (
-            !$replyTarget ||
+            ! $replyTarget ||
             (int) $replyTarget->conversation_id !== (int) $conversation->id ||
             $replyTarget->trashed() ||
             (bool) $replyTarget->is_trashed
@@ -461,7 +434,7 @@ class MessageService
 
     protected function normalizeIdempotencyKey(?string $idempotencyKey): ?string
     {
-        if (!is_string($idempotencyKey)) {
+        if (! is_string($idempotencyKey)) {
             return null;
         }
 

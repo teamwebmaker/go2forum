@@ -19,11 +19,10 @@ class NotificationController extends Controller
         DatabaseNotification $notification,
         Request $request,
         MessageServiceSupport $messageServiceSupport
-    )
-    {
+    ) {
         $user = $request->user();
         if (
-            !$user ||
+            ! $user ||
             $notification->notifiable_id !== $user->id ||
             $notification->notifiable_type !== $user::class
         ) {
@@ -45,7 +44,7 @@ class NotificationController extends Controller
         $conversationId = $notification->data['conversation_id'] ?? null;
         if ($conversationId) {
             $conversation = Conversation::query()->find($conversationId);
-            if (!$conversation) {
+            if (! $conversation) {
                 abort(404);
             }
 
@@ -65,7 +64,7 @@ class NotificationController extends Controller
     public function markAllRead(Request $request, NotificationService $notificationService)
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
 
@@ -85,11 +84,11 @@ class NotificationController extends Controller
         NotificationService $notificationService
     ) {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
 
-        if (!$notificationService->deleteOne($user, $notification->id)) {
+        if (! $notificationService->deleteOne($user, $notification->id)) {
             abort(403);
         }
 
@@ -104,7 +103,7 @@ class NotificationController extends Controller
     public function clearAll(Request $request, NotificationService $notificationService)
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
 
@@ -121,7 +120,7 @@ class NotificationController extends Controller
     public function clearHistory(Request $request, NotificationService $notificationService)
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
 
@@ -147,7 +146,7 @@ class NotificationController extends Controller
         Request $request
     ) {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             abort(403);
         }
 
@@ -165,16 +164,15 @@ class NotificationController extends Controller
                 'subscribed_at' => now(),
             ]);
         } else {
-            TopicSubscription::query()
-                ->where('user_id', $user->id)
-                ->where('topic_id', $topic->id)
-                ->delete();
+            if (! $user->hasExpertSubscriptionToTopic((int) $topic->id)) {
+                TopicSubscription::query()
+                    ->where('user_id', $user->id)
+                    ->where('topic_id', $topic->id)
+                    ->delete();
+            }
         }
 
-        $isSubscribed = TopicSubscription::query()
-            ->where('user_id', $user->id)
-            ->where('topic_id', $topic->id)
-            ->exists();
+        $isSubscribed = $user->isSubscribedToTopic((int) $topic->id);
 
         return response()->json([
             'subscribed' => $isSubscribed,

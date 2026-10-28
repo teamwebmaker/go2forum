@@ -2,18 +2,19 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Actions\Action;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use App\Services\ImageUploadService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Illuminate\Database\Eloquent\Model;
+use Filament\Schemas\Schema;
 
 class UserForm
 {
@@ -36,7 +37,7 @@ class UserForm
                         ->unique(
                             table: User::class,
                             column: 'nickname',
-                            ignorable: fn(?User $record) => $record,
+                            ignorable: fn (?User $record) => $record,
                         ),
                 ]),
                 Grid::make(1)->schema([
@@ -84,27 +85,27 @@ class UserForm
                     DateTimePicker::make('email_verified_at')
                         ->label(UserResource::labelFor('email_verified_at'))
                         ->nullable()
-                        ->dehydrateStateUsing(fn($state) => filled($state) ? $state : null)
+                        ->dehydrateStateUsing(fn ($state) => filled($state) ? $state : null)
                         ->suffixAction(
                             Action::make('clearEmailVerifiedAt')
                                 ->icon('heroicon-m-x-mark')
                                 ->color('gray')
                                 ->tooltip(__('models.users.actions.clear_email_verified_at'))
-                                ->visible(fn($state): bool => filled($state))
-                                ->action(fn(Set $set): mixed => $set('email_verified_at', null)),
+                                ->visible(fn ($state): bool => filled($state))
+                                ->action(fn (Set $set): mixed => $set('email_verified_at', null)),
                             isInline: true
                         ),
                     DateTimePicker::make('phone_verified_at')
                         ->label(UserResource::labelFor('phone_verified_at'))
                         ->nullable()
-                        ->dehydrateStateUsing(fn($state) => filled($state) ? $state : null)
+                        ->dehydrateStateUsing(fn ($state) => filled($state) ? $state : null)
                         ->suffixAction(
                             Action::make('clearPhoneVerifiedAt')
                                 ->icon('heroicon-m-x-mark')
                                 ->color('gray')
                                 ->tooltip(__('models.users.actions.clear_phone_verified_at'))
-                                ->visible(fn($state): bool => filled($state))
-                                ->action(fn(Set $set): mixed => $set('phone_verified_at', null)),
+                                ->visible(fn ($state): bool => filled($state))
+                                ->action(fn (Set $set): mixed => $set('phone_verified_at', null)),
                             isInline: true
                         ),
                 ]),
@@ -112,11 +113,11 @@ class UserForm
                     ->label(UserResource::labelFor('password'))
                     ->password()
                     // Required only on create
-                    ->required(fn(string $operation): bool => $operation === 'create')
+                    ->required(fn (string $operation): bool => $operation === 'create')
                     ->rule('sometimes')
                     ->rule('min:8')
                     // Allow blank password on update (keeps current password)
-                    ->dehydrated(fn($state, string $operation) => $operation === 'create' || filled($state)),
+                    ->dehydrated(fn ($state, string $operation) => $operation === 'create' || filled($state)),
 
                 Grid::make(2)->schema([
                     Toggle::make('is_expert')
@@ -141,11 +142,31 @@ class UserForm
                         ->label(UserResource::labelFor('is_blocked'))
                         ->required(),
                 ]),
+                Grid::make(1)->schema([
+                    Toggle::make('expert_subscribes_to_all_topics')
+                        ->label(UserResource::labelFor('expert_subscribes_to_all_topics'))
+                        ->helperText(UserResource::labelFor('expert_subscribes_to_all_topics_help'))
+                        ->live()
+                        ->visible(fn (Get $get): bool => (bool) $get('is_expert'))
+                        ->afterStateUpdated(function ($state, Set $set): void {
+                            if ($state) {
+                                $set('expertTopics', []);
+                            }
+                        }),
+                    Select::make('expertTopics')
+                        ->label(UserResource::labelFor('expert_topics'))
+                        ->helperText(UserResource::labelFor('expert_topics_help'))
+                        ->relationship('expertTopics', 'title')
+                        ->multiple()
+                        ->searchable()
+                        ->visible(fn (Get $get): bool => (bool) $get('is_expert')
+                            && ! (bool) $get('expert_subscribes_to_all_topics')),
+                ]),
                 Toggle::make('create_in_trash')
                     ->label(UserResource::labelFor('create_in_trash'))
                     ->default(false)
-                    ->visible(fn(string $operation): bool => $operation === 'create')
-                    ->dehydrated(fn(string $operation): bool => $operation === 'create'),
+                    ->visible(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrated(fn (string $operation): bool => $operation === 'create'),
             ]);
     }
 }

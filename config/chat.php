@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'topic_notification_chunk_size' => (int) env('TOPIC_NOTIFICATION_CHUNK_SIZE', 500),
     'attachments_disk' => env('CHAT_ATTACHMENTS_DISK', 'public'),
     'delete_attachments_on_message_delete' => env('CHAT_DELETE_ATTACHMENTS', false),
     'attachments_max_kb' => (int) env('CHAT_ATTACHMENTS_MAX_KB', 2048),
